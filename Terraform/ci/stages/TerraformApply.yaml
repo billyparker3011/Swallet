@@ -1,0 +1,12 @@
+parameters:
+- name: Environment
+  type: string
+
+stages:
+- stage: TerraformApply
+  pool: $(pool)
+  displayName: 'Terraform Apply'
+  jobs:
+  - template: ../jobs/TerraformApply.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}

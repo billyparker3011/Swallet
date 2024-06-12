@@ -1,0 +1,15 @@
+steps:
+- task: TerraformTaskV4@4
+  displayName: 'Terraform show'
+  inputs:
+    provider: 'azurerm'
+    command: 'show'
+    outputTo: 'console'
+    outputFormat: 'default'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/Terraform'
+    environmentServiceNameAzureRM: '$(backendServiceArm)'
+    backendServiceArm: '$(backendServiceArm)'
+    backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
+    backendAzureRmStorageAccountName: '$(backendAzureRmStorageAccountName)'
+    backendAzureRmContainerName: '$(backendAzureRmContainerName)'
+    backendAzureRmKey: '$(backendAzureRmKey)'

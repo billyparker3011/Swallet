@@ -1,0 +1,102 @@
+﻿using HnMicro.Core.Helpers;
+using Lottery.Core.Enums;
+using Lottery.Core.Helpers;
+using Lottery.Core.Models.BetKind;
+using Lottery.Core.Models.MatchResult;
+using Lottery.Core.Models.Ticket;
+using Lottery.Core.Models.Ticket.Process;
+
+namespace Lottery.Core.Services.Ticket.Processors;
+
+public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
+{
+    private const int _prize = 9;
+    private const int _acceptedPrize = 6;
+
+    public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_DeTruot.ToInt();
+
+    public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
+    {
+        if (model.Numbers.Count < 10) return ErrorCodeHelper.ProcessTicket.FirstNorthern_Northern_DeTruot_MustChooseAtLeast10;
+        if (!metadata.IsLive) return 0;
+        return metadata.Prize.HasValue && metadata.Prize.Value > _acceptedPrize ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
+    }
+
+    public override decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null)
+    {
+        return (oddsValue - betKind.Award) * point;
+    }
+
+    public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
+    {
+        var rs = result.FirstOrDefault(f => f.Prize == _prize);
+        if (rs == null) return null;
+        var latestRs = rs.Results.FirstOrDefault();
+        if (latestRs == null) return null;
+        if (!latestRs.Result.GetEndOfResult(out string val)) return null;
+        if (ticket.Children.Count == 0) return null;
+
+        var totalPayout = ticket.Children.Sum(f => f.PlayerPayout);
+
+        var dataResult = new CompletedTicketResultModel
+        {
+            TicketId = ticket.TicketId
+        };
+
+        var totalPlayerWinLose = 0m;
+        var totalAgentWinLose = 0m;
+        var totalAgentCommission = 0m;
+        var totalMasterWinLose = 0m;
+        var totalMasterCommission = 0m;
+        var totalSupermasterWinLose = 0m;
+        var totalSupermasterCommission = 0m;
+        var totalCompanyWinLose = 0m;
+        foreach (var item in ticket.Children)
+        {
+            var playerWinlose = item.ChoosenNumbers.Equals(val)
+                                    ? -1 * totalPayout
+                                    : item.Stake * ticket.RewardRate.Value;
+            var agentWinlose = -1 * playerWinlose * item.AgentPt;
+            var agentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
+            var masterWinlose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
+            var masterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
+            var supermasterWinlose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
+            var supermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
+            var companyWinlose = -1 * (1 - item.SupermasterPt) * playerWinlose;
+
+            dataResult.Children.Add(new CompletedChildrenTicketResultModel
+            {
+                TicketId = item.TicketId,
+                State = item.ChoosenNumbers.Equals(val) ? TicketState.Lose : TicketState.Won,
+                PlayerWinLose = playerWinlose,
+                AgentWinLose = agentWinlose,
+                AgentCommission = agentCommission,
+                MasterWinLose = masterWinlose,
+                MasterCommission = masterCommission,
+                SupermasterWinLose = supermasterWinlose,
+                SupermasterCommission = supermasterCommission,
+                CompanyWinLose = companyWinlose
+            });
+
+            totalPlayerWinLose += playerWinlose;
+            totalAgentWinLose += agentWinlose;
+            totalAgentCommission += agentCommission;
+            totalMasterWinLose += masterWinlose;
+            totalMasterCommission += masterCommission;
+            totalSupermasterWinLose += supermasterWinlose;
+            totalSupermasterCommission += supermasterCommission;
+            totalCompanyWinLose += companyWinlose;
+        }
+
+        dataResult.State = totalPlayerWinLose < 0 ? TicketState.Lose : TicketState.Won;
+        dataResult.PlayerWinLose = totalPlayerWinLose;
+        dataResult.AgentWinLose = totalAgentWinLose;
+        dataResult.AgentCommission = totalAgentCommission;
+        dataResult.MasterWinLose = totalMasterWinLose;
+        dataResult.MasterCommission = totalMasterCommission;
+        dataResult.SupermasterWinLose = totalSupermasterWinLose;
+        dataResult.SupermasterCommission = totalSupermasterCommission;
+        dataResult.CompanyWinLose = totalCompanyWinLose;
+        return dataResult;
+    }
+}

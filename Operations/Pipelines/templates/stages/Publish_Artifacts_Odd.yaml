@@ -1,0 +1,11 @@
+parameters:
+- name: Environment
+  type: string
+
+stages:
+- stage: Publish_Artifacts
+  displayName: "Publish Artifacts"
+  jobs:
+  - template: ../jobs/Publish_Docker_Artifacts_Odd.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}

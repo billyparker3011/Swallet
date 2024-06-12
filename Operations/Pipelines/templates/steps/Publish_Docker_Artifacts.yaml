@@ -1,0 +1,10 @@
+steps:
+- task: ContainerBuild@0
+  displayName: "Publish $(application) Docker Image"
+  inputs:
+    dockerRegistryServiceConnection: "$(DockerRegistry)"
+    Dockerfile: "$(Dockerfile)"
+    repository: "$(repository)"
+    tags: |
+      $(Build.BuildNumber)
+      latest

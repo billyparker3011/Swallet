@@ -1,0 +1,14 @@
+steps:
+- task: replacetokens@5
+  inputs:
+    targetFiles: '**/*.tfvars, **/main.tf'
+    encoding: 'auto'
+    tokenPattern: 'rm'
+    writeBOM: true
+    actionOnMissing: 'warn'
+    keepToken: false
+    actionOnNoFiles: 'continue'
+    enableTransforms: false
+    enableRecursion: false
+    useLegacyPattern: false
+    enableTelemetry: true

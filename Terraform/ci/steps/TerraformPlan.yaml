@@ -1,0 +1,44 @@
+steps:
+- task: TerraformTaskV4@4
+  displayName: 'Terraform plan'
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/Terraform'
+    ${{ if eq(parameters.Environment, 'dev') }}:
+      commandOptions: >-
+        -var-file="$(System.DefaultWorkingDirectory)/Terraform/values-${{ parameters.Environment }}.tfvars"
+        -target module.api_management
+        -target module.bastion_host
+        -target module.container_registry
+        -target module.linux_web_app
+        -target module.mssql_server
+        -target module.network_security_group
+        -target module.random_password
+        -target module.redis_cache
+        -target module.resource_group
+        -target module.service_plan
+        -target module.user_assigned_identity
+        -target module.virtual_machine
+        -target module.virtual_network
+        --out=tfplan
+    ${{ if eq(parameters.Environment, 'test') }}:
+      commandOptions: >-
+        -var-file="$(System.DefaultWorkingDirectory)/Terraform/values-${{ parameters.Environment }}.tfvars"
+        -target module.api_management
+        -target module.mssql_server
+        -target module.linux_web_app
+        -target module.network_security_group
+        -target module.random_password
+        -target module.redis_cache
+        -target module.resource_group
+        -target module.service_plan
+        -target module.user_assigned_identity
+        -target module.virtual_network
+        --out=tfplan
+    environmentServiceNameAzureRM: '$(backendServiceArm)'
+    backendServiceArm: '$(backendServiceArm)'
+    backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
+    backendAzureRmStorageAccountName: '$(backendAzureRmStorageAccountName)'
+    backendAzureRmContainerName: '$(backendAzureRmContainerName)'
+    backendAzureRmKey: '$(backendAzureRmKey)'

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\HnMicro.Core\HnMicro.Core.csproj" />
+    <ProjectReference Include="..\..\Core\HnMicro.Framework\HnMicro.Framework.csproj" />
+    <ProjectReference Include="..\HnMicro.Modules.InMemory\HnMicro.Modules.InMemory.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+jobs:
+- job: Publish_Docker_Artifacts
+  pool:
+    name: "$(AgentPool)"
+  displayName: "Publish Docker Artifact to ${{ parameters.Environment }} Environment"
+  strategy:
+    matrix:
+      PlayerAuthentication:
+        WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
+        application: "PlayerAuthentication"
+        repository: "player-authentication"
+        Dockerfile: "Projects/Lottery/Player/AuthenticationService/Lottery.Player.AuthenticationService/Dockerfile"
+        AppSettings: "Projects/Lottery/Player/AuthenticationService/Lottery.Player.AuthenticationService"
+      Player:
+        WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
+        application: "Player"
+        repository: "player"
+        Dockerfile: "Projects/Lottery/Player/PlayerService/Lottery.Player.PlayerService/Dockerfile"
+        AppSettings: "Projects/Lottery/Player/PlayerService/Lottery.Player.PlayerService"
+  steps:
+  - template: ../steps/Replace_AppSettings_Files.yaml
+  - template: ../steps/Publish_Docker_Artifacts.yaml
+  - template: ../steps/Publish_Image_To_App_Service.yaml

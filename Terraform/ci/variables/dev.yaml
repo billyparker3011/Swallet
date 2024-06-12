@@ -1,0 +1,17 @@
+variables:
+- name: backendAzureRmResourceGroupName
+  value: 'rg-hnx-dev-southeastasia'
+- name: backendAzureRmContainerName
+  value: 'tfstate'
+- name: backendAzureRmStorageAccountName
+  value: 'sthnxdevsoutheastasia'
+- name: backendServiceArm
+  value: 'Terraform'
+- name: backendAzureRmKey
+  value: "${{ parameters.Environment }}"
+- name: location
+  value: "southeastasia"
+- name: site
+  value: "primary"
+- name: pool
+  value: "Development Environment Agent Pool"

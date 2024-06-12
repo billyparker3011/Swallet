@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Modules\Caching\HnMicro.Module.Caching.ByRedis\HnMicro.Module.Caching.ByRedis.csproj" />
+    <ProjectReference Include="..\..\..\..\Modules\HnMicro.Modules.EntityFrameworkCore\HnMicro.Modules.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\..\..\..\Modules\HnMicro.Modules.InMemory\HnMicro.Modules.InMemory.csproj" />
+    <ProjectReference Include="..\Lottery.Data\Lottery.Data.csproj" />
+  </ItemGroup>
+
+</Project>

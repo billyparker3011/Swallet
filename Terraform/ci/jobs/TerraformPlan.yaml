@@ -1,0 +1,14 @@
+parameters:
+- name: Environment
+  type: string
+
+jobs:
+- job: TerraformPlan
+  steps:
+  - template: ../steps/CheckOut.yaml
+  - template: ../steps/ReplaceTokens.yaml
+  - template: ../steps/InstallTerraform.yaml
+  - template: ../steps/TerraformInit.yaml
+  - template: ../steps/TerraformPlan.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}

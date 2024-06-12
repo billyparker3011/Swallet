@@ -1,0 +1,2 @@
+﻿1. Service có thể quản lý nhiều connection máy chủ khác nhau.
+2. Cần điền giá trị tham số "to" ở các hàm GetData, SetData, Remove. Mặc định giá trị bằng EMPTY sẽ lấy connection đầu tiên trong danh sách.

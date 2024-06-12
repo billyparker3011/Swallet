@@ -1,0 +1,20 @@
+parameters:
+- name: Environment
+  type: string
+
+jobs:
+- deployment: TerraformApply
+  environment: 'Development'
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - template: ../steps/CheckOut.yaml
+        - template: ../steps/ReplaceTokens.yaml
+        - template: ../steps/InstallTerraform.yaml
+        - template: ../steps/TerraformInit.yaml
+        - template: ../steps/TerraformPlan.yaml
+          parameters:
+            Environment: ${{ parameters.Environment }}
+        - template: ../steps/TerraformApply.yaml
+        - template: ../steps/TerraformShow.yaml

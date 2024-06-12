@@ -1,0 +1,30 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - apt-transport-https
+  - lsb-release
+  - gnupg
+  - curl
+  - unzip
+runcmd:
+# Install Azure CLI
+  - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+# Install Terraform
+  - curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+  - sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+  - sudo apt-get update && sudo apt-get install terraform
+# Install docker
+  - sudo apt install docker.io -y
+  - sudo usermod -aG docker hnxadmin
+  - sudo usermod -aG docker AzDevOps
+# Install mono
+  - sudo apt install mono-complete -y
+# Install .NET
+  - wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+  - sudo dpkg -i packages-microsoft-prod.deb
+  - rm packages-microsoft-prod.deb
+  - sudo apt-get update && sudo apt-get install -y dotnet-sdk-7.0
+# Install Node.js
+  - curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+  - source ~/.bashrc
+  - nvm install v16.20.2

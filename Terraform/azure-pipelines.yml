@@ -1,0 +1,28 @@
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger: none
+
+pool:
+  name: "Development Environment Agent Pool"
+
+parameters:
+- name: Environment
+  type: string
+  default: dev
+  values:
+  - dev
+  - test
+  - prod
+
+variables:
+- template: ci/variables/${{ parameters.Environment }}.yaml
+  parameters:
+    Environment: ${{ parameters.Environment }}
+
+stages:
+- template: ci/stages/TerraformPlan.yaml
+  parameters:
+    Environment: ${{ parameters.Environment }}
+- template: ci/stages/TerraformApply.yaml
+  parameters:
+    Environment: ${{ parameters.Environment }}

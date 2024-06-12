@@ -1,0 +1,6 @@
+steps:  
+- script: |
+    az storage blob download --container-name appsettings --name "$(application).appsettings.Development.json" --file "$(application).appsettings.Development.json" --account-name sthnxdevsoutheastasia --account-key $(storage_account_key)
+    cp $(application).appsettings.Development.json "$(System.DefaultWorkingDirectory)/$(AppSettings)/appsettings.Development.json"
+    cp $(application).appsettings.Development.json "$(System.DefaultWorkingDirectory)/$(AppSettings)/appsettings.json"
+  displayName: "Replace $(application) AppSettings Files"

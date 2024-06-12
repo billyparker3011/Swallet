@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\HnMicro.Core\HnMicro.Core.csproj" />
+    <ProjectReference Include="..\..\Core\HnMicro.Framework.Data\HnMicro.Framework.Data.csproj" />
+    <ProjectReference Include="..\..\Core\HnMicro.Framework\HnMicro.Framework.csproj" />
+  </ItemGroup>
+
+</Project>
