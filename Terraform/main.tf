@@ -76,6 +76,17 @@ module "linux_web_app" {
 }
 
 ######################################################
+##               Log Analytics Workspace            ##
+######################################################
+module "log_analytics_workspace" {
+  source              = "./modules/log_analytics_workspace"
+  location            = var.location
+  name                = local.log_analytics_workspace_name
+  resource_group_name = module.resource_group.name
+  tags                = local.tags
+}
+
+######################################################
 ##            MSSQL Azure Database Server           ##
 ######################################################
 module "mssql_server" {

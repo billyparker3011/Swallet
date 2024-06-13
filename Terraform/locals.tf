@@ -18,6 +18,7 @@ locals {
   resource_group_name                            = "rg-${local.name_suffix}"
   virtual_network_name                           = "vnet-${local.name_suffix}"
   network_security_group_names                   = { for nsg in var.network_security_group_names : nsg => "nsg-${replace(local.name_suffix, var.project, nsg)}" }
+  log_analytics_workspace_name                   = "log-${local.name_suffix}"
   linux_virtual_machine_name                     = "vm-${replace(local.name_suffix, var.project, "linux")}"
   linux_virtual_machine_network_interface_name   = "nic-${replace(local.name_suffix, var.project, "linux")}"
   linux_virtual_machine_os_disk_name             = "osdisk-${replace(local.name_suffix, var.project, "linux")}"
