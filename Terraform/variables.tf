@@ -31,6 +31,15 @@ variable "api_management_sku_name" {
 }
 
 ######################################################
+##                Application Gateway               ##
+######################################################
+variable "zones" {
+  type        = list(string)
+  description = "(Optional) Specifies a list of Availability Zones in which this Application Gateway should be located. Changing this forces a new Application Gateway to be created."
+  default     = []
+}
+
+######################################################
 ##             Azure Kubernetes Service             ##
 ######################################################
 variable "kubernetes_version" {

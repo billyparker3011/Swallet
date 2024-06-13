@@ -34,6 +34,27 @@ module "api_management" {
 
 
 ######################################################
+##                Application Gateway               ##
+######################################################
+module "application_gateway" {
+  source                             = "./modules/application_gateway"
+  location                           = var.location
+  resource_group_name                = module.resource_group.name
+  agw_subnet_id                      = module.virtual_network.agw_subnet_id
+  public_ip_name                     = local.public_ip_name
+  application_gateway_name           = local.application_gateway_name
+  agw_gateway_ip_configuration_name  = local.agw_gateway_ip_configuration_name
+  agw_frontend_port_name             = local.agw_frontend_port_name
+  agw_frontend_ip_configuration_name = local.agw_frontend_ip_configuration_name
+  agw_backend_address_pool_name      = local.agw_backend_address_pool_name
+  agw_backend_http_settings_name     = local.agw_backend_http_settings_name
+  agw_http_listener_name             = local.agw_http_listener_name
+  agw_request_routing_rule_name      = local.agw_request_routing_rule_name
+  zones                              = var.zones
+  tags                               = local.tags
+}
+
+######################################################
 ##                   Bastion Host                   ##
 ######################################################
 module "bastion_host" {
