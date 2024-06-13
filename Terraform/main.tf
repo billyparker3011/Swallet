@@ -145,6 +145,18 @@ module "network_security_group" {
 }
 
 ######################################################
+##                 Private DNS Zone                 ##
+######################################################
+module "private_dns_zone" {
+  source                                                   = "./modules/private_dns_zone"
+  location                                                 = var.location
+  resource_group_name                                      = module.resource_group.name
+  tags                                                     = local.tags
+  private_dns_zone_virtual_network_link_name               = local.virtual_network_name
+  private_dns_zone_virtual_network_link_virtual_network_id = module.virtual_network.virtual_network_id
+}
+
+######################################################
 ##                  Random Password                 ##
 ######################################################
 module "random_password" {
