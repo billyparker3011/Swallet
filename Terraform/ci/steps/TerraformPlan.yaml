@@ -43,6 +43,7 @@ steps:
         -target module.bastion_host
         -target module.application_gateway
         -target module.container_registry
+        -target module.kubernetes_cluster
         -target module.log_analytics_workspace
         -target module.mssql_server
         -target module.network_security_group
