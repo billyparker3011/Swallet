@@ -26,6 +26,78 @@ aks_default_node_pool_max_count = 10
 aks_default_node_pool_min_count = 1
 
 ######################################################
+##                   App Service                    ##
+######################################################
+linux_web_apps = [
+  {
+    name              = "app-hnx-agent-portal-dev-southeastasia"
+    docker_image_name = "agent-portal"
+    app_settings      = {}
+  },
+  {
+    name              = "app-hnx-agent-dev-southeastasia"
+    docker_image_name = "agent"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  },
+  {
+    name              = "app-hnx-agent-authentication-dev-southeastasia"
+    docker_image_name = "agent-authentication"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  },
+  {
+    name              = "app-hnx-odd-dev-southeastasia"
+    docker_image_name = "odd"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  },
+  {
+    name              = "app-hnx-player-dev-southeastasia"
+    docker_image_name = "player"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  },
+  {
+    name              = "app-hnx-player-authentication-dev-southeastasia"
+    docker_image_name = "player-authentication"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  },
+  {
+    name              = "app-hnx-player-portal-dev-southeastasia"
+    docker_image_name = "player-portal"
+    app_settings      = {}
+  },
+  {
+    name              = "app-hnx-ticket-dev-southeastasia"
+    docker_image_name = "ticket"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  },
+  {
+    name              = "app-hnx-match-dev-southeastasia"
+    docker_image_name = "match"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  },
+  {
+    name              = "app-hnx-log-dev-southeastasia"
+    docker_image_name = "log"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
+  }
+]
+
+######################################################
 ##            MSSQL Azure Database Server           ##
 ######################################################
 administrator_login           = "hnxadmin"
