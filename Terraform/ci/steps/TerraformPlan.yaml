@@ -36,6 +36,19 @@ steps:
         -target module.user_assigned_identity
         -target module.virtual_network
         --out=tfplan
+    ${{ if eq(parameters.Environment, 'test') }}:
+      commandOptions: >-
+        -var-file="$(System.DefaultWorkingDirectory)/Terraform/values-${{ parameters.Environment }}.tfvars"
+        -target module.api_management
+        -target module.container_registry
+        -target module.mssql_server
+        -target module.network_security_group
+        -target module.random_password
+        -target module.redis_cache
+        -target module.resource_group
+        -target module.user_assigned_identity
+        -target module.virtual_network
+        --out=tfplan
     environmentServiceNameAzureRM: '$(backendServiceArm)'
     backendServiceArm: '$(backendServiceArm)'
     backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
