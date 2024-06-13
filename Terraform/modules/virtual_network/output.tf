@@ -17,3 +17,11 @@ output "pep_subnet_id" {
 output "bas_subnet_id" {
   value = [for s in azurerm_subnet.subnet : s.id if contains(split("-", s.name), "AzureBastionSubnet")][0]
 }
+
+output "agw_subnet_id" {
+  value = [for s in azurerm_subnet.subnet : s.id if contains(split("-", s.name), "agw")][0]
+}
+
+output "aks_subnet_id" {
+  value = [for s in azurerm_subnet.subnet : s.id if contains(split("-", s.name), "aks")][0]
+}

@@ -13,81 +13,17 @@ api_management_names    = ["agent", "player"]
 api_management_sku_name = "Premium_1"
 
 ######################################################
-##                   App Service                    ##
-######################################################
-linux_web_apps = [
-  {
-    name              = "app-hnx-agent-portal-prod-southeastasia"
-    docker_image_name = "agent-portal"
-    app_settings      = {}
-  },
-  {
-    name              = "app-hnx-agent-prod-southeastasia"
-    docker_image_name = "agent"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  },
-  {
-    name              = "app-hnx-agent-authentication-prod-southeastasia"
-    docker_image_name = "agent-authentication"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  },
-  {
-    name              = "app-hnx-odd-prod-southeastasia"
-    docker_image_name = "odd"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  },
-  {
-    name              = "app-hnx-player-prod-southeastasia"
-    docker_image_name = "player"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  },
-  {
-    name              = "app-hnx-player-authentication-prod-southeastasia"
-    docker_image_name = "player-authentication"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  },
-  {
-    name              = "app-hnx-player-portal-prod-southeastasia"
-    docker_image_name = "player-portal"
-    app_settings      = {}
-  },
-  {
-    name              = "app-hnx-ticket-prod-southeastasia"
-    docker_image_name = "ticket"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  },
-  {
-    name              = "app-hnx-match-prod-southeastasia"
-    docker_image_name = "match"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  },
-  {
-    name              = "app-hnx-log-prod-southeastasia"
-    docker_image_name = "log"
-    app_settings = {
-      ASPNETCORE_ENVIRONMENT = "Development"
-    }
-  }
-]
-
-######################################################
 ##                   Bastion Host                   ##
 ######################################################
 shareable_link_enabled = true
+
+######################################################
+##             Azure Kubernetes Service             ##
+######################################################
+kubernetes_version              = "1.29.4"
+aks_default_node_pool_vm_size   = "Standard_D4s_v3"
+aks_default_node_pool_max_count = 10
+aks_default_node_pool_min_count = 1
 
 ######################################################
 ##            MSSQL Azure Database Server           ##
@@ -161,5 +97,13 @@ subnets = [
     name           = "AzureBastionSubnet"
     address_prefix = "10.10.8.0/22"
   },
+  {
+    name           = "aks"
+    address_prefix = "10.10.12.0/22"
+  },
+  {
+    name           = "agw"
+    address_prefix = "10.10.16.0/22"
+  }
 ]
 
