@@ -36,7 +36,7 @@ steps:
         -target module.user_assigned_identity
         -target module.virtual_network
         --out=tfplan
-    ${{ if eq(parameters.Environment, 'test') }}:
+    ${{ if eq(parameters.Environment, 'prod') }}:
       commandOptions: >-
         -var-file="$(System.DefaultWorkingDirectory)/Terraform/values-${{ parameters.Environment }}.tfvars"
         -target module.api_management
