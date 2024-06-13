@@ -53,44 +53,6 @@ variable "aks_default_node_pool_max_count" {
   description = "(Optional) The maximum number of nodes which should exist in this Node Pool. If specified this must be between 1 and 1000."
 }
 
-variable "kubernetes_cluster_node_pool_max_count" {
-  type        = number
-  description = "(Optional) The maximum number of nodes which should exist within this Node Pool. Valid values are between 0 and 1000 and must be greater than or equal to min_count."
-}
-
-variable "kubernetes_cluster_node_pool_min_count" {
-  type        = number
-  description = "(Optional) The minimum number of nodes which should exist within this Node Pool. Valid values are between 0 and 1000 and must be less than or equal to max_count."
-}
-
-variable "kubernetes_cluster_node_pool_count" {
-  type = number
-}
-
-variable "report_kubernetes_cluster_node_pool_count" {
-  type = number
-}
-
-variable "kubernetes_cluster_node_pool_vm_size" {
-  type        = string
-  description = "(Required) The SKU which should be used for the Virtual Machines used in this Node Pool. Changing this forces a new resource to be created."
-}
-
-variable "report_kubernetes_cluster_node_pool_vm_size" {
-  type        = string
-  description = "(Required) The SKU which should be used for the Virtual Machines used in this Node Pool. Changing this forces a new resource to be created."
-}
-
-variable "report_kubernetes_cluster_node_pool_node_count" {
-  type        = number
-  description = "(Optional) The number of nodes which should exist within this Node Pool. Valid values are between 0 and 1000 (inclusive) for user pools and between 1 and 1000 (inclusive) for system pools."
-}
-
-variable "report_kubernetes_cluster_node_pool_node_taints" {
-  type        = list(string)
-  description = "(Optional) A list of Kubernetes taints which should be applied to nodes in the agent pool (e.g key=value:NoSchedule). Changing this forces a new resource to be created."
-}
-
 ######################################################
 ##                   Bastion Host                   ##
 ######################################################

@@ -44,6 +44,7 @@ steps:
         -target module.log_analytics_workspace
         -target module.mssql_server
         -target module.network_security_group
+        -target module.private_dns_zone
         -target module.random_password
         -target module.redis_cache
         -target module.resource_group
