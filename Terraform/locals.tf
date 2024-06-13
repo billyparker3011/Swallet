@@ -25,6 +25,8 @@ locals {
   agw_backend_http_settings_name                 = "be-htst-${local.name_suffix}"
   agw_http_listener_name                         = "httplstn-${local.name_suffix}"
   agw_request_routing_rule_name                  = "rqrt-${local.name_suffix}"
+  kubernetes_cluster_name                        = "aks-${local.name_suffix}"
+  node_resource_group                            = "rg-${replace(local.name_suffix, var.project, "aks")}"
   network_security_group_names                   = { for nsg in var.network_security_group_names : nsg => "nsg-${replace(local.name_suffix, var.project, nsg)}" }
   log_analytics_workspace_name                   = "log-${local.name_suffix}"
   linux_virtual_machine_name                     = "vm-${replace(local.name_suffix, var.project, "linux")}"

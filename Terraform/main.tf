@@ -69,26 +69,26 @@ module "bastion_host" {
   tags                           = local.tags
 }
 
-# ######################################################
-# ##             Azure Kubernetes Service             ##
-# ######################################################
-# module "kubernetes_cluster" {
-#   source                                   = "./modules/kubernetes_cluster"
-#   location                                 = var.location
-#   resource_group_name                      = module.resource_group.name
-#   kubernetes_cluster_name                  = local.kubernetes_cluster_name
-#   kubernetes_version                       = var.kubernetes_version
-#   node_resource_group                      = local.node_resource_group
-#   private_dns_zone_id                      = module.private_dns_zone.private_dns_zone_id
-#   aks_default_node_pool_vm_size            = var.aks_default_node_pool_vm_size
-#   aks_default_node_pool_min_count          = var.aks_default_node_pool_min_count
-#   aks_default_node_pool_max_count          = var.aks_default_node_pool_max_count
-#   aks_default_node_pool_vnet_subnet_id     = module.virtual_network.aks_subnet_id
-#   aks_ingress_application_gateway_appgw_id = module.application_gateway.application_gateway_id
-#   aks_identity_ids                         = module.user_assigned_identity.user_assigned_identity_id
-#   log_analytics_workspace_id               = module.log_analytics_workspace.id
-#   tags                                     = local.tags
-# }
+######################################################
+##             Azure Kubernetes Service             ##
+######################################################
+module "kubernetes_cluster" {
+  source                                   = "./modules/kubernetes_cluster"
+  location                                 = var.location
+  resource_group_name                      = module.resource_group.name
+  kubernetes_cluster_name                  = local.kubernetes_cluster_name
+  kubernetes_version                       = var.kubernetes_version
+  node_resource_group                      = local.node_resource_group
+  private_dns_zone_id                      = module.private_dns_zone.private_dns_zone_id
+  aks_default_node_pool_vm_size            = var.aks_default_node_pool_vm_size
+  aks_default_node_pool_min_count          = var.aks_default_node_pool_min_count
+  aks_default_node_pool_max_count          = var.aks_default_node_pool_max_count
+  aks_default_node_pool_vnet_subnet_id     = module.virtual_network.aks_subnet_id
+  aks_ingress_application_gateway_appgw_id = module.application_gateway.application_gateway_id
+  aks_identity_ids                         = module.user_assigned_identity.user_assigned_identity_id
+  log_analytics_workspace_id               = module.log_analytics_workspace.id
+  tags                                     = local.tags
+}
 
 ######################################################
 ##                Container Registry                ##

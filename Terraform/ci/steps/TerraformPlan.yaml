@@ -40,6 +40,7 @@ steps:
       commandOptions: >-
         -var-file="$(System.DefaultWorkingDirectory)/Terraform/values-${{ parameters.Environment }}.tfvars"
         -target module.api_management
+        -target module.bastion_host
         -target module.application_gateway
         -target module.container_registry
         -target module.log_analytics_workspace
@@ -50,6 +51,7 @@ steps:
         -target module.redis_cache
         -target module.resource_group
         -target module.user_assigned_identity
+        -target module.virtual_machine
         -target module.virtual_network
         --out=tfplan
     environmentServiceNameAzureRM: '$(backendServiceArm)'
