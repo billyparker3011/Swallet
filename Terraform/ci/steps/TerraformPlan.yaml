@@ -41,6 +41,7 @@ steps:
         -var-file="$(System.DefaultWorkingDirectory)/Terraform/values-${{ parameters.Environment }}.tfvars"
         -target module.api_management
         -target module.container_registry
+        -target module.log_analytics_workspace
         -target module.mssql_server
         -target module.network_security_group
         -target module.random_password
