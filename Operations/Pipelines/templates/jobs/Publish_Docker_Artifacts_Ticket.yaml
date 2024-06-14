@@ -15,3 +15,5 @@ jobs:
   - template: ../steps/Replace_AppSettings_Files.yaml
   - template: ../steps/Publish_Docker_Artifacts.yaml
   - template: ../steps/Publish_Image_To_App_Service.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}
