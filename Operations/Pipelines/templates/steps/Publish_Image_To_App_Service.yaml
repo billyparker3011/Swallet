@@ -1,6 +1,6 @@
 steps:
 - task: Bash@3
-  condition: eq(parameters.Environment, 'Production')
+  condition: eq('${{ parameters.Environment }}', 'Production')
   displayName: "Publish $(application) to App Service"
   inputs:
     targetType: 'inline'
