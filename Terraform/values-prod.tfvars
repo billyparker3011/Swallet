@@ -13,6 +13,11 @@ api_management_names    = ["agent", "player"]
 api_management_sku_name = "Premium_1"
 
 ######################################################
+##                Application Gateway               ##
+######################################################
+zones = ["1", "2", "3"]
+
+######################################################
 ##                   Bastion Host                   ##
 ######################################################
 shareable_link_enabled = true
@@ -176,6 +181,10 @@ subnets = [
   {
     name           = "agw"
     address_prefix = "10.10.16.0/22"
+  },
+  {
+    name           = "apim"
+    address_prefix = "10.10.20.0/22"
   }
 ]
 
