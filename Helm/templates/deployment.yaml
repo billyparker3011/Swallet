@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: {{ include "common.labels" . | indent 4 }}
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels: {{ include "common.labels" . | indent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+      labels: {{ include "common.labels" . | indent 8 }}
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels: {{ include "common.labels" . | indent 6 }}
+      {{- if eq (index .Values.applications .Values.applicationName).tolerationsEnabled true }}
+      tolerations:
+      - key: {{ (index .Values.applications .Values.applicationName).tolerations.key }} 
+        operator: {{ (index .Values.applications .Values.applicationName).tolerations.operator }}
+        value:  {{ (index .Values.applications .Values.applicationName).tolerations.value }}
+        effect: {{ (index .Values.applications .Values.applicationName).tolerations.effect }}
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          image: {{ (index .Values.applications .Values.applicationName).image }}
+          ports:
+            - containerPort: {{ .Values.Port }}
+              protocol: {{ .Values.protocol }}
+          resources:
+            limits:
+              memory: {{ (index .Values.applications .Values.applicationName).resources.limits.memory }}
+            requests:
+              cpu: {{ (index .Values.applications .Values.applicationName).resources.requests.cpu }}
+              memory: {{ (index .Values.applications .Values.applicationName).resources.requests.memory }}
+          envFrom:
+            - configMapRef:
+                name: {{ .Release.Name }}-configmap
+          {{- if eq (index .Values.applications .Values.applicationName).livenessProbeEnabled true }}
+          livenessProbe:
+            httpGet:
+              path: {{ (index .Values.applications .Values.applicationName).livenessProbe.httpGet.path }}
+              port: {{ (index .Values.applications .Values.applicationName).livenessProbe.httpGet.port }}
+            initialDelaySeconds: {{ (index .Values.applications .Values.applicationName).livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ (index .Values.applications .Values.applicationName).livenessProbe.periodSeconds }}
+          {{- end }}
