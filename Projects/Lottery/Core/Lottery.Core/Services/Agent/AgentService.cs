@@ -1494,7 +1494,7 @@ namespace Lottery.Core.Services.Agent
                     break;
             }
 
-            if (updateItem.Credit < outstanding || updateItem.Credit > maxCreditToCompare + updatedAgent.Credit)
+            if (updatedAgent.RoleId != Role.Supermaster.ToInt() && (updateItem.Credit < outstanding || updateItem.Credit > maxCreditToCompare + updatedAgent.Credit))
                 throw new BadRequestException(ErrorCodeHelper.Agent.InvalidCredit);
             var oldCreditValue = updatedAgent.Credit;
             updatedAgent.Credit = updateItem.Credit;
