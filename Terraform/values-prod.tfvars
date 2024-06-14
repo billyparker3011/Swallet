@@ -181,6 +181,10 @@ subnets = [
   {
     name           = "agw"
     address_prefix = "10.10.16.0/22"
+  },
+  {
+    name           = "apim"
+    address_prefix = "10.10.20.0/22"
   }
 ]
 
