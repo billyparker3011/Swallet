@@ -1,8 +1,8 @@
 steps:
-- task: Bash@3
-  condition: eq('${{ parameters.Environment }}', 'Production')
-  displayName: "Publish $(application) to App Service"
-  inputs:
-    targetType: 'inline'
-    script: |
-      az webapp config container set --name $(WebAppName) --resource-group $(ResourceGroupName) --docker-custom-image-name $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+  - ${{ if eq(parameters.Environment, 'Production' ) }}:
+    - task: Bash@3
+      displayName: "Publish $(application) to App Service"
+      inputs:
+        targetType: 'inline'
+        script: |
+          az webapp config container set --name $(WebAppName) --resource-group $(ResourceGroupName) --docker-custom-image-name $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
