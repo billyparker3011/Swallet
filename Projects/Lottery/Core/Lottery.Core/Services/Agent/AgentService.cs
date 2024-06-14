@@ -20,6 +20,7 @@ using Lottery.Core.Models.Agent.GetSubAgents;
 using Lottery.Core.Models.Agent.UpdateAgent;
 using Lottery.Core.Models.Agent.UpdateAgentCreditBalance;
 using Lottery.Core.Repositories.Agent;
+using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.Services.Audit;
@@ -339,6 +340,7 @@ namespace Lottery.Core.Services.Agent
             updatedAgent.FirstName = updateModel.FirstName ?? updatedAgent.FirstName;
             updatedAgent.LastName = updateModel.LastName ?? updatedAgent.LastName;
             //  TODO Update children to state.
+            var oldStateValue = updatedAgent.State;
             if (updateModel.State.HasValue && updateModel.State.Value != UserState.All.ToInt())
             {
                 updatedAgent.State = updateModel.State.Value;
@@ -385,6 +387,22 @@ namespace Lottery.Core.Services.Agent
                     DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdateGivenCreditWithMemberMaxCredit, updatedAgent.Username, updatedAgent.MemberMaxCredit, oldMemberMaxCreditValue),
                     OldValue = oldCreditValue,
                     NewValue = updatedAgent.Credit,
+                    SupermasterId = GetAuditSupermasterId(updatedAgent),
+                    MasterId = GetAuditMasterId(updatedAgent)
+                });
+            }
+
+            if(updateModel.State.HasValue && updateModel.State.Value != UserState.All.ToInt())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = (int)AuditType.State,
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = updatedAgent.Username,
+                    Action = AuditDataHelper.State.Action.ActionUpdateState,
+                    DetailMessage = string.Format(AuditDataHelper.State.DetailMessage.DetailUpdateState, updatedAgent.Username, oldStateValue, updatedAgent.State),
+                    OldValue = oldStateValue,
+                    NewValue = updatedAgent.State,
                     SupermasterId = GetAuditSupermasterId(updatedAgent),
                     MasterId = GetAuditMasterId(updatedAgent)
                 });
@@ -1211,42 +1229,117 @@ namespace Lottery.Core.Services.Agent
         {
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
             var agentOddRepository = LotteryUow.GetRepository<IAgentOddRepository>();
+            var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
 
             var agent = await agentRepository.FindByIdAsync(agentId) ?? throw new NotFoundException();
 
+            var auditBetSettings = new List<AuditSettingData>();
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
+            var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentBetSettings = await agentOddRepository.FindQueryBy(x => x.AgentId == agent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentBetSettings.ForEach(item =>
             {
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
                 {
+                    var oldBuyValue = item.Buy;
+                    var oldMinBetValue = item.MinBet;
+                    var oldMaxBetValue = item.MaxBet;
+                    var oldMaxPerNumber = item.MaxPerNumber;
                     item.MinBet = updateItem.ActualMinBet;
                     item.MaxBet = updateItem.ActualMaxBet;
                     item.MaxPerNumber = updateItem.ActualMaxPerNumber;
+
+                    auditBetSettings.AddRange(new List<AuditSettingData>
+                    {
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.MinBetTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldMinBetValue,
+                            NewValue = item.MinBet
+                        },
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.MaxBetTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldMaxBetValue,
+                            NewValue = item.MaxBet
+                        },
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.MaxPerNumberTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldMaxPerNumber,
+                            NewValue = item.MaxPerNumber
+                        }
+                    });
                 }
             });
             await LotteryUow.SaveChangesAsync();
+
+            if (existedAgentBetSettings.Any())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = (int)AuditType.Setting,
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = agent.Username,
+                    Action = AuditDataHelper.Setting.Action.ActionUpdateBetSetting,
+                    SupermasterId = GetAuditSupermasterId(agent),
+                    MasterId = GetAuditMasterId(agent),
+                    AuditSettingDatas = auditBetSettings.OrderBy(x => x.BetKind).ToList()
+                });
+            }
         }
 
         public async Task UpdateAgentPositionTaking(long agentId, List<AgentPositionTakingDto> updateItems)
         {
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
             var agentPositionTakingRepository = LotteryUow.GetRepository<IAgentPositionTakingRepository>();
+            var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
 
             var agent = await agentRepository.FindByIdAsync(agentId) ?? throw new NotFoundException();
 
+            var auditPositionTakings = new List<AuditSettingData>();
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
+            var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentPositionTakings = await agentPositionTakingRepository.FindQueryBy(x => x.AgentId == agent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentPositionTakings.ForEach(item =>
             {
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
                 {
+                    var oldPTValue = item.PositionTaking;
                     item.PositionTaking = updateItem.ActualPositionTaking;
+
+                    auditPositionTakings.AddRange(new List<AuditSettingData>
+                    {
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.PositionTakingTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldPTValue,
+                            NewValue = item.PositionTaking
+                        }
+                    });
                 }
             });
             await LotteryUow.SaveChangesAsync();
+
+            if (existedAgentPositionTakings.Any())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = (int)AuditType.Setting,
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = agent.Username,
+                    Action = AuditDataHelper.Setting.Action.ActionUpdatePositionTaking,
+                    SupermasterId = GetAuditSupermasterId(agent),
+                    MasterId = GetAuditMasterId(agent),
+                    AuditSettingDatas = auditPositionTakings.OrderBy(x => x.BetKind).ToList()
+                });
+            }
         }
 
         public async Task<GetAgentCreditBalanceResult> GetAgentCreditBalances(GetAgentCreditBalanceModel model)
