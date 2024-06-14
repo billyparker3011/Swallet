@@ -1,3 +1,7 @@
+parameters:
+- name: Environment
+  type: string
+
 jobs:
 - job: Publish_Docker_Artifacts
   pool:
