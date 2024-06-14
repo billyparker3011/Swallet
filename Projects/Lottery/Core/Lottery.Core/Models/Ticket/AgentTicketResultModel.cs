@@ -2,7 +2,7 @@
 
 namespace Lottery.Core.Models.Ticket
 {
-    public class AdvancedSearchTicketsResultModel
+    public class AgentTicketResultModel
     {
         public List<TicketDetailModel> Items { get; set; }
         public ApiResponseMetadata Metadata { get; set; }

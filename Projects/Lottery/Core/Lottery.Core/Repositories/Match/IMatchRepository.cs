@@ -9,5 +9,6 @@ namespace Lottery.Core.Repositories.Match
         Task<bool> HaveRunningOrSuspendedMatch();
         Task<Data.Entities.Match> GetRunningMatch();
         Task<Data.Entities.Match> GetMatchByKickoffTime(DateTime kickOffTime);
+        Task<Data.Entities.Match> GetLatestMatch();
     }
 }

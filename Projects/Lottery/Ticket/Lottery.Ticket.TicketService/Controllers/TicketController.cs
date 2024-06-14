@@ -63,6 +63,12 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok(OkResponse.Create(await _playerTicketService.GetTicketsAsBetList()));
         }
 
+        [HttpGet("refund-reject-tickets")]
+        public async Task<IActionResult> RefundRejectTickets()
+        {
+            return Ok(OkResponse.Create(await _playerTicketService.GetRefundRejectTickets()));
+        }
+
         [HttpGet("{matchId:long}/bet-list")]
         public async Task<IActionResult> BetList([FromRoute] long matchId)
         {
