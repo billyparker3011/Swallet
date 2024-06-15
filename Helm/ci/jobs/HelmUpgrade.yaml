@@ -1,0 +1,25 @@
+parameters:
+- name: Environment
+  type: string
+
+jobs:
+- job: HelmUpgrade
+  strategy:
+    matrix:
+      AgentAuthentication:
+        WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
+        application: "AgentAuthentication"
+        repository: "agent-authentication"
+        Dockerfile: "Projects/Lottery/Agent/AuthenticationService/Lottery.Agent.AuthenticationService/Dockerfile"
+        AppSettings: "Projects/Lottery/Agent/AuthenticationService/Lottery.Agent.AuthenticationService"
+      Agent:
+        WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
+        application: "Agent"
+        repository: "agent"
+        Dockerfile: "Projects/Lottery/Agent/AgentService/Lottery.Agent.AgentService/Dockerfile"
+        AppSettings: "Projects/Lottery/Agent/AgentService/Lottery.Agent.AgentService"     
+  steps:
+  - template: ../steps/DownloadHelmArtifact.yaml
+  # - template: ../steps/HelmUpgrade.yaml
+  #   parameters:
+  #     Environment: ${{ parameters.Environment }}

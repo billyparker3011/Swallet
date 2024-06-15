@@ -21,3 +21,6 @@ stages:
 - template: ci/stages/HelmPackage.yaml
   parameters:
     Environment: ${{ parameters.Environment }}
+- template: ci/stages/HelmUpgrade.yaml
+  parameters:
+    Environment: ${{ parameters.Environment }}
