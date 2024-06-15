@@ -4,6 +4,7 @@ parameters:
 
 stages:
 - stage: HelmUpgrade
+  dependsOn: HelmPackage
   variables:
   - group: "${{ parameters.Environment }} Environment Variable Group"
   pool: $(pool)
