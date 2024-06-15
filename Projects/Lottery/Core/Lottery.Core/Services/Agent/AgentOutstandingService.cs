@@ -58,6 +58,7 @@ namespace Lottery.Core.Services.Agent
             return new GetAgentOutstandingResult
             {
                 AgentOuts = listAgentOustanding,
+                SummaryBetCount = listAgentOustanding.Sum(x => x.TotalBetCount),
                 SummaryStake = listAgentOustanding.Sum(x => x.TotalStake),
                 SummaryPayout = listAgentOustanding.Sum(x => x.TotalPayout)
             };
