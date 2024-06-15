@@ -1,6 +1,24 @@
 parameters:
 - name: Environment
   type: string
+- name: AgentAuthenticationBuildNumber
+  type: string
+- name: AgentBuildNumber
+  type: string
+- name: LogBuildNumber
+  type: string
+- name: OddBuildNumber
+  type: string
+- name: PlayerAuthenticationBuildNumber
+  type: string
+- name: PlayerBuildNumber
+  type: string
+- name: TicketBuildNumber
+  type: string
+- name: AgentPortalBuildNumber
+  type: string
+- name: PlayerPortalBuildNumber
+  type: string
 
 stages:
 - stage: HelmUpgrade
@@ -13,3 +31,12 @@ stages:
   - template: ../jobs/HelmUpgrade.yaml
     parameters:
       Environment: ${{ parameters.Environment }}
+      AgentAuthenticationBuildNumber: ${{ parameters.AgentAuthenticationBuildNumber }}
+      AgentBuildNumber: ${{ parameters.AgentBuildNumber }}
+      PlayerAuthenticationBuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
+      PlayerBuildNumber: ${{ parameters.PlayerBuildNumber }}
+      LogBuildNumber: ${{ parameters.LogBuildNumber }}
+      OddBuildNumber: ${{ parameters.OddBuildNumber }}
+      TicketBuildNumber: ${{ parameters.TicketBuildNumber }}
+      AgentPortalBuildNumber: ${{ parameters.AgentPortalBuildNumber }}
+      PlayerPortalBuildNumber: ${{ parameters.PlayerPortalBuildNumber }}

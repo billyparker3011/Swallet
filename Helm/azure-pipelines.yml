@@ -1,6 +1,14 @@
 name: $(date:yyMMdd)$(rev:.rr)
 
-trigger: none
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - "Helm/*"
+  batch: true
 
 pool:
   name: "Development Environment Agent Pool"
@@ -22,16 +30,16 @@ parameters:
 - name: LogBuildNumber
   displayName: Log Build Number
   default: latest
-- name: OddhBuildNumber
+- name: OddBuildNumber
   displayName: Odd Build Number
   default: latest
-- name: PlayerAuthentication
+- name: PlayerAuthenticationBuildNumber
   displayName: Player Authentication Build Number
   default: latest
-- name: Player
+- name: PlayerBuildNumber
   displayName: Player Build Number
   default: latest
-- name: Ticket
+- name: TicketBuildNumber
   displayName: Ticket Build Number
   default: latest
 - name: AgentPortalBuildNumber
@@ -51,3 +59,12 @@ stages:
 - template: ci/stages/HelmUpgrade.yaml
   parameters:
     Environment: ${{ parameters.Environment }}
+    AgentAuthenticationBuildNumber: ${{ parameters.AgentAuthenticationBuildNumber }}
+    AgentBuildNumber: ${{ parameters.AgentBuildNumber }}
+    PlayerAuthenticationBuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
+    PlayerBuildNumber: ${{ parameters.PlayerBuildNumber }}
+    LogBuildNumber: ${{ parameters.LogBuildNumber }}
+    OddBuildNumber: ${{ parameters.OddBuildNumber }}
+    TicketBuildNumber: ${{ parameters.TicketBuildNumber }}
+    AgentPortalBuildNumber: ${{ parameters.AgentPortalBuildNumber }}
+    PlayerPortalBuildNumber: ${{ parameters.PlayerPortalBuildNumber }}

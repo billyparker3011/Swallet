@@ -1,13 +1,56 @@
 parameters:
 - name: Environment
   type: string
+- name: AgentAuthenticationBuildNumber
+  type: string
+- name: AgentBuildNumber
+  type: string
+- name: LogBuildNumber
+  type: string
+- name: OddBuildNumber
+  type: string
+- name: PlayerAuthenticationBuildNumber
+  type: string
+- name: PlayerBuildNumber
+  type: string
+- name: TicketBuildNumber
+  type: string
+- name: AgentPortalBuildNumber
+  type: string
+- name: PlayerPortalBuildNumber
+  type: string
 
 jobs:
 - job: HelmUpgrade
   strategy:
     matrix:
       AgentAuthentication:
-        applicationName: "agent-authentication"     
+        applicationName: "agent-authentication"
+        BuildNumber: ${{ parameters.AgentAuthenticationBuildNumber }}
+      Agent:
+        applicationName: "agent"
+        BuildNumber: ${{ parameters.AgentBuildNumber }}
+      PlayerAuthentication:
+        applicationName: "player-authentication"
+        BuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
+      Player:
+        applicationName: "player"
+        BuildNumber: ${{ parameters.PlayerBuildNumber }}
+      Log:
+        applicationName: "log"
+        BuildNumber: ${{ parameters.LogBuildNumber }}
+      Odd:
+        applicationName: "odd"
+        BuildNumber: ${{ parameters.OddBuildNumber }}
+      Ticket:
+        applicationName: "ticket"
+        BuildNumber: ${{ parameters.TicketBuildNumber }}
+      AgentPortal:
+        applicationName: "agent-portal"
+        BuildNumber: ${{ parameters.AgentPortalBuildNumber }}
+      PlayerPortal:
+        applicationName: "player-portal"
+        BuildNumber: ${{ parameters.PlayerPortalBuildNumber }}
   steps:
   - template: ../steps/KubectlInstaller.yaml
   - template: ../steps/HelmInstaller.yaml
@@ -17,3 +60,4 @@ jobs:
   - template: ../steps/HelmUpgrade.yaml
     parameters:
       Environment: ${{ parameters.Environment }}
+
