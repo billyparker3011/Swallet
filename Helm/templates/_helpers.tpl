@@ -6,5 +6,4 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "host" -}}
 {{- $domain := (index .Values.applications .Values.applicationName).domain -}}
 {{- printf "%s.%s" .Release.Name $domain -}}
-{{- end }}
 {{- end -}}
