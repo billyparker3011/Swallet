@@ -19,6 +19,8 @@
             public const string PasswordIsRequired = "Password is required.";
             public const string CreditIsRequired = "Credit is required.";
             public const string UserNameNotContainsWhiteSpace = "Username not allow to contain white space.";
+            public const string UserNameDoesNotContainSpecialCharacters = "Username does not contain special characters";
+            public const string UserNameMustHaveAtLeastTwoCharacters = "Username must have at least 2 characters";
         }
 
         public static class Match

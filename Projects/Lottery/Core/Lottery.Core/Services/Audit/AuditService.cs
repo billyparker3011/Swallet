@@ -77,8 +77,9 @@ namespace Lottery.Core.Services.Audit
                     LastName = x.LastName,
                     Type = x.Type,
                     Username = x.UserName,
-                    AuditSettingDatas = string.IsNullOrEmpty(query.SearchBetKind) ? x.AuditSettingDatas.OrderBy(p => p.BetKind).ToList() 
-                                                                                  : x.AuditSettingDatas.Where(x => x.BetKind == query.SearchBetKind).OrderBy(x => x.BetKind).ToList()
+                    AuditSettingDatas = x.AuditSettingDatas != null && x.AuditSettingDatas.Any() ? string.IsNullOrEmpty(query.SearchBetKind) ? x.AuditSettingDatas.OrderBy(p => p.BetKind).ToList() 
+                                                                                                                                             : x.AuditSettingDatas.Where(x => x.BetKind == query.SearchBetKind).OrderBy(x => x.BetKind).ToList()
+                                                                                                 : new List<AuditSettingData>()
                 }),
                 Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
                 {
