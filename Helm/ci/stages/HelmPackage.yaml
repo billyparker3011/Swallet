@@ -5,7 +5,7 @@ parameters:
 stages:
 - stage: HelmPackage
   variables:
-  - group: "$(variables_group)"
+  - group: "$(variables_group) Environment Variable Group"
   pool: $(pool)
   displayName: 'Helm package'
   jobs:

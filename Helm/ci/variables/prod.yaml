@@ -4,4 +4,4 @@ variables:
 - name: pool
   value: "Development Environment Agent Pool"
 - name: variables_group
-  value: "Production Environment Variable Group"
+  value: "Production"
