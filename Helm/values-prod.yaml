@@ -19,7 +19,7 @@ applications:
         memory: 50Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent-portal:
     domain: abc.com
     minReplicas: 1
@@ -40,7 +40,7 @@ applications:
         memory: 2000Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent:
     domain: abc.com
     minReplicas: 1
@@ -60,7 +60,7 @@ applications:
       effect: "NoExecute"
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   log:
     domain: abc.com
     minReplicas: 1
@@ -74,7 +74,7 @@ applications:
         memory: 50Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   match:
     domain: abc.com
     minReplicas: 1
@@ -88,7 +88,7 @@ applications:
         memory: 1000Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   odd:
     domain: abc.com
     minReplicas: 1
@@ -102,7 +102,7 @@ applications:
         memory: 1000Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-authentication:
     domain: abc.com
     minReplicas: 1
@@ -116,7 +116,7 @@ applications:
         memory: 1000Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-portal:
     domain: abc.com
     minReplicas: 1
@@ -130,7 +130,7 @@ applications:
         memory: 1000Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player:
     domain: abc.com
     minReplicas: 1
@@ -144,7 +144,7 @@ applications:
         memory: 1000Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
   ticket:
     domain: abc.com
     minReplicas: 1
@@ -158,4 +158,4 @@ applications:
         memory: 1000Mi
     config:
       RedisConnections: "{RedisConnections}"
-	    DatabaseConnectionString: "#{DatabaseConnectionString}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
