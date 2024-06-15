@@ -1,4 +1,6 @@
-﻿namespace Lottery.Core.Dtos.Audit
+﻿using Lottery.Data.Entities;
+
+namespace Lottery.Core.Dtos.Audit
 {
     public class AuditParams
     {
@@ -14,5 +16,6 @@
         public long AgentId { get; set; }
         public decimal? OldValue { get; set; }
         public decimal? NewValue { get; set; }
+        public List<AuditSettingData> AuditSettingDatas { get; set; } = new List<AuditSettingData>();
     }
 }

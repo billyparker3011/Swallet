@@ -33,5 +33,30 @@
                 public const string DetailUpdateAgentCredit = "Update credit for agent account {0}";
             }
         }
+        public static class State
+        {
+            public static class Action
+            {
+                public const string ActionUpdateState = "Change State";
+            }
+            public static class DetailMessage
+            {
+                public const string DetailUpdateState = "Change state of {0} from {1} to {2}";
+            }
+        }
+        public static class Setting
+        {
+            public const string MinBetTitle = "Min Bet";
+            public const string MaxBetTitle = "Max Bet";
+            public const string MaxPerNumberTitle = "Max Per Number";
+            public const string BuyTitle = "Buy";
+            public const string PositionTakingTitle = "Position Taking";
+            public static class Action
+            {
+                public const string ActionUpdateBetSetting = "Change Bet Setting";
+                public const string ActionUpdatePositionTaking = "Change Position Taking";
+                public const string ActionUpdateBuySetting = "Change Buy Setting";
+            }
+        }
     }
 }

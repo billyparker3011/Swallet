@@ -5,6 +5,7 @@
         All = 0,
         Login = 1,
         State = 2,
-        Credit = 3
+        Credit = 3,
+        Setting = 4
     }
 }

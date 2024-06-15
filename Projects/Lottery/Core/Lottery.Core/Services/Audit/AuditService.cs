@@ -76,7 +76,9 @@ namespace Lottery.Core.Services.Audit
                     FirstName = x.FirstName,
                     LastName = x.LastName,
                     Type = x.Type,
-                    Username = x.UserName
+                    Username = x.UserName,
+                    AuditSettingDatas = string.IsNullOrEmpty(query.SearchBetKind) ? x.AuditSettingDatas.OrderBy(p => p.BetKind).ToList() 
+                                                                                  : x.AuditSettingDatas.Where(x => x.BetKind == query.SearchBetKind).OrderBy(x => x.BetKind).ToList()
                 }),
                 Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
                 {
@@ -115,7 +117,8 @@ namespace Lottery.Core.Services.Audit
                 EdittedBy = auditParams.EditedUsername,
                 SupermasterId = auditParams.SupermasterId,
                 MasterId = auditParams.MasterId,
-                AgentId = auditParams.AgentId
+                AgentId = auditParams.AgentId,
+                AuditSettingDatas = auditParams.AuditSettingDatas
             });
 
             await LotteryUow.SaveChangesAsync();
