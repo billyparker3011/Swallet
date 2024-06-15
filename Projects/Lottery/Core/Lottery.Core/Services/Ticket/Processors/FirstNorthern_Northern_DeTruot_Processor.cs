@@ -27,10 +27,10 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
         return (oddsValue - betKind.Award) * point;
     }
 
-    public override decimal? GetPlayerOdds(Dictionary<int, decimal> payoutByNumbers)
+    public override decimal? GetPlayerOdds(Dictionary<int, decimal> oddsValueByNumbers)
     {
-        foreach (var item in payoutByNumbers) return item.Value;
-        return base.GetPlayerOdds(payoutByNumbers);
+        foreach (var item in oddsValueByNumbers) return item.Value;
+        return base.GetPlayerOdds(oddsValueByNumbers);
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
@@ -42,12 +42,12 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
         if (!latestRs.Result.GetEndOfResult(out string val)) return null;
         if (ticket.Children.Count == 0) return null;
 
-        //var totalPayout = ticket.Children.Sum(f => f.PlayerPayout);
-
         var dataResult = new CompletedTicketResultModel
         {
             TicketId = ticket.TicketId
         };
+
+        var totalPlayerPayout = ticket.Children.Sum(f => f.PlayerPayout);
 
         var totalPlayerWinLose = 0m;
         var totalAgentWinLose = 0m;
@@ -60,7 +60,7 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
         foreach (var item in ticket.Children)
         {
             var playerWinlose = item.ChoosenNumbers.Equals(val)
-                                    ? -1 * item.PlayerOdds ?? 0m
+                                    ? -1 * totalPlayerPayout
                                     : item.Stake * ticket.RewardRate.Value;
             var agentWinlose = -1 * playerWinlose * item.AgentPt;
             var agentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;

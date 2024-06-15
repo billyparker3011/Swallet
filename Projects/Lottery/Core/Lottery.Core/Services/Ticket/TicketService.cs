@@ -167,6 +167,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         var childTickets = new List<Data.Entities.Ticket>();
         var pointByNumbers = new Dictionary<int, decimal>();
         var payoutByNumbers = new Dictionary<int, decimal>();
+        var oddsValueByNumbers = new Dictionary<int, decimal>();
         if (model.Numbers.Count == 1)
         {
             var thisNumber = model.Numbers.First();
@@ -212,6 +213,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
             pointByNumbers[thisNumber.Number] = ticket.Stake;
             payoutByNumbers[thisNumber.Number] = ticket.PlayerPayout;
+            oddsValueByNumbers[thisNumber.Number] = ticket.PlayerOdds.Value;
 
             if (thisNumber.Point < setting.MinBet || thisNumber.Point > setting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
             if (!outs.PointsByMatchAndNumbers.TryGetValue(thisNumber.Number, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
@@ -248,6 +250,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
                 pointByNumbers[item.Number] = item.Point;
                 payoutByNumbers[item.Number] = playerPayout;
+                oddsValueByNumbers[item.Number] = playerOddsValue + rateValue;
 
                 totalStake += item.Point;
                 totalPlayerPayout += playerPayout;
@@ -312,7 +315,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
             ticket.ChoosenNumbers = string.Join(", ", normalizedNumbers);
             ticket.Stake = totalStake;
-            ticket.PlayerOdds = _ticketProcessor.GetPlayerOdds(model.BetKindId, payoutByNumbers);
+            ticket.PlayerOdds = _ticketProcessor.GetPlayerOdds(model.BetKindId, oddsValueByNumbers);
             ticket.PlayerPayout = totalPlayerPayout;
             ticket.AgentPayout = totalAgentPayout;
             ticket.MasterPayout = totalMasterPayout;

@@ -26,10 +26,10 @@ public class FirstNorthern_Northern_LoTruot_Processor : AbstractBetKindProcessor
         return point * (oddsValue - betKind.Award);
     }
 
-    public override decimal? GetPlayerOdds(Dictionary<int, decimal> payoutByNumbers)
+    public override decimal? GetPlayerOdds(Dictionary<int, decimal> oddsValueByNumbers)
     {
-        foreach (var item in payoutByNumbers) return item.Value;
-        return base.GetPlayerOdds(payoutByNumbers);
+        foreach (var item in oddsValueByNumbers) return item.Value;
+        return base.GetPlayerOdds(oddsValueByNumbers);
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)

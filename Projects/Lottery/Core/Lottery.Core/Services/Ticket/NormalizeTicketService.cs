@@ -50,7 +50,7 @@ public class NormalizeTicketService : HnMicroBaseService<NormalizeTicketService>
             if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt()) f.ShowMore = splitChooseNumbers.Length > 2;
             else if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt()) f.ShowMore = splitChooseNumbers.Length > 3;
             else if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt()) f.ShowMore = splitChooseNumbers.Length > 4;
-            else if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoTruot.ToInt()) f.ShowMore = false;
+            else if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_DeTruot.ToInt() || f.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoTruot.ToInt()) f.ShowMore = true;
             else f.ShowMore = splitChooseNumbers.Length > 1;
             var noOfChooseNumbers = splitChooseNumbers.Length > 9 ? 9 : splitChooseNumbers.Length;
             var arrChooseNumbers = new List<string>();

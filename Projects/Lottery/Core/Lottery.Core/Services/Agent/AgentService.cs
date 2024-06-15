@@ -29,7 +29,6 @@ using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
 using System.Linq.Expressions;
 
 namespace Lottery.Core.Services.Agent
@@ -107,7 +106,8 @@ namespace Lottery.Core.Services.Agent
 
             await LotteryUow.SaveChangesAsync();
 
-            await _auditService.SaveAuditData(new AuditParams{
+            await _auditService.SaveAuditData(new AuditParams
+            {
                 Type = (int)AuditType.Credit,
                 EditedUsername = ClientContext.Agent.UserName,
                 AgentUserName = newAgent.Username,
@@ -393,7 +393,7 @@ namespace Lottery.Core.Services.Agent
                 });
             }
 
-            if(updateModel.State.HasValue && updateModel.State.Value != UserState.All.ToInt())
+            if (updateModel.State.HasValue && updateModel.State.Value != UserState.All.ToInt())
             {
                 await _auditService.SaveAuditData(new AuditParams
                 {
@@ -1409,7 +1409,7 @@ namespace Lottery.Core.Services.Agent
 
         private async Task<GetAgentCreditBalanceResult> GetAgentCreditBalance(IAgentRepository agentRepos, Data.Entities.Agent clientAgent, GetAgentCreditBalanceModel model)
         {
-            IQueryable<Data.Entities.Agent> agentQuery = agentRepos.FindQuery().Include(f => f.AgentSession);
+            var agentQuery = agentRepos.FindQuery().Include(f => f.AgentSession).AsQueryable();
 
             switch (clientAgent.RoleId.ToEnum<Role>())
             {
@@ -1440,7 +1440,7 @@ namespace Lottery.Core.Services.Agent
 
             return new GetAgentCreditBalanceResult
             {
-                AgentCreditBalances = agentQuery.OrderBy(x => x.State).ThenBy(x => x.Username).Select(x => new AgentCreditDto
+                AgentCreditBalances = await agentQuery.OrderBy(x => x.State).ThenBy(x => x.Username).Select(x => new AgentCreditDto
                 {
                     Id = x.AgentId,
                     Credit = x.Credit,
@@ -1462,7 +1462,7 @@ namespace Lottery.Core.Services.Agent
                     IpAddress = x.AgentSession != null ? x.AgentSession.IpAddress : null,
                     LastLogin = x.AgentSession != null ? x.AgentSession.LatestDoingTime : null,
                     Platform = x.AgentSession != null ? x.AgentSession.Platform : null
-                }).ToList()
+                }).ToListAsync()
             };
         }
 
