@@ -16,7 +16,7 @@ pool:
 parameters:
 - name: Environment
   type: string
-  default: dev
+  default: prod
   values:
   - dev
   - test
