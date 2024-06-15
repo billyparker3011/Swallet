@@ -3,4 +3,4 @@ steps:
   inputs:
     artifact: HnX ${{ parameters.Environment }}
 - script: |
-    ls -la $(System.DefaultWorkingDirectory)/
+    ls -la $(Pipeline.Workspace)
