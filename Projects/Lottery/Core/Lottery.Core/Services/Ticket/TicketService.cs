@@ -442,7 +442,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
                     if ((pointsByMatchAndNumberValue + number.Value) > betSetting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid);
                 }
 
-                var ticket = CreateParentTicket(correlationId, processValidation, betKindId, currentBetKind, normalizedNumbers);
+                var ticket = CreateParentTicket(correlationId, processValidation, betKindId, currentBetKind, playerOddsValue, normalizedNumbers);
                 var childTickets = new List<Data.Entities.Ticket>();
                 foreach (var itemSubsets in subsets)
                 {
@@ -536,7 +536,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         };
     }
 
-    private Data.Entities.Ticket CreateParentTicket(Guid correlationId, ProcessValidationTicketModel processValidation, int betKindId, BetKindModel betKind, List<string> normalizedNumbers)
+    private Data.Entities.Ticket CreateParentTicket(Guid correlationId, ProcessValidationTicketModel processValidation, int betKindId, BetKindModel betKind, decimal playerOddsValue, List<string> normalizedNumbers)
     {
         return new Data.Entities.Ticket
         {
@@ -559,7 +559,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             Prize = processValidation.Metadata.Prize,
             Position = processValidation.Metadata.Position,
             //  Player
-            PlayerOdds = 0m,
+            PlayerOdds = playerOddsValue,
             PlayerPayout = 0m,
             PlayerWinLoss = 0m,
             //  Agent
