@@ -25,7 +25,6 @@ namespace Lottery.Core.Services.Agent
 
         public async Task<GetAgentOutstandingResult> GetAgentOutstandings(GetAgentOutstandingModel model)
         {
-            //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var ticketRepos = LotteryUow.GetRepository<ITicketRepository>();
@@ -68,7 +67,7 @@ namespace Lottery.Core.Services.Agent
         {
             var playerIds = await playerRepos.FindQueryBy(x => x.AgentId == targetAgentId).Select(x => x.PlayerId).ToListAsync();
             var agentOutsQuery = playerRepos.FindQueryBy(x => playerIds.Contains(x.PlayerId)).Include(x => x.PlayerSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.PlayerId, y => y.PlayerId, (player, ticket) => new
+                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.PlayerId, y => y.PlayerId, (player, ticket) => new
                                    {
                                        player.PlayerId,
                                        player.Username,
@@ -113,7 +112,7 @@ namespace Lottery.Core.Services.Agent
         {
             var agentIds = await agentRepos.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
             var agentOutsQuery = agentRepos.FindQueryBy(x => agentIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.AgentId, y => y.AgentId, (agent, ticket) => new
+                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.AgentId, y => y.AgentId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
@@ -160,7 +159,7 @@ namespace Lottery.Core.Services.Agent
         {
             var masterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
             var agentOutsQuery = agentRepos.FindQueryBy(x => masterIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.AgentId, y => y.MasterId, (agent, ticket) => new
+                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.AgentId, y => y.MasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
@@ -207,7 +206,7 @@ namespace Lottery.Core.Services.Agent
         {
             var supermasterIds = await agentRepos.FindQueryBy(x => x.RoleId == targetRoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
             var agentOutsQuery = agentRepos.FindQueryBy(x => supermasterIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.AgentId, y => y.SupermasterId, (agent, ticket) => new
+                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.AgentId, y => y.SupermasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
@@ -254,9 +253,11 @@ namespace Lottery.Core.Services.Agent
             if (string.IsNullOrEmpty(model.SortName)) return agentOuts => agentOuts.Username;
             return model.SortName?.ToLower() switch
             {
-                "username" => agentOuts => agentOuts.Username,
+                "totalbetcount" => agentOuts => agentOuts.TotalBetCount,
                 "totalstake" => agentOuts => agentOuts.TotalStake,
-                "totalpayout" => agentOuts => agentOuts.TotalPayout
+                "totalpayout" => agentOuts => agentOuts.TotalPayout,
+                "username" => agentOuts => agentOuts.Username,
+                _ => agentOuts => agentOuts.Username
             };
         }
     }

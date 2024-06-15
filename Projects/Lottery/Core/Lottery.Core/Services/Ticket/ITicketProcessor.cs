@@ -14,5 +14,5 @@ public interface ITicketProcessor : ISingletonDependency
     CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, List<PrizeMatchResultModel> result);
     Dictionary<int, int> GetSubBetKindIds(int betKindId);
     decimal GetPayoutByNumber(BetKindModel betKind, int point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null);
-    decimal? GetPlayerOdds(int betKindId, Dictionary<int, decimal> payoutByNumbers);
+    decimal? GetPlayerOdds(int betKindId, Dictionary<int, decimal> oddsValueByNumbers);
 }

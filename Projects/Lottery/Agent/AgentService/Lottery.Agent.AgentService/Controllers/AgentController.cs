@@ -195,8 +195,7 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpGet("agent/winloss-summary")]
         public async Task<IActionResult> GetAgentWinLossSummary([FromQuery] long? agentId, [FromQuery] GetAgentWinLossSearchRequest searchRequest)
         {
-            var result = await _agentService.GetAgentWinLossSummary(agentId, searchRequest.From, searchRequest.To);
-            return Ok(OkResponse.Create(result));
+            return Ok(OkResponse.Create(await _agentService.GetAgentWinLossSummary(agentId, searchRequest.From, searchRequest.To)));
         }
 
         [HttpGet("agent/credit-balance")]
