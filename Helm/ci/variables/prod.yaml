@@ -3,3 +3,5 @@ variables:
   value: "southeastasia"
 - name: pool
   value: "Development Environment Agent Pool"
+- name: DockerRegistryURL
+  value: "crhnxprodsoutheastasia.azurecr.io"

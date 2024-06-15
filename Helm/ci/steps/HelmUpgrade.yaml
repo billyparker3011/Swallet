@@ -1,5 +1,15 @@
 steps:
-- task: HelmInstaller@0
+- task: HelmDeploy@0
   inputs:
-    helmVersion: latest
-    installKubectl: true
+    connectionType: 'Azure Resource Manager'
+    azureSubscription: 'Terraform'
+    azureResourceGroup: 'rg-hnx-${{ parameters.Environment }}-$(location)'
+    kubernetesCluster: 'aks-hnx-${{ parameters.Environment }}-$(location)'
+    namespace: '${{ parameters.Environment }}'
+    command: 'upgrade'
+    chartType: 'FilePath'
+    chartPath: '$(Pipeline.Workspace)/a/HnX-1.0.0.tgz'
+    releaseName: 'app-hnx-$(application)-${{ parameters.Environment }}-$(location)'
+    overrideValues: 'applicationName=$(applicationName),applications.$(applicationName).image="$(DockerRegistryURL)/$(applicationName):$(Build.BuildNumber)"'
+    valueFile: '$(Pipeline.Workspace)/s/Helm/values-${{ parameters.Environment }}.yaml'
+    arguments: '--create-namespace --timeout 60s'
