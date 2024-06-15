@@ -18,7 +18,7 @@ applications:
         cpu: 10m
         memory: 50Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent-portal:
     domain: abc.com
@@ -39,7 +39,7 @@ applications:
         cpu: 50m
         memory: 2000Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent:
     domain: abc.com
@@ -59,7 +59,7 @@ applications:
       value: "report-triggered-jobs"
       effect: "NoExecute"
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   log:
     domain: abc.com
@@ -73,7 +73,7 @@ applications:
         cpu: 10m
         memory: 50Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   match:
     domain: abc.com
@@ -87,7 +87,7 @@ applications:
         cpu: 10m
         memory: 1000Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   odd:
     domain: abc.com
@@ -101,7 +101,7 @@ applications:
         cpu: 10m
         memory: 1000Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-authentication:
     domain: abc.com
@@ -115,7 +115,7 @@ applications:
         cpu: 10m
         memory: 1000Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-portal:
     domain: abc.com
@@ -129,7 +129,7 @@ applications:
         cpu: 10m
         memory: 1000Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player:
     domain: abc.com
@@ -143,7 +143,7 @@ applications:
         cpu: 10m
         memory: 1000Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   ticket:
     domain: abc.com
@@ -157,5 +157,5 @@ applications:
         cpu: 10m
         memory: 1000Mi
     config:
-      RedisConnections: "{RedisConnections}"
+      RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
