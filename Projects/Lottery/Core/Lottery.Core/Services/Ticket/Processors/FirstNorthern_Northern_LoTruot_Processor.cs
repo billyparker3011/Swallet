@@ -26,6 +26,12 @@ public class FirstNorthern_Northern_LoTruot_Processor : AbstractBetKindProcessor
         return point * (oddsValue - betKind.Award);
     }
 
+    public override decimal? GetPlayerOdds(Dictionary<int, decimal> payoutByNumbers)
+    {
+        foreach (var item in payoutByNumbers) return item.Value;
+        return base.GetPlayerOdds(payoutByNumbers);
+    }
+
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
         var rs = result.Where(f => f.Prize >= _startedPrize && f.Prize <= _endPrize).SelectMany(f => f.Results).Select(f => f.Result).ToList();

@@ -312,6 +312,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
             ticket.ChoosenNumbers = string.Join(", ", normalizedNumbers);
             ticket.Stake = totalStake;
+            ticket.PlayerOdds = _ticketProcessor.GetPlayerOdds(model.BetKindId, payoutByNumbers);
             ticket.PlayerPayout = totalPlayerPayout;
             ticket.AgentPayout = totalAgentPayout;
             ticket.MasterPayout = totalMasterPayout;

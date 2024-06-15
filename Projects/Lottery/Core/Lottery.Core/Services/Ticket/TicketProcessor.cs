@@ -37,6 +37,13 @@ public class TicketProcessor : ITicketProcessor
         return handler.GetPayoutByNumber(betKind, point, oddsValue, metadata);
     }
 
+    public decimal? GetPlayerOdds(int betKindId, Dictionary<int, decimal> payoutByNumbers)
+    {
+        var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);
+        if (handler == null) return null;
+        return handler.GetPlayerOdds(payoutByNumbers);
+    }
+
     public Dictionary<int, int> GetSubBetKindIds(int betKindId)
     {
         var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);
