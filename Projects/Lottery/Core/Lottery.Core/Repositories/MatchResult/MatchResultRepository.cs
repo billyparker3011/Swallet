@@ -19,5 +19,10 @@ namespace Lottery.Core.Repositories.MatchResult
         {
             return await FindQueryBy(f => f.MatchId == matchId && f.RegionId == regionId && f.ChannelId == channelId).FirstOrDefaultAsync();
         }
+
+        public async Task<List<Data.Entities.MatchResult>> FindByMatchIds(List<long> matchIds)
+        {
+            return await FindQueryBy(f => matchIds.Contains(f.MatchId)).ToListAsync();
+        }
     }
 }

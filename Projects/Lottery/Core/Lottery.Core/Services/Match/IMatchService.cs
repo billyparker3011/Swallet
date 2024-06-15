@@ -14,7 +14,7 @@ namespace Lottery.Core.Services.Match
         Task<MatchModel> GetRunningMatch(bool inCache = true);
         Task UpdateMatchResults(MatchResultModel model);
         Task<ResultModel> ResultsByKickoff(DateTime kickOffTime);
-        Task<List<MatchModel>> GetMatches(int top = 30);
+        Task<List<MatchModel>> GetMatches(int top = 30, bool displayResult = false);
         Task<MatchModel> GetMatchById(long matchId);
         Task OnOffProcessTicketOfChannel(OnOffProcessTicketOfChannelModel model);
     }

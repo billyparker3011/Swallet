@@ -1,6 +1,7 @@
 ﻿using HnMicro.Framework.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Contexts;
+using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.Region;
 using Lottery.Core.Models.Prize;
 using Lottery.Core.Repositories.Prize;
@@ -30,16 +31,29 @@ namespace Lottery.Core.Services.Prizes
             var prizeRepository = LotteryUow.GetRepository<IPrizeRepository>();
             var query = prizeRepository.FindQuery();
             if (regionId.HasValue) query = query.Where(f => f.RegionId == regionId.Value);
-            var data = await query.OrderBy(f => f.RegionId).ThenBy(f => f.Id).ToListAsync();
-            return data.Select(f => new PrizeModel
+            var data = await query
+                .Select(f => new PrizeModel
+                {
+                    Id = f.Id,
+                    PrizeId = f.PrizeId,
+                    RegionId = f.RegionId,
+                    Name = f.Name,
+                    NoOfNumbers = f.NoOfNumbers,
+                    Order = f.Order
+                })
+                .OrderBy(f => f.RegionId)
+                .ThenBy(f => f.Id).ToListAsync();
+            data.ForEach(f =>
             {
-                Id = f.Id,
-                PrizeId = f.PrizeId,
-                RegionId = f.RegionId,
-                Name = f.Name,
-                NoOfNumbers = f.NoOfNumbers,
-                Order = f.Order
-            }).ToList();
+                var listNumbers = new List<int>();
+                for (var i = 0; i < f.NoOfNumbers; i++)
+                {
+                    var position = f.PrizeId.GetPositionOfPrize(i);
+                    listNumbers.Add(position);
+                }
+                f.Numbers = listNumbers;
+            });
+            return data;
         }
 
         public PrizeFilterOptionModel GetFilterOptions()

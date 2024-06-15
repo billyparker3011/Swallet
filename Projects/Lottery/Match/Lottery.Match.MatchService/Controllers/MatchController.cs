@@ -23,9 +23,9 @@ namespace Lottery.Match.MatchService.Controllers
         }
 
         [HttpGet, LotteryAuthorize(Permission.Management.Matches, Permission.Management.AdvancedTickets)]
-        public async Task<IActionResult> GetMatches()
+        public async Task<IActionResult> GetMatches([FromQuery] bool displayResult = false)
         {
-            return Ok(OkResponse.Create(await _matchService.GetMatches()));
+            return Ok(OkResponse.Create(await _matchService.GetMatches(30, displayResult)));
         }
 
         [HttpPost, LotteryAuthorize(Permission.Management.Matches)]
