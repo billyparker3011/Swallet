@@ -5,40 +5,19 @@ trigger: none
 pool:
   name: "Development Environment Agent Pool"
 
-jobs:
-- job: HelmPackageDevCentralUS
-  displayName: 'Helm package'
-  variables:
-    - group: "Development Environment Variable Group"             
-  steps:
-  - task: Bash@3
-    inputs:
-      targetType: 'inline'
-      script: 'sed -i "s/Team/$(teamName)/g; s/Region/$(location)/g" values-dev.yaml'
-      workingDirectory: '$(System.DefaultWorkingDirectory)/Helm/'
+parameters:
+- name: Environment
+  type: string
+  default: dev
+  values:
+  - dev
+  - test
+  - prod
 
-  - task: replacetokens@5
-    inputs:
-      rootDirectory: '$(System.DefaultWorkingDirectory)/Helm/'
-      targetFiles: 'values-dev.yaml'
-      encoding: 'auto'
-      tokenPattern: 'default'
-      writeBOM: true
-      actionOnMissing: 'warn'
-      keepToken: false
-      actionOnNoFiles: 'continue'
-      enableTransforms: false
-      enableRecursion: false
-      useLegacyPattern: false
-      enableTelemetry: true
+variables:
+- template: ci/variables/${{ parameters.Environment }}.yaml
 
-  - task: HelmDeploy@0
-    inputs:
-      command: 'package'
-      chartPath: '$(System.DefaultWorkingDirectory)/Helm/'
-
-  - task: PublishPipelineArtifact@1
-    inputs:
-      targetPath: '$(Pipeline.Workspace)'
-      artifact: 'PTG.PPPlus2 $(teamName)'
-      publishLocation: 'pipeline'
+stages:
+- template: ci/stages/HelmPackage.yaml
+  parameters:
+    Environment: ${{ parameters.Environment }}

@@ -1,0 +1,14 @@
+parameters:
+- name: Environment
+  type: string
+
+jobs:
+- job: HelmPackage         
+  steps:
+  - template: ../steps/ReplaceTokens.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}
+  - template: ../steps/HelmPackage.yaml
+  - template: ../steps/HelmPublish.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}

@@ -1,0 +1,15 @@
+steps:
+- task: replacetokens@5
+  inputs:
+    rootDirectory: '$(System.DefaultWorkingDirectory)/Helm/'
+    targetFiles: 'values-${{ parameters.Environment }}.yaml'
+    encoding: 'auto'
+    tokenPattern: 'default'
+    writeBOM: true
+    actionOnMissing: 'warn'
+    keepToken: false
+    actionOnNoFiles: 'continue'
+    enableTransforms: false
+    enableRecursion: false
+    useLegacyPattern: false
+    enableTelemetry: true
