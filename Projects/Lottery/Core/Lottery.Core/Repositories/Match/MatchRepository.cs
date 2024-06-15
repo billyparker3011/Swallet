@@ -31,5 +31,12 @@ namespace Lottery.Core.Repositories.Match
         {
             return await FindQueryBy(f => f.KickOffTime.Date == kickOffTime.Date).Include(f => f.MatchResults).OrderByDescending(f => f.KickOffTime).FirstOrDefaultAsync();
         }
+
+        public async Task<Data.Entities.Match> GetLatestMatch()
+        {
+            var runningMatch = await GetRunningMatch();
+            if (runningMatch != null) return runningMatch;
+            return await FindQueryBy(f => true).OrderByDescending(f => f.MatchId).FirstOrDefaultAsync();
+        }
     }
 }
