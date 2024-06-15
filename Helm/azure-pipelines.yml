@@ -13,6 +13,9 @@ parameters:
   - dev
   - test
   - prod
+- name: AgentAuthenticationBuildNumber
+  displayName: Agent Authentication Build Number
+  default: latest
 
 variables:
 - template: ci/variables/${{ parameters.Environment }}.yaml
