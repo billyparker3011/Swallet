@@ -29,6 +29,7 @@ using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System.Linq.Expressions;
 
 namespace Lottery.Core.Services.Agent
@@ -400,7 +401,7 @@ namespace Lottery.Core.Services.Agent
                     EditedUsername = ClientContext.Agent.UserName,
                     AgentUserName = updatedAgent.Username,
                     Action = AuditDataHelper.State.Action.ActionUpdateState,
-                    DetailMessage = string.Format(AuditDataHelper.State.DetailMessage.DetailUpdateState, updatedAgent.Username, oldStateValue, updatedAgent.State),
+                    DetailMessage = string.Format(AuditDataHelper.State.DetailMessage.DetailUpdateState, updatedAgent.Username, Enum.GetName(typeof(UserState), oldStateValue), Enum.GetName(typeof(UserState), updatedAgent.State)),
                     OldValue = oldStateValue,
                     NewValue = updatedAgent.State,
                     SupermasterId = GetAuditSupermasterId(updatedAgent),
