@@ -16,6 +16,33 @@ parameters:
 - name: AgentAuthenticationBuildNumber
   displayName: Agent Authentication Build Number
   default: latest
+- name: AgentBuildNumber
+  displayName: Agent Build Number
+  default: latest
+- name: LogBuildNumber
+  displayName: Log Build Number
+  default: latest
+- name: OddhBuildNumber
+  displayName: Odd Build Number
+  default: latest
+- name: PlayerAuthentication
+  displayName: Player Authentication Build Number
+  default: latest
+- name: Player
+  displayName: Player Build Number
+  default: latest
+- name: Ticket
+  displayName: Ticket Build Number
+  default: latest
+- name: Ticket
+  displayName: Ticket Build Number
+  default: latest
+- name: AgentPortalBuildNumber
+  displayName: Agent Portal Build Number
+  default: latest
+- name: PlayerPortalBuildNumber
+  displayName: Player Portal Build Number
+  default: latest
 
 variables:
 - template: ci/variables/${{ parameters.Environment }}.yaml
