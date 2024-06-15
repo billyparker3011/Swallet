@@ -34,9 +34,6 @@ parameters:
 - name: Ticket
   displayName: Ticket Build Number
   default: latest
-- name: Ticket
-  displayName: Ticket Build Number
-  default: latest
 - name: AgentPortalBuildNumber
   displayName: Agent Portal Build Number
   default: latest
