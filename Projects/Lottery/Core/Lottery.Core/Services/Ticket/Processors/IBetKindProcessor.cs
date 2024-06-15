@@ -12,6 +12,7 @@ public interface IBetKindProcessor
     CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result);
     bool EnableStats();
     decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null);
+    decimal? GetPlayerOdds(Dictionary<int, decimal> payoutByNumbers);
     Dictionary<int, int> GetSubBetKindIds();
     int Valid(ProcessTicketModel model, TicketMetadataModel metadata);
     int ValidMixed(ProcessMixedTicketModel model, TicketMetadataModel metadata);

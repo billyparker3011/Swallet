@@ -24,6 +24,11 @@ public abstract class AbstractBetKindProcessor : IBetKindProcessor
         return point * oddsValue;
     }
 
+    public virtual decimal? GetPlayerOdds(Dictionary<int, decimal> payoutByNumbers)
+    {
+        return null;
+    }
+
     public virtual Dictionary<int, int> GetSubBetKindIds()
     {
         return new Dictionary<int, int>();
