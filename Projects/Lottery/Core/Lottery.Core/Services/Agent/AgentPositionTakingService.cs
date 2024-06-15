@@ -3,12 +3,14 @@ using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.Agent;
+using Lottery.Core.Dtos.Audit;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
-using Lottery.Core.Models.Agent.GetAgentBetSettings;
 using Lottery.Core.Models.Agent.GetAgentPositionTaking;
 using Lottery.Core.Models.PositionTakings;
 using Lottery.Core.Repositories.Agent;
+using Lottery.Core.Repositories.BetKind;
+using Lottery.Core.Services.Audit;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -19,8 +21,11 @@ namespace Lottery.Core.Services.Agent
 {
     public class AgentPositionTakingService : LotteryBaseService<AgentPositionTakingService>, IAgentPositionTakingService
     {
-        public AgentPositionTakingService(ILogger<AgentPositionTakingService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+        private readonly IAuditService _auditService;
+
+        public AgentPositionTakingService(ILogger<AgentPositionTakingService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow, IAuditService auditService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
+            _auditService = auditService;
         }
 
         public async Task<List<AgentPositionTakingModel>> GetAgentPositionTakingByAgentIds(int betKindId, List<long> agentIds)
@@ -153,23 +158,62 @@ namespace Lottery.Core.Services.Agent
             //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var agentPtRepos = LotteryUow.GetRepository<IAgentPositionTakingRepository>();
-
+            var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
+            
             var targetAgentId = ClientContext.Agent.ParentId != 0L ? ClientContext.Agent.ParentId : ClientContext.Agent.AgentId;
             var clientAgent = await agentRepos.FindByIdAsync(targetAgentId) ?? throw new NotFoundException();
             if (clientAgent.RoleId != Role.Company.ToInt()) return;
 
+            var auditPositionTakings = new List<AuditSettingData>();
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
+            var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentPositionTakings = await agentPtRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentPositionTakings.ForEach(item =>
             {
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
                 {
+                    var oldPTValue = item.PositionTaking;
                     item.PositionTaking = updateItem.ActualPositionTaking;
+
+                    auditPositionTakings.AddRange(new List<AuditSettingData>
+                    {
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.PositionTakingTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldPTValue,
+                            NewValue = item.PositionTaking
+                        }
+                    });
                 }
             });
 
             await LotteryUow.SaveChangesAsync();
+
+            if (existedAgentPositionTakings.Any())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = (int)AuditType.Setting,
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = clientAgent.Username,
+                    Action = AuditDataHelper.Setting.Action.ActionUpdatePositionTaking,
+                    SupermasterId = GetAuditSupermasterId(clientAgent),
+                    MasterId = GetAuditMasterId(clientAgent),
+                    AuditSettingDatas = auditPositionTakings.OrderBy(x => x.BetKind).ToList()
+                });
+            }
+        }
+
+        private long GetAuditMasterId(Data.Entities.Agent targetUser)
+        {
+            return targetUser.RoleId is (int)Role.Agent ? targetUser.MasterId : 0;
+        }
+
+        private long GetAuditSupermasterId(Data.Entities.Agent targetUser)
+        {
+            return targetUser.RoleId is (int)Role.Master or (int)Role.Agent ? targetUser.SupermasterId : 0;
         }
     }
 }

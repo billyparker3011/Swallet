@@ -23,6 +23,7 @@ namespace Lottery.Agent.AgentService.Controllers
             {
                 Type = type,
                 SearchTerm = request.SearchTerm,
+                SearchBetKind = request.SearchBetKind,
                 PageIndex = request.PageIndex,
                 PageSize = request.PageSize,
                 DateFrom = request.DateFrom,

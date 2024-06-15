@@ -13,5 +13,6 @@ namespace Lottery.Core.Dtos.Audit
         public AuditData AuditData { get; set; }
         public DateTime CreatedAt { get; set; }
         public string EditedBy { get; set; }
+        public List<AuditSettingData> AuditSettingDatas { get; set; } = new List<AuditSettingData>();
     }
 }

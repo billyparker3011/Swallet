@@ -58,6 +58,7 @@ namespace Lottery.Core.Services.Agent
             return new GetAgentOutstandingResult
             {
                 AgentOuts = listAgentOustanding,
+                SummaryBetCount = listAgentOustanding.Sum(x => x.TotalBetCount),
                 SummaryStake = listAgentOustanding.Sum(x => x.TotalStake),
                 SummaryPayout = listAgentOustanding.Sum(x => x.TotalPayout)
             };
@@ -88,6 +89,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
+                                       TotalBetCount = x.LongCount(),
                                        TotalStake = x.Sum(s => s.Stake),
                                        TotalPayout = x.Sum(s => s.PlayerPayout),
                                        IpAddress = x.Key.IpAddress,
@@ -134,6 +136,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
+                                       TotalBetCount = x.LongCount(),
                                        TotalStake = x.Sum(s => s.Stake),
                                        TotalPayout = x.Sum(s => s.PlayerPayout),
                                        IpAddress = x.Key.IpAddress,
@@ -180,6 +183,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
+                                       TotalBetCount = x.LongCount(),
                                        TotalStake = x.Sum(s => s.Stake),
                                        TotalPayout = x.Sum(s => s.PlayerPayout),
                                        IpAddress = x.Key.IpAddress,
@@ -226,6 +230,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
+                                       TotalBetCount = x.LongCount(),
                                        TotalStake = x.Sum(s => s.Stake),
                                        TotalPayout = x.Sum(s => s.PlayerPayout),
                                        IpAddress = x.Key.IpAddress,

@@ -12,4 +12,5 @@ public interface IPlayerTicketService : IScopedDependency
 
     Task<List<TicketDetailModel>> GetPlayerOuts(long playerId);
     Task<List<TicketDetailModel>> GetPlayerWinloseDetail(WinloseDetailQueryModel model);
+    Task<List<TicketDetailModel>> GetRefundRejectTickets();
 }

@@ -77,6 +77,14 @@ public class PlayerTicketService : LotteryBaseService<PlayerTicketService>, IPla
         return data;
     }
 
+    public async Task<List<TicketDetailModel>> GetRefundRejectTickets()
+    {
+        var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
+        var latestMatch = await matchRepository.GetLatestMatch();
+        if (latestMatch == null) return new List<TicketDetailModel>();
+        return await InternalGetTicketsByMatch(latestMatch.MatchId, CommonHelper.RefundRejectTicketState());
+    }
+
     public async Task<List<TicketDetailModel>> GetTicketsAsBetList()
     {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
@@ -90,11 +98,13 @@ public class PlayerTicketService : LotteryBaseService<PlayerTicketService>, IPla
 
     public async Task<List<TicketDetailModel>> GetTicketsByMatch(long matchId)
     {
-        var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-        var match = await matchRepository.FindByIdAsync(matchId);
-        if (match == null) return new List<TicketDetailModel>();
+        return await InternalGetTicketsByMatch(matchId);
+    }
+
+    private async Task<List<TicketDetailModel>> InternalGetTicketsByMatch(long matchId, List<int> listState = null)
+    {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
-        var data = await ticketRepository.FindQueryBy(f => f.PlayerId == ClientContext.Player.PlayerId && !f.ParentId.HasValue && f.MatchId == matchId)
+        var data = await ticketRepository.FindQueryBy(f => f.PlayerId == ClientContext.Player.PlayerId && !f.ParentId.HasValue && f.MatchId == matchId && (listState == null || (listState != null && listState.Contains(f.State))))
             .OrderByDescending(f => f.TicketId)
             .Select(f => f.ToTicketDetailModel()).ToListAsync();
         _normalizeTicketService.NormalizeTicket(data);

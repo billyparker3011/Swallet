@@ -39,6 +39,7 @@ namespace Lottery.Data.Entities
         public DateTime CreatedAt { get; set; }
         [MaxLength(255)]
         public string EdittedBy { get; set; }
+        public List<AuditSettingData> AuditSettingDatas { get; set; }
     }
 
     public class AuditData
@@ -53,6 +54,14 @@ namespace Lottery.Data.Entities
         public decimal? NewValue { get; set;}
     }
 
+    public class AuditSettingData
+    {
+        public string Title { get; set; }
+        public string BetKind { get; set; }
+        public decimal? OldValue { get; set; }
+        public decimal? NewValue { get; set; }
+    }
+
     public class AuditConfiguration : IEntityTypeConfiguration<Audit>
     {
         public void Configure(EntityTypeBuilder<Audit> builder)
@@ -60,6 +69,10 @@ namespace Lottery.Data.Entities
             builder.Property(e => e.AuditData).HasConversion(
                 v => JsonConvert.SerializeObject(v, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
                 v => JsonConvert.DeserializeObject<AuditData>(v, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
+
+            builder.Property(e => e.AuditSettingDatas).HasConversion(
+                v => JsonConvert.SerializeObject(v, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }),
+                v => JsonConvert.DeserializeObject<List<AuditSettingData>>(v, new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore }));
         }
     }
 }

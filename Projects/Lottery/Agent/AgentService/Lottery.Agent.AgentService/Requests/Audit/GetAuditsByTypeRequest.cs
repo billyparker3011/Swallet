@@ -3,6 +3,7 @@
     public class GetAuditsByTypeRequest
     {
         public string SearchTerm {  get; set; }
+        public string SearchBetKind { get; set; }
         public int PageIndex { get; set; }
         public int PageSize { get; set; }
         public DateTime DateFrom { get; set; }
