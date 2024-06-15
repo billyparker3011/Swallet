@@ -10,6 +10,6 @@ steps:
     chartType: 'FilePath'
     chartPath: '$(Pipeline.Workspace)/a/HnX-1.0.0.tgz'
     releaseName: 'app-hnx-$(applicationName)-${{ parameters.Environment }}-$(location)'
-    overrideValues: 'applicationName=$(applicationName),applications.$(applicationName).image="$(DockerRegistryURL)/$(applicationName):$(BuildNumber)"'
+    overrideValues: 'applicationName=$(applicationName),applications.$(applicationName).image="$(DockerRegistryURL)/$(applicationName):$(applicationBuildNo)"'
     valueFile: '$(Pipeline.Workspace)/s/Helm/values-${{ parameters.Environment }}.yaml'
     arguments: '--create-namespace --timeout 60s'

@@ -26,28 +26,28 @@ jobs:
     matrix:
       AgentAuthentication:
         applicationName: "agent-authentication"
-        BuildNumber: ${{ parameters.AgentAuthenticationBuildNumber }}
+        applicationBuildNo: ${{ parameters.AgentAuthenticationBuildNumber }}
       Agent:
         applicationName: "agent"
-        BuildNumber: ${{ parameters.AgentBuildNumber }}
+        applicationBuildNo: ${{ parameters.AgentBuildNumber }}
       PlayerAuthentication:
         applicationName: "player-authentication"
-        BuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
+        applicationBuildNo: ${{ parameters.PlayerAuthenticationBuildNumber }}
       Player:
         applicationName: "player"
-        BuildNumber: ${{ parameters.PlayerBuildNumber }}
+        applicationBuildNo: ${{ parameters.PlayerBuildNumber }}
       Log:
         applicationName: "log"
-        BuildNumber: ${{ parameters.LogBuildNumber }}
+        applicationBuildNo: ${{ parameters.LogBuildNumber }}
       Odd:
         applicationName: "odd"
-        BuildNumber: ${{ parameters.OddBuildNumber }}
+        applicationBuildNo: ${{ parameters.OddBuildNumber }}
       Ticket:
         applicationName: "ticket"
-        BuildNumber: ${{ parameters.TicketBuildNumber }}
+        applicationBuildNo: ${{ parameters.TicketBuildNumber }}
       AgentPortal:
         applicationName: "agent-portal"
-        BuildNumber: ${{ parameters.AgentPortalBuildNumber }}
+        applicationBuildNo: ${{ parameters.AgentPortalBuildNumber }}
       PlayerPortal:
         applicationName: "player-portal"
         BuildNumber: ${{ parameters.PlayerPortalBuildNumber }}
