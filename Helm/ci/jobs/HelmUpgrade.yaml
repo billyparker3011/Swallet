@@ -7,6 +7,8 @@ parameters:
   type: string
 - name: LogBuildNumber
   type: string
+- name: MatchBuildNumber
+  type: string
 - name: OddBuildNumber
   type: string
 - name: PlayerAuthenticationBuildNumber
@@ -30,18 +32,21 @@ jobs:
       Agent:
         applicationName: "agent"
         applicationBuildNo: ${{ parameters.AgentBuildNumber }}
+      Log:
+        applicationName: "log"
+        applicationBuildNo: ${{ parameters.LogBuildNumber }}
+      Match:
+        applicationName: "match"
+        applicationBuildNo: ${{ parameters.MatchBuildNumber }}
+      Odd:
+        applicationName: "odd"
+        applicationBuildNo: ${{ parameters.OddBuildNumber }}
       PlayerAuthentication:
         applicationName: "player-authentication"
         applicationBuildNo: ${{ parameters.PlayerAuthenticationBuildNumber }}
       Player:
         applicationName: "player"
         applicationBuildNo: ${{ parameters.PlayerBuildNumber }}
-      Log:
-        applicationName: "log"
-        applicationBuildNo: ${{ parameters.LogBuildNumber }}
-      Odd:
-        applicationName: "odd"
-        applicationBuildNo: ${{ parameters.OddBuildNumber }}
       Ticket:
         applicationName: "ticket"
         applicationBuildNo: ${{ parameters.TicketBuildNumber }}

@@ -30,6 +30,9 @@ parameters:
 - name: LogBuildNumber
   displayName: Log Build Number
   default: latest
+- name: MatchBuildNumber
+  displayName: Match Build Number
+  default: latest
 - name: OddBuildNumber
   displayName: Odd Build Number
   default: latest
@@ -61,10 +64,11 @@ stages:
     Environment: ${{ parameters.Environment }}
     AgentAuthenticationBuildNumber: ${{ parameters.AgentAuthenticationBuildNumber }}
     AgentBuildNumber: ${{ parameters.AgentBuildNumber }}
-    PlayerAuthenticationBuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
-    PlayerBuildNumber: ${{ parameters.PlayerBuildNumber }}
     LogBuildNumber: ${{ parameters.LogBuildNumber }}
+    MatchBuildNumber: ${{ parameters.MatchBuildNumber }}
     OddBuildNumber: ${{ parameters.OddBuildNumber }}
+    PlayerAuthenticationBuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
+    PlayerBuildNumber: ${{ parameters.PlayerBuildNumber }}    
     TicketBuildNumber: ${{ parameters.TicketBuildNumber }}
     AgentPortalBuildNumber: ${{ parameters.AgentPortalBuildNumber }}
     PlayerPortalBuildNumber: ${{ parameters.PlayerPortalBuildNumber }}
