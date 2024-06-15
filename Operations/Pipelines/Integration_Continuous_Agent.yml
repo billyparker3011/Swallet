@@ -11,6 +11,7 @@ trigger:
     exclude:
     - "Operations/*"
     - "Terraform/*"
+    - "Helm/*"
   batch: true
 
 name: $(date:yyMMdd)$(rev:.rr)

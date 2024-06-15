@@ -1,0 +1,17 @@
+parameters:
+- name: Environment
+  type: string
+
+jobs:
+- job: HelmUpgrade
+  strategy:
+    matrix:
+      AgentAuthentication:
+        applicationName: "agent-authentication"     
+  steps:
+  - template: ../steps/DownloadHelmArtifact.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}
+  - template: ../steps/HelmUpgrade.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}

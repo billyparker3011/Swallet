@@ -1,0 +1,14 @@
+parameters:
+- name: Environment
+  type: string
+
+stages:
+- stage: HelmPackage
+  variables:
+  - group: "${{ parameters.Environment }} Environment Variable Group"
+  pool: $(pool)
+  displayName: 'Helm package'
+  jobs:
+  - template: ../jobs/HelmPackage.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}

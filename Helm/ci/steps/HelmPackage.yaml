@@ -1,0 +1,6 @@
+steps:
+- task: HelmDeploy@0
+  displayName: "HelmPackage"
+  inputs:
+    command: 'package'
+    chartPath: '$(System.DefaultWorkingDirectory)/Helm/'

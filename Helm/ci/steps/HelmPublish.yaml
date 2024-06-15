@@ -1,0 +1,6 @@
+steps:
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Pipeline.Workspace)'
+    artifact: 'HnX ${{ parameters.Environment }}'
+    publishLocation: 'pipeline'

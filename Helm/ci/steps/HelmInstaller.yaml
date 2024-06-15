@@ -1,0 +1,5 @@
+steps:
+- task: HelmInstaller@0
+  inputs:
+    helmVersion: latest
+    installKubectl: true

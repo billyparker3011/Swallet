@@ -1,0 +1,6 @@
+steps:
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifact: HnX ${{ parameters.Environment }}
+- script: |
+    ls -la $(Pipeline.Workspace)/a
