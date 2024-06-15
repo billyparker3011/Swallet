@@ -9,6 +9,7 @@ jobs:
       AgentAuthentication:
         applicationName: "agent-authentication"     
   steps:
+  - template: ../steps/KubectlInstaller.yaml
   - template: ../steps/DownloadHelmArtifact.yaml
     parameters:
       Environment: ${{ parameters.Environment }}
