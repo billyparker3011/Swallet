@@ -18,3 +18,6 @@ steps:
   inputs:
     helmVersion: latest
     installKubectl: true
+
+- script: |
+    echo $(Build.BuildNumber)
