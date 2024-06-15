@@ -20,6 +20,8 @@ jobs:
         AppSettings: "Projects/Lottery/Agent/AgentService/Lottery.Agent.AgentService"     
   steps:
   - template: ../steps/DownloadHelmArtifact.yaml
+    parameters:
+      Environment: ${{ parameters.Environment }}
   # - template: ../steps/HelmUpgrade.yaml
   #   parameters:
   #     Environment: ${{ parameters.Environment }}
