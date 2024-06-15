@@ -55,7 +55,7 @@ jobs:
         applicationBuildNo: ${{ parameters.AgentPortalBuildNumber }}
       PlayerPortal:
         applicationName: "player-portal"
-        BuildNumber: ${{ parameters.PlayerPortalBuildNumber }}
+        applicationBuildNo: ${{ parameters.PlayerPortalBuildNumber }}
   steps:
   - template: ../steps/KubectlInstaller.yaml
   - template: ../steps/HelmInstaller.yaml
