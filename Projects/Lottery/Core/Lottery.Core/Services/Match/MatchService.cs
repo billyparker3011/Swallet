@@ -253,6 +253,22 @@ namespace Lottery.Core.Services.Match
 
         private async Task<Dictionary<int, List<ResultByRegionModel>>> GetMatchResults(long matchId, DateTime kickoffTime)
         {
+            var dict = new Dictionary<long, DateTime>
+            {
+                { matchId, kickoffTime }
+            };
+            var results = await GetMatchResults(dict);
+            if (!results.TryGetValue(matchId, out Dictionary<int, List<ResultByRegionModel>> v)) return new Dictionary<int, List<ResultByRegionModel>>();
+            return v;
+        }
+
+        private async Task<Dictionary<long, Dictionary<int, List<ResultByRegionModel>>>> GetMatchResults(Dictionary<long, DateTime> matches)
+        {
+            var matchIds = matches.Keys.ToList();
+
+            var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
+            var matchResults = await matchResultRepository.FindByMatchIds(matchIds);
+
             var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
             var regions = regionInMemoryRepository.GetAll().ToList();
 
@@ -262,64 +278,67 @@ namespace Lottery.Core.Services.Match
             var prizeInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IPrizeInMemoryRepository>();
             var prizes = prizeInMemoryRepository.GetAll().ToList();
 
-            var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
-            var matchResults = await matchResultRepository.FindByMatchId(matchId);
-
-            var resultByRegion = new Dictionary<int, List<ResultByRegionModel>>();
-            foreach (var region in regions)
+            var resultsByMatchId = new Dictionary<long, Dictionary<int, List<ResultByRegionModel>>>();
+            foreach (var item in matches)
             {
-                if (!resultByRegion.TryGetValue(region.Id.ToInt(), out List<ResultByRegionModel> regionDetail))
+                var resultByRegion = new Dictionary<int, List<ResultByRegionModel>>();
+                foreach (var region in regions)
                 {
-                    regionDetail = new List<ResultByRegionModel>();
-                    resultByRegion[region.Id.ToInt()] = regionDetail;
-                }
-
-                var channelsOfRegion = channels.Where(f => f.RegionId == region.Id.ToInt() && f.DayOfWeeks.Any(f1 => f1 == (int)kickoffTime.DayOfWeek)).ToList();
-                foreach (var itemChannel in channelsOfRegion)
-                {
-                    var listPrize = new List<PrizeMatchResultModel>();
-                    var currentMatchResult = matchResults.FirstOrDefault(f => f.RegionId == region.Id.ToInt() && f.ChannelId == itemChannel.Id);
-                    if (currentMatchResult == null || string.IsNullOrEmpty(currentMatchResult.Results))
+                    if (!resultByRegion.TryGetValue(region.Id.ToInt(), out List<ResultByRegionModel> regionDetail))
                     {
-                        var regionPrizes = prizes.Where(f => f.RegionId == region.Id.ToInt()).OrderBy(f => f.Id).ToList();
-                        regionPrizes.ForEach(f =>
+                        regionDetail = new List<ResultByRegionModel>();
+                        resultByRegion[region.Id.ToInt()] = regionDetail;
+                    }
+
+                    var channelsOfRegion = channels.Where(f => f.RegionId == region.Id.ToInt() && f.DayOfWeeks.Any(f1 => f1 == (int)item.Value.DayOfWeek)).ToList();
+                    foreach (var itemChannel in channelsOfRegion)
+                    {
+                        var listPrize = new List<PrizeMatchResultModel>();
+                        var currentMatchResult = matchResults.FirstOrDefault(f => f.MatchId == item.Key && f.RegionId == region.Id.ToInt() && f.ChannelId == itemChannel.Id);
+                        if (currentMatchResult == null || string.IsNullOrEmpty(currentMatchResult.Results))
                         {
-                            listPrize.Add(new PrizeMatchResultModel
+                            var regionPrizes = prizes.Where(f => f.RegionId == region.Id.ToInt()).OrderBy(f => f.Id).ToList();
+                            regionPrizes.ForEach(f =>
                             {
-                                NoOfNumbers = f.NoOfNumbers,
-                                Order = f.Order,
-                                Prize = f.PrizeId
+                                listPrize.Add(new PrizeMatchResultModel
+                                {
+                                    NoOfNumbers = f.NoOfNumbers,
+                                    Order = f.Order,
+                                    Prize = f.PrizeId
+                                });
                             });
+                        }
+                        else listPrize = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(currentMatchResult.Results);
+                        listPrize.ForEach(f =>
+                        {
+                            var regionPrizes = prizes.Where(f1 => f1.RegionId == region.Id.ToInt()).ToList();
+                            var currentPrize = regionPrizes.FirstOrDefault(f1 => f1.PrizeId == f.Prize);
+                            if (currentPrize == null) return;
+
+                            f.PrizeName = currentPrize.Name;
+                            f.Order = currentPrize.Order;
+                            f.NoOfNumbers = currentPrize.NoOfNumbers;
+                            for (var i = 0; i < f.NoOfNumbers; i++)
+                            {
+                                var position = f.Prize.GetPositionOfPrize(i);
+                                var itemPosition = f.Results.FirstOrDefault(f2 => f2.Position == position);
+                                if (itemPosition == null) f.Results.Add(new PrizeMatchResultDetailModel { Position = position, Result = string.Empty });
+                            }
+                        });
+                        regionDetail.Add(new ResultByRegionModel
+                        {
+                            ChannelId = itemChannel.Id,
+                            ChannelName = itemChannel.Name,
+                            IsLive = currentMatchResult != null && currentMatchResult.IsLive,
+                            Prize = listPrize,
+                            EnabledProcessTicket = currentMatchResult != null && currentMatchResult.EnabledProcessTicket
                         });
                     }
-                    else listPrize = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(currentMatchResult.Results);
-                    listPrize.ForEach(f =>
-                    {
-                        var regionPrizes = prizes.Where(f1 => f1.RegionId == region.Id.ToInt()).ToList();
-                        var currentPrize = regionPrizes.FirstOrDefault(f1 => f1.PrizeId == f.Prize);
-                        if (currentPrize == null) return;
-
-                        f.PrizeName = currentPrize.Name;
-                        f.Order = currentPrize.Order;
-                        f.NoOfNumbers = currentPrize.NoOfNumbers;
-                        for (var i = 0; i < f.NoOfNumbers; i++)
-                        {
-                            var position = f.Prize.GetPositionOfPrize(i);
-                            var itemPosition = f.Results.FirstOrDefault(f2 => f2.Position == position);
-                            if (itemPosition == null) f.Results.Add(new PrizeMatchResultDetailModel { Position = position, Result = string.Empty });
-                        }
-                    });
-                    regionDetail.Add(new ResultByRegionModel
-                    {
-                        ChannelId = itemChannel.Id,
-                        ChannelName = itemChannel.Name,
-                        IsLive = currentMatchResult != null && currentMatchResult.IsLive,
-                        Prize = listPrize,
-                        EnabledProcessTicket = currentMatchResult != null && currentMatchResult.EnabledProcessTicket
-                    });
                 }
+
+                resultsByMatchId[item.Key] = resultByRegion;
             }
-            return resultByRegion;
+            return resultsByMatchId;
         }
 
         private async Task CreateOrUpdateRunningMatch(MatchModel matchModel)
@@ -437,10 +456,10 @@ namespace Lottery.Core.Services.Match
             };
         }
 
-        public async Task<List<MatchModel>> GetMatches(int top = 30)
+        public async Task<List<MatchModel>> GetMatches(int top = 30, bool displayResult = false)
         {
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-            return await matchRepository.FindQueryBy(f => true).OrderByDescending(f => f.MatchId).Take(top).Select(f => new MatchModel
+            var data = await matchRepository.FindQueryBy(f => true).OrderByDescending(f => f.MatchId).Take(top).Select(f => new MatchModel
             {
                 MatchId = f.MatchId,
                 KickoffTime = f.KickOffTime,
@@ -448,6 +467,17 @@ namespace Lottery.Core.Services.Match
                 State = f.MatchState,
                 CreatedAt = f.CreatedAt
             }).ToListAsync();
+            if (!displayResult)
+            {
+                var dict = data.ToDictionary(f => f.MatchId, f => f.KickoffTime);
+                var results = await GetMatchResults(dict);
+                data.ForEach(f =>
+                {
+                    if (!results.TryGetValue(f.MatchId, out Dictionary<int, List<ResultByRegionModel>> v)) v = new Dictionary<int, List<ResultByRegionModel>>();
+                    f.MatchResult = v;
+                });
+            }
+            return data;
         }
 
         public async Task<MatchModel> GetMatchById(long matchId)

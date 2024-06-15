@@ -8,5 +8,6 @@
         public int RegionId { get; set; }
         public int Order { get; set; }
         public int NoOfNumbers { get; set; }
+        public List<int> Numbers { get; set; }
     }
 }
