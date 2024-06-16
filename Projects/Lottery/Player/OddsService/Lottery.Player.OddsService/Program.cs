@@ -1,3 +1,4 @@
+using HnMicro.Core.Helpers;
 using HnMicro.Framework.Helpers;
 using HnMicro.Module.Caching.ByRedis.Helpers;
 using Lottery.Core.Helpers;
@@ -13,6 +14,7 @@ builder.BuildOddsService();
 
 var app = builder.Build();
 
+app.UseHealthChecks(OtherHelper.HealthChecksPath);
 app.MapHub<OddsHub>("/odds");
 
 app.Run();

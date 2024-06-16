@@ -1,4 +1,5 @@
-﻿using HnMicro.Framework.Middlewares;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Middlewares;
 using HnMicro.Framework.Options;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,7 +18,7 @@ namespace HnMicro.Framework.Helpers
                 app.UseSwaggerUI();
             }
 
-            app.UseHealthChecks("/health-checks");
+            app.UseHealthChecks(OtherHelper.HealthChecksPath);
             app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseHttpsRedirection();
             app.UseOnlyCors();

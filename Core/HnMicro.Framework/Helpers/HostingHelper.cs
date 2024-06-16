@@ -150,7 +150,7 @@ namespace HnMicro.Framework.Helpers
                     OnMessageReceived = context =>
                     {
                         var token = context.Request.Query[WebSocketConfigs.AccessToken];
-                        if (string.IsNullOrEmpty(token)) throw new ArgumentNullException(WebSocketConfigs.AccessToken);
+                        if (context.HttpContext.WebSockets.IsWebSocketRequest && string.IsNullOrEmpty(token)) throw new ArgumentNullException(WebSocketConfigs.AccessToken);
                         context.Token = token;
                         return Task.CompletedTask;
                     }
