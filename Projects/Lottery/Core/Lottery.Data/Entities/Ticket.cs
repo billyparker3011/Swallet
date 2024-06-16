@@ -69,6 +69,10 @@ namespace Lottery.Data.Entities
 
         [Required, Precision(18, 3)]
         public decimal PlayerWinLoss { get; set; }
+
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftPlayerWinLoss { get; set; }
+
         //  Agent
         [Precision(18, 3)]
         public decimal? AgentOdds { get; set; }
@@ -82,8 +86,15 @@ namespace Lottery.Data.Entities
         [Required, Precision(18, 3)]
         public decimal AgentCommission { get; set; }
 
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftAgentWinLoss { get; set; }
+
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftAgentCommission { get; set; }
+
         [Required, Precision(18, 3)]
         public decimal AgentPt { get; set; }
+
         //  Master
         [Precision(18, 3)]
         public decimal? MasterOdds { get; set; }
@@ -97,8 +108,15 @@ namespace Lottery.Data.Entities
         [Required, Precision(18, 3)]
         public decimal MasterCommission { get; set; }
 
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftMasterWinLoss { get; set; }
+
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftMasterCommission { get; set; }
+
         [Required, Precision(18, 3)]
         public decimal MasterPt { get; set; }
+
         //  Supermaster
         [Precision(18, 3)]
         public decimal? SupermasterOdds { get; set; }
@@ -112,8 +130,15 @@ namespace Lottery.Data.Entities
         [Required, Precision(18, 3)]
         public decimal SupermasterCommission { get; set; }
 
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftSupermasterWinLoss { get; set; }
+
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftSupermasterCommission { get; set; }
+
         [Required, Precision(18, 3)]
         public decimal SupermasterPt { get; set; }
+
         //  Company
         [Precision(18, 3)]
         public decimal? CompanyOdds { get; set; }
@@ -123,6 +148,9 @@ namespace Lottery.Data.Entities
 
         [Required, Precision(18, 3)]
         public decimal CompanyWinLoss { get; set; }
+
+        [Required, Precision(18, 3), DefaultValue(0)]
+        public decimal DraftCompanyWinLoss { get; set; }
 
         [Required]
         public int State { get; set; }
