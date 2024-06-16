@@ -81,12 +81,12 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
     public async Task<AdvancedSearchTicketsResultModel> Search(AdvancedSearchTicketsModel model)
     {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
+        var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
         var ticketQuery = ticketRepository.FindQueryBy(f => !f.ParentId.HasValue);
         if (model.MatchId > 0L) ticketQuery = ticketQuery.Where(f => f.MatchId == model.MatchId);
         if (model.TicketIds.Count > 0) ticketQuery = ticketQuery.Where(f => model.TicketIds.Contains(f.TicketId));
         if (model.Username.Count > 0)
         {
-            var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
             var playerIds = await playerRepository.FindQueryBy(f => model.Username.Any(f1 => f.Username.Contains(f1.ToUpper()))).Select(f => f.PlayerId).ToListAsync();
             if (playerIds.Count > 0) ticketQuery = ticketQuery.Where(f => playerIds.Contains(f.PlayerId));
         }
@@ -109,6 +109,11 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
         var result = await ticketRepository.PagingByAsync(ticketQuery, model.PageIndex, model.PageSize);
         var tickets = result.Items.Select(f => f.ToTicketDetailModel()).ToList();
         _normalizeTicketService.NormalizeTicket(tickets);
+
+        var listPlayerId = tickets.Select(f => f.PlayerId).Distinct().ToList();
+        var players = await playerRepository.FindQueryBy(f => listPlayerId.Contains(f.PlayerId)).ToListAsync();
+        _normalizeTicketService.NormalizePlayer(tickets, players.ToDictionary(f => f.PlayerId, f => f.Username));
+
         return new AdvancedSearchTicketsResultModel
         {
             Items = tickets,

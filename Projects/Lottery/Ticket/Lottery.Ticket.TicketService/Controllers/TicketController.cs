@@ -88,10 +88,26 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok();
         }
 
-        [HttpGet("{matchId:long}/completed-tickets"), LotteryAuthorize(Permission.Management.Matches)]
-        public IActionResult CompletedTicketsByMatch([FromRoute] long matchId)
+        [HttpGet("{matchId:long}/draft-completed-tickets"), LotteryAuthorize(Permission.Management.Matches)]
+        public IActionResult DraftCompletedTicketsByMatch([FromRoute] long matchId)
         {
-            _completedMatchService.Enqueue(matchId);
+            _completedMatchService.Enqueue(new CompletedMatchInQueueModel
+            {
+                MatchId = matchId,
+                IsDraft = true
+            });
+            return Ok();
+        }
+
+        [HttpGet("{matchId:long}/completed-tickets-onemore"), LotteryAuthorize(Permission.Management.Matches)]
+        public IActionResult CompletedTicketsOneMoreByMatch([FromRoute] long matchId)
+        {
+            _completedMatchService.Enqueue(new CompletedMatchInQueueModel
+            {
+                MatchId = matchId,
+                IsDraft = false,
+                Recalculation = true
+            });
             return Ok();
         }
 

@@ -38,35 +38,35 @@ public class FirstNorthern_Northern_DeDauGiai1_Processor : AbstractBetKindProces
             {
                 dataResult.State = TicketState.Won;
 
-                dataResult.PlayerWinLose = ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
+                dataResult.PlayerWinLoss = ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
 
-                dataResult.AgentWinLose = -1 * dataResult.PlayerWinLose * ticket.AgentPt;
+                dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
                 dataResult.AgentCommission = (ticket.PlayerOdds ?? 0m - ticket.AgentOdds ?? 0m) * ticket.Stake;
 
-                dataResult.MasterWinLose = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLose;
+                dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
                 dataResult.MasterCommission = (ticket.AgentOdds ?? 0m - ticket.MasterOdds ?? 0m) * ticket.Stake;
 
-                dataResult.SupermasterWinLose = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLose;
+                dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
                 dataResult.SupermasterCommission = (ticket.MasterOdds ?? 0m - ticket.SupermasterOdds ?? 0m) * ticket.Stake;
 
-                dataResult.CompanyWinLose = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLose;
+                dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
             }
             else
             {
                 dataResult.State = TicketState.Lose;
 
-                dataResult.PlayerWinLose = -1 * ticket.PlayerPayout;
+                dataResult.PlayerWinLoss = -1 * ticket.PlayerPayout;
 
-                dataResult.AgentWinLose = -1 * dataResult.PlayerWinLose * ticket.AgentPt;
+                dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
                 dataResult.AgentCommission = (ticket.PlayerOdds ?? 0m - ticket.AgentOdds ?? 0m) * ticket.Stake;
 
-                dataResult.MasterWinLose = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLose;
+                dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
                 dataResult.MasterCommission = (ticket.AgentOdds ?? 0m - ticket.MasterOdds ?? 0m) * ticket.Stake;
 
-                dataResult.SupermasterWinLose = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLose;
+                dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
                 dataResult.SupermasterCommission = (ticket.MasterOdds ?? 0m - ticket.SupermasterOdds ?? 0m) * ticket.Stake;
 
-                dataResult.CompanyWinLose = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLose;
+                dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
             }
         }
         else
@@ -116,14 +116,14 @@ public class FirstNorthern_Northern_DeDauGiai1_Processor : AbstractBetKindProces
                     {
                         TicketId = item.TicketId,
                         State = TicketState.Won,
-                        PlayerWinLose = playerWinlose,
-                        AgentWinLose = agentWinlose,
+                        PlayerWinLoss = playerWinlose,
+                        AgentWinLoss = agentWinlose,
                         AgentCommission = agentCommission,
-                        MasterWinLose = masterWinlose,
+                        MasterWinLoss = masterWinlose,
                         MasterCommission = masterCommission,
-                        SupermasterWinLose = supermasterWinlose,
+                        SupermasterWinLoss = supermasterWinlose,
                         SupermasterCommission = supermasterCommission,
-                        CompanyWinLose = companyWinlose
+                        CompanyWinLoss = companyWinlose
                     });
                 }
                 else
@@ -145,14 +145,14 @@ public class FirstNorthern_Northern_DeDauGiai1_Processor : AbstractBetKindProces
                     {
                         TicketId = item.TicketId,
                         State = TicketState.Lose,
-                        PlayerWinLose = playerWinlose,
-                        AgentWinLose = agentWinlose,
+                        PlayerWinLoss = playerWinlose,
+                        AgentWinLoss = agentWinlose,
                         AgentCommission = agentCommission,
-                        MasterWinLose = masterWinlose,
+                        MasterWinLoss = masterWinlose,
                         MasterCommission = masterCommission,
-                        SupermasterWinLose = supermasterWinlose,
+                        SupermasterWinLoss = supermasterWinlose,
                         SupermasterCommission = supermasterCommission,
-                        CompanyWinLose = companyWinlose
+                        CompanyWinLoss = companyWinlose
                     });
                 }
 
@@ -171,18 +171,18 @@ public class FirstNorthern_Northern_DeDauGiai1_Processor : AbstractBetKindProces
             }
 
             dataResult.State = totalPlayerWinLose > 0 ? TicketState.Won : TicketState.Lose;
-            dataResult.PlayerWinLose = totalPlayerWinLose;
+            dataResult.PlayerWinLoss = totalPlayerWinLose;
 
-            dataResult.AgentWinLose = totalAgentWinLose;
+            dataResult.AgentWinLoss = totalAgentWinLose;
             dataResult.AgentCommission = totalAgentCommission;
 
-            dataResult.MasterWinLose = totalMasterWinLose;
+            dataResult.MasterWinLoss = totalMasterWinLose;
             dataResult.MasterCommission = totalMasterCommission;
 
-            dataResult.SupermasterWinLose = totalSupermasterWinLose;
+            dataResult.SupermasterWinLoss = totalSupermasterWinLose;
             dataResult.SupermasterCommission = totalSupermasterCommission;
 
-            dataResult.CompanyWinLose = totalCompanyWinLose;
+            dataResult.CompanyWinLoss = totalCompanyWinLose;
         }
         return dataResult;
     }

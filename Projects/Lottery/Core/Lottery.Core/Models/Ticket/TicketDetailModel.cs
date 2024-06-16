@@ -2,5 +2,7 @@
 {
     public class TicketDetailModel : BaseTicketDetailModel
     {
+        public long PlayerId { get; set; }
+        public string Username { get; set; }
     }
 }

@@ -26,10 +26,10 @@ public class FirstNorthern_Northern_LoTruot_Processor : AbstractBetKindProcessor
         return point * (oddsValue - betKind.Award);
     }
 
-    public override decimal? GetPlayerOdds(Dictionary<int, decimal> oddsValueByNumbers)
+    public override decimal? GetPlayerOdds(Dictionary<int, decimal> payoutByNumbers)
     {
-        foreach (var item in oddsValueByNumbers) return item.Value;
-        return base.GetPlayerOdds(oddsValueByNumbers);
+        foreach (var item in payoutByNumbers) return item.Value;
+        return base.GetPlayerOdds(payoutByNumbers);
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
@@ -76,37 +76,37 @@ public class FirstNorthern_Northern_LoTruot_Processor : AbstractBetKindProcessor
                 child.State = TicketState.Won;
                 playerWinlose = item.Stake * ticket.RewardRate.Value;
             }
-            child.PlayerWinLose = playerWinlose;
-            child.AgentWinLose = -1 * playerWinlose * item.AgentPt;
+            child.PlayerWinLoss = playerWinlose;
+            child.AgentWinLoss = -1 * playerWinlose * item.AgentPt;
             child.AgentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
 
-            child.MasterWinLose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
+            child.MasterWinLoss = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
             child.MasterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
 
-            child.SupermasterWinLose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
+            child.SupermasterWinLoss = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
             child.SupermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
-            child.CompanyWinLose = -1 * (1 - item.SupermasterPt) * playerWinlose;
+            child.CompanyWinLoss = -1 * (1 - item.SupermasterPt) * playerWinlose;
             dataResult.Children.Add(child);
 
             totalPlayerWinLose += playerWinlose;
-            totalAgentWinLose += child.AgentWinLose;
+            totalAgentWinLose += child.AgentWinLoss;
             totalAgentCommission += child.AgentCommission;
-            totalMasterWinLose += child.MasterWinLose;
+            totalMasterWinLose += child.MasterWinLoss;
             totalMasterCommission += child.MasterCommission;
-            totalSupermasterWinLose += child.SupermasterWinLose;
+            totalSupermasterWinLose += child.SupermasterWinLoss;
             totalSupermasterCommission += child.SupermasterCommission;
-            totalCompanyWinLose += child.CompanyWinLose;
+            totalCompanyWinLose += child.CompanyWinLoss;
         }
 
         dataResult.State = totalPlayerWinLose > 0 ? TicketState.Won : TicketState.Lose;
-        dataResult.PlayerWinLose = totalPlayerWinLose;
-        dataResult.AgentWinLose = totalAgentWinLose;
+        dataResult.PlayerWinLoss = totalPlayerWinLose;
+        dataResult.AgentWinLoss = totalAgentWinLose;
         dataResult.AgentCommission = totalAgentCommission;
-        dataResult.MasterWinLose = totalMasterWinLose;
+        dataResult.MasterWinLoss = totalMasterWinLose;
         dataResult.MasterCommission = totalMasterCommission;
-        dataResult.SupermasterWinLose = totalSupermasterWinLose;
+        dataResult.SupermasterWinLoss = totalSupermasterWinLose;
         dataResult.SupermasterCommission = totalSupermasterCommission;
-        dataResult.CompanyWinLose = totalCompanyWinLose;
+        dataResult.CompanyWinLoss = totalCompanyWinLose;
         return dataResult;
     }
 }

@@ -27,10 +27,10 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
         return (oddsValue - betKind.Award) * point;
     }
 
-    public override decimal? GetPlayerOdds(Dictionary<int, decimal> oddsValueByNumbers)
+    public override decimal? GetPlayerOdds(Dictionary<int, decimal> payoutByNumbers)
     {
-        foreach (var item in oddsValueByNumbers) return item.Value;
-        return base.GetPlayerOdds(oddsValueByNumbers);
+        foreach (var item in payoutByNumbers) return item.Value;
+        return base.GetPlayerOdds(payoutByNumbers);
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
@@ -47,8 +47,6 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
             TicketId = ticket.TicketId
         };
 
-        var totalPlayerPayout = ticket.Children.Sum(f => f.PlayerPayout);
-
         var totalPlayerWinLose = 0m;
         var totalAgentWinLose = 0m;
         var totalAgentCommission = 0m;
@@ -60,7 +58,7 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
         foreach (var item in ticket.Children)
         {
             var playerWinlose = item.ChoosenNumbers.Equals(val)
-                                    ? -1 * totalPlayerPayout
+                                    ? -1 * item.PlayerPayout
                                     : item.Stake * ticket.RewardRate.Value;
             var agentWinlose = -1 * playerWinlose * item.AgentPt;
             var agentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
@@ -74,14 +72,14 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
             {
                 TicketId = item.TicketId,
                 State = item.ChoosenNumbers.Equals(val) ? TicketState.Lose : TicketState.Won,
-                PlayerWinLose = playerWinlose,
-                AgentWinLose = agentWinlose,
+                PlayerWinLoss = playerWinlose,
+                AgentWinLoss = agentWinlose,
                 AgentCommission = agentCommission,
-                MasterWinLose = masterWinlose,
+                MasterWinLoss = masterWinlose,
                 MasterCommission = masterCommission,
-                SupermasterWinLose = supermasterWinlose,
+                SupermasterWinLoss = supermasterWinlose,
                 SupermasterCommission = supermasterCommission,
-                CompanyWinLose = companyWinlose
+                CompanyWinLoss = companyWinlose
             });
 
             totalPlayerWinLose += playerWinlose;
@@ -95,14 +93,14 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
         }
 
         dataResult.State = totalPlayerWinLose < 0 ? TicketState.Lose : TicketState.Won;
-        dataResult.PlayerWinLose = totalPlayerWinLose;
-        dataResult.AgentWinLose = totalAgentWinLose;
+        dataResult.PlayerWinLoss = totalPlayerWinLose;
+        dataResult.AgentWinLoss = totalAgentWinLose;
         dataResult.AgentCommission = totalAgentCommission;
-        dataResult.MasterWinLose = totalMasterWinLose;
+        dataResult.MasterWinLoss = totalMasterWinLose;
         dataResult.MasterCommission = totalMasterCommission;
-        dataResult.SupermasterWinLose = totalSupermasterWinLose;
+        dataResult.SupermasterWinLoss = totalSupermasterWinLose;
         dataResult.SupermasterCommission = totalSupermasterCommission;
-        dataResult.CompanyWinLose = totalCompanyWinLose;
+        dataResult.CompanyWinLoss = totalCompanyWinLose;
         return dataResult;
     }
 }

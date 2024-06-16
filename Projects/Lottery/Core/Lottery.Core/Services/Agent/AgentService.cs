@@ -1305,7 +1305,7 @@ namespace Lottery.Core.Services.Agent
             {
                 await _auditService.SaveAuditData(new AuditParams
                 {
-                    Type = (int)AuditType.Setting,
+                    Type = AuditType.Setting.ToInt(),
                     EditedUsername = ClientContext.Agent.UserName,
                     AgentUserName = agent.Username,
                     Action = AuditDataHelper.Setting.Action.ActionUpdateBetSetting,
@@ -1354,7 +1354,7 @@ namespace Lottery.Core.Services.Agent
             {
                 await _auditService.SaveAuditData(new AuditParams
                 {
-                    Type = (int)AuditType.Setting,
+                    Type = AuditType.Setting.ToInt(),
                     EditedUsername = ClientContext.Agent.UserName,
                     AgentUserName = agent.Username,
                     Action = AuditDataHelper.Setting.Action.ActionUpdatePositionTaking,
