@@ -81,14 +81,14 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok(OkResponse.Create(await _playerTicketService.GetDetailTicket(ticketId)));
         }
 
-        [HttpGet("{matchId:long}/load-tickets")]
+        [HttpGet("{matchId:long}/load-tickets"), LotteryAuthorize(Permission.Management.Matches)]
         public async Task<IActionResult> LoadTicketsByMatch([FromRoute] long matchId, [FromQuery] int top = 1000)
         {
             await _ticketService.LoadTicketsByMatch(matchId, top);
             return Ok();
         }
 
-        [HttpGet("{matchId:long}/completed-tickets")]
+        [HttpGet("{matchId:long}/completed-tickets"), LotteryAuthorize(Permission.Management.Matches)]
         public IActionResult CompletedTicketsByMatch([FromRoute] long matchId)
         {
             _completedMatchService.Enqueue(matchId);

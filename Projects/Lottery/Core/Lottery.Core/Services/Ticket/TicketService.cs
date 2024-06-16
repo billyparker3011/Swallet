@@ -743,8 +743,8 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
     {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var tickets = top < 0
-                    ? await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId).ToListAsync()
-                    : await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId).Take(top).ToListAsync();
+                    ? await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId && f.State == TicketState.Waiting.ToInt()).ToListAsync()
+                    : await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId && f.State == TicketState.Waiting.ToInt()).Take(top).ToListAsync();
         var ticketIds = tickets.Select(f => f.TicketId).ToList();
         var children = await ticketRepository.FindQueryBy(f => f.ParentId.HasValue && ticketIds.Contains(f.ParentId.Value)).ToListAsync();
 
