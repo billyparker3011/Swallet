@@ -33,16 +33,25 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
         {
             ticket.State = ticket.IsLive ? TicketState.Reject.ToInt() : TicketState.Refund.ToInt();
             ticket.PlayerWinLoss = 0m;
+            ticket.DraftPlayerWinLoss = 0m;
+
             ticket.AgentWinLoss = 0m;
             ticket.AgentCommission = 0m;
+            ticket.DraftAgentWinLoss = 0m;
+            ticket.DraftAgentCommission = 0m;
 
             ticket.MasterWinLoss = 0m;
             ticket.MasterCommission = 0m;
+            ticket.DraftMasterWinLoss = 0m;
+            ticket.DraftMasterCommission = 0m;
 
             ticket.SupermasterWinLoss = 0m;
             ticket.SupermasterCommission = 0m;
+            ticket.DraftSupermasterWinLoss = 0m;
+            ticket.DraftSupermasterCommission = 0m;
 
             ticket.CompanyWinLoss = 0m;
+            ticket.DraftCompanyWinLoss = 0m;
 
             ticketRepository.Update(ticket);
 

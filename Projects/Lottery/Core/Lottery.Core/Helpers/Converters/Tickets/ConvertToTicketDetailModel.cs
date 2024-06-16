@@ -18,6 +18,7 @@ namespace Lottery.Core.Helpers.Converters.Tickets
                 State = f.State,
                 TotalPayout = f.PlayerPayout,
                 TotalWinlose = f.PlayerWinLoss,
+                TotalDraftWinlose = f.DraftPlayerWinLoss,
                 TotalPoints = f.Stake,
                 CreatedAt = f.CreatedAt,
                 IpAddress = f.IpAddress,

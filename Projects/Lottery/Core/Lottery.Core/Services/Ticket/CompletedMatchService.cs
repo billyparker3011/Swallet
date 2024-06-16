@@ -139,6 +139,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
 
                 item.State = resultTicket.State.ToInt();
                 item.PlayerWinLoss = resultTicket.PlayerWinLose;
+                item.DraftPlayerWinLoss = resultTicket.DraftPlayerWinLose;
 
                 item.AgentWinLoss = resultTicket.AgentWinLose;
                 item.AgentCommission = resultTicket.AgentCommission;

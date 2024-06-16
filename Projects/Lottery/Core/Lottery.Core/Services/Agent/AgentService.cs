@@ -931,7 +931,8 @@ namespace Lottery.Core.Services.Agent
                                        player.PlayerSession.Platform,
                                        ticket.Stake,
                                        ticket.PlayerPayout,
-                                       ticket.PlayerWinLoss
+                                       ticket.PlayerWinLoss,
+                                       ticket.DraftPlayerWinLoss
                                    })
                                    .GroupBy(x => new
                                    {
@@ -949,7 +950,7 @@ namespace Lottery.Core.Services.Agent
                                        Point = x.Sum(s => s.Stake),
                                        Payout = x.Sum(s => s.PlayerPayout),
                                        WinLose = x.Sum(s => s.PlayerWinLoss),
-                                       //WinLoseInfos = winLossInfos,
+                                       DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
                                        Company = null,
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
@@ -961,6 +962,7 @@ namespace Lottery.Core.Services.Agent
                 TotalPoint = agentWinlossSummaries.Sum(x => x.Point),
                 TotalPayout = agentWinlossSummaries.Sum(x => x.Payout),
                 TotalWinLose = agentWinlossSummaries.Sum(x => x.WinLose),
+                TotalDraftWinLose = agentWinlossSummaries.Sum(x => x.DraftWinLose),
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {
@@ -997,7 +999,8 @@ namespace Lottery.Core.Services.Agent
                                        agent.AgentSession.Platform,
                                        ticket.Stake,
                                        ticket.PlayerPayout,
-                                       ticket.PlayerWinLoss
+                                       ticket.PlayerWinLoss,
+                                       ticket.DraftPlayerWinLoss
                                    })
                                    .GroupBy(x => new
                                    {
@@ -1016,7 +1019,7 @@ namespace Lottery.Core.Services.Agent
                                        Point = x.Sum(s => s.Stake),
                                        Payout = x.Sum(s => s.PlayerPayout),
                                        WinLose = x.Sum(s => s.PlayerWinLoss),
-                                       //WinLoseInfos = winLossInfos,
+                                       DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
                                        Company = null,
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
@@ -1028,6 +1031,7 @@ namespace Lottery.Core.Services.Agent
                 TotalPoint = agentWinlossSummaries.Sum(x => x.Point),
                 TotalPayout = agentWinlossSummaries.Sum(x => x.Payout),
                 TotalWinLose = agentWinlossSummaries.Sum(x => x.WinLose),
+                TotalDraftWinLose = agentWinlossSummaries.Sum(x => x.DraftWinLose),
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {
@@ -1140,13 +1144,21 @@ namespace Lottery.Core.Services.Agent
                                        ticket.Stake,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
+                                       ticket.DraftPlayerWinLoss,
                                        ticket.AgentWinLoss,
                                        ticket.AgentCommission,
+                                       ticket.DraftAgentWinLoss,
+                                       ticket.DraftAgentCommission,
                                        ticket.MasterWinLoss,
                                        ticket.MasterCommission,
+                                       ticket.DraftMasterWinLoss,
+                                       ticket.DraftMasterCommission,
                                        ticket.SupermasterWinLoss,
                                        ticket.SupermasterCommission,
-                                       ticket.CompanyWinLoss
+                                       ticket.DraftSupermasterWinLoss,
+                                       ticket.DraftSupermasterCommission,
+                                       ticket.CompanyWinLoss,
+                                       ticket.DraftCompanyWinLoss
                                    })
                                    .GroupBy(x => new
                                    {
@@ -1165,34 +1177,43 @@ namespace Lottery.Core.Services.Agent
                                        Point = x.Sum(s => s.Stake),
                                        Payout = x.Sum(s => s.PlayerPayout),
                                        WinLose = x.Sum(s => s.PlayerWinLoss),
+                                       DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new WinLoseInfo
                                                        {
                                                            WinLose = x.Sum(s => s.AgentWinLoss),
                                                            Commission = x.Sum(s => s.AgentCommission),
-                                                           Subtotal = x.Sum(s => s.AgentWinLoss) + x.Sum(s => s.AgentCommission)
+                                                           Subtotal = x.Sum(s => s.AgentWinLoss) + x.Sum(s => s.AgentCommission),
+                                                           DraftWinLose = x.Sum(s => s.DraftAgentWinLoss),
+                                                           DraftCommission = x.Sum(s => s.DraftAgentCommission),
+                                                           DraftSubtotal = x.Sum(s => s.DraftAgentWinLoss) + x.Sum(s => s.DraftAgentCommission)
                                                        }
                                                        : null,
-
                                        MasterWinlose = loginAgent.RoleId < Role.Master.ToInt()
                                                        ? new WinLoseInfo
                                                        {
                                                            WinLose = x.Sum(s => s.MasterWinLoss),
                                                            Commission = x.Sum(s => s.MasterCommission),
-                                                           Subtotal = x.Sum(s => s.MasterWinLoss) + x.Sum(s => s.MasterCommission)
+                                                           Subtotal = x.Sum(s => s.MasterWinLoss) + x.Sum(s => s.MasterCommission),
+
+                                                           DraftWinLose = x.Sum(s => s.DraftMasterWinLoss),
+                                                           DraftCommission = x.Sum(s => s.DraftMasterCommission),
+                                                           DraftSubtotal = x.Sum(s => s.DraftMasterWinLoss) + x.Sum(s => s.DraftMasterCommission)
                                                        }
                                                        : null,
-
                                        SupermasterWinlose = loginAgent.RoleId < Role.Supermaster.ToInt()
                                                        ? new WinLoseInfo
                                                        {
                                                            WinLose = x.Sum(s => s.SupermasterWinLoss),
                                                            Commission = x.Sum(s => s.SupermasterCommission),
-                                                           Subtotal = x.Sum(s => s.SupermasterWinLoss) + x.Sum(s => s.SupermasterCommission)
+                                                           Subtotal = x.Sum(s => s.SupermasterWinLoss) + x.Sum(s => s.SupermasterCommission),
+                                                           DraftWinLose = x.Sum(s => s.DraftSupermasterWinLoss),
+                                                           DraftCommission = x.Sum(s => s.DraftSupermasterCommission),
+                                                           DraftSubtotal = x.Sum(s => s.DraftSupermasterWinLoss) + x.Sum(s => s.DraftSupermasterCommission)
                                                        }
                                                        : null,
-
                                        Company = x.Sum(s => s.CompanyWinLoss),
+                                       DraftCompany = x.Sum(s => s.DraftCompanyWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
                                    })
@@ -1204,6 +1225,7 @@ namespace Lottery.Core.Services.Agent
                 TotalPoint = agentWinlossSummaries.Sum(x => x.Point),
                 TotalPayout = agentWinlossSummaries.Sum(x => x.Payout),
                 TotalWinLose = agentWinlossSummaries.Sum(x => x.WinLose),
+                TotalDraftWinLose = agentWinlossSummaries.Sum(x => x.DraftWinLose),
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {

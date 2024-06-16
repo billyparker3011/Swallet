@@ -8,5 +8,6 @@
         public object TotalPoint { get; set; }
         public decimal TotalPayout { get; set; }
         public decimal? TotalWinlose { get; set; }
+        public decimal? TotalDraftWinlose { get; set; }
     }
 }
