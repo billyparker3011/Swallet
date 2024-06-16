@@ -8,8 +8,8 @@ jobs:
   - template: ../steps/ReplaceTokens.yaml
     parameters:
       Environment: ${{ parameters.Environment }}
-  # - template: ../steps/HelmInstaller.yaml
-  # - template: ../steps/HelmPackage.yaml
+  - template: ../steps/HelmInstaller.yaml
+  - template: ../steps/HelmPackage.yaml
   - template: ../steps/HelmPublish.yaml
     parameters:
       Environment: ${{ parameters.Environment }}
