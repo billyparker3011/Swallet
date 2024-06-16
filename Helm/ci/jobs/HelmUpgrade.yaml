@@ -57,8 +57,8 @@ jobs:
         applicationName: "player-portal"
         applicationBuildNo: ${{ parameters.PlayerPortalBuildNumber }}
   steps:
-  - template: ../steps/KubectlInstaller.yaml
-  - template: ../steps/HelmInstaller.yaml
+  # - template: ../steps/KubectlInstaller.yaml
+  # - template: ../steps/HelmInstaller.yaml
   - template: ../steps/DownloadHelmArtifact.yaml
     parameters:
       Environment: ${{ parameters.Environment }}
