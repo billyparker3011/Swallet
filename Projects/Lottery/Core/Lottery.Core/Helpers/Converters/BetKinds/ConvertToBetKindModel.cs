@@ -13,6 +13,7 @@ namespace Lottery.Core.Helpers.Converters.BetKinds
                 Name = betKind.Name,
                 RegionId = betKind.RegionId,
                 CategoryId = betKind.CategoryId,
+                CategoryName = EnumCategoryHelper.GetEnumCategoryInformation((Enums.Category)betKind.CategoryId)?.Name,
                 IsLive = betKind.IsLive,
                 ReplaceByIdWhenLive = betKind.ReplaceByIdWhenLive,
                 OrderInCategory = betKind.OrderInCategory,

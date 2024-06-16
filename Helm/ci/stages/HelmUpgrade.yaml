@@ -7,6 +7,8 @@ parameters:
   type: string
 - name: LogBuildNumber
   type: string
+- name: MatchBuildNumber
+  type: string
 - name: OddBuildNumber
   type: string
 - name: PlayerAuthenticationBuildNumber
@@ -33,10 +35,11 @@ stages:
       Environment: ${{ parameters.Environment }}
       AgentAuthenticationBuildNumber: ${{ parameters.AgentAuthenticationBuildNumber }}
       AgentBuildNumber: ${{ parameters.AgentBuildNumber }}
-      PlayerAuthenticationBuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
-      PlayerBuildNumber: ${{ parameters.PlayerBuildNumber }}
       LogBuildNumber: ${{ parameters.LogBuildNumber }}
+      MatchBuildNumber: ${{ parameters.MatchBuildNumber }}
       OddBuildNumber: ${{ parameters.OddBuildNumber }}
+      PlayerAuthenticationBuildNumber: ${{ parameters.PlayerAuthenticationBuildNumber }}
+      PlayerBuildNumber: ${{ parameters.PlayerBuildNumber }}    
       TicketBuildNumber: ${{ parameters.TicketBuildNumber }}
       AgentPortalBuildNumber: ${{ parameters.AgentPortalBuildNumber }}
       PlayerPortalBuildNumber: ${{ parameters.PlayerPortalBuildNumber }}

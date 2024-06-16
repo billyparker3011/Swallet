@@ -7,155 +7,150 @@ averageUtilization:
   memory: 90
 applications:
   agent-authentication:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-authentication"
     resources:
       limits:
-        memory: 50Mi
+        memory: 512Mi
       requests:
-        cpu: 10m
-        memory: 50Mi
+        cpu: 100m
+        memory: 256Mi
     config:
-      RedisConnections: "#{RedisConnections}#"
-      DatabaseConnectionString: "#{DatabaseConnectionString}#"
-  agent-portal:
-    domain: abc.com
-    minReplicas: 1
-    maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
-    livenessProbeEnabled: true
-    livenessProbe:
-      httpGet:
-        path: /healthcheck
-        port: 80
-      initialDelaySeconds: 30
-      periodSeconds: 30
-    resources:
-      limits:
-        memory: 2000Mi
-      requests:
-        cpu: 50m
-        memory: 2000Mi
-    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
-    maxReplicas: 1
+    maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent"
     resources:
       limits:
-        memory: 6000Mi
+        memory: 512Mi
       requests:
         cpu: 100m
-        memory: 6000Mi
-    tolerationsEnabled: false
-    tolerations:
-      key: "application"
-      operator: "Equal"
-      value: "report-triggered-jobs"
-      effect: "NoExecute"
+        memory: 256Mi
     config:
+      ASPNETCORE_ENVIRONMENT: "Development"
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   log:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/log"
     resources:
       limits:
-        memory: 50Mi
+        memory: 512Mi
       requests:
-        cpu: 10m
-        memory: 50Mi
+        cpu: 100m
+        memory: 256Mi
     config:
+      ASPNETCORE_ENVIRONMENT: "Development"
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   match:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/match"
     resources:
       limits:
-        memory: 1000Mi
+        memory: 512Mi
       requests:
-        cpu: 10m
-        memory: 1000Mi
+        cpu: 100m
+        memory: 256Mi
     config:
+      ASPNETCORE_ENVIRONMENT: "Development"
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   odd:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/odd"
     resources:
       limits:
-        memory: 1000Mi
+        memory: 512Mi
       requests:
-        cpu: 10m
-        memory: 1000Mi
+        cpu: 100m
+        memory: 256Mi
     config:
+      ASPNETCORE_ENVIRONMENT: "Development"
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-authentication:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player-authentication"
     resources:
       limits:
-        memory: 1000Mi
+        memory: 512Mi
       requests:
-        cpu: 10m
-        memory: 1000Mi
+        cpu: 100m
+        memory: 256Mi
     config:
-      RedisConnections: "#{RedisConnections}#"
-      DatabaseConnectionString: "#{DatabaseConnectionString}#"
-  player-portal:
-    domain: abc.com
-    minReplicas: 1
-    maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/player-portal"
-    resources:
-      limits:
-        memory: 1000Mi
-      requests:
-        cpu: 10m
-        memory: 1000Mi
-    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player"
     resources:
       limits:
-        memory: 1000Mi
+        memory: 512Mi
       requests:
-        cpu: 10m
-        memory: 1000Mi
+        cpu: 100m
+        memory: 256Mi
     config:
+      ASPNETCORE_ENVIRONMENT: "Development"
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   ticket:
-    domain: abc.com
+    domain: m8xs.io
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/ticket"
     resources:
       limits:
-        memory: 1000Mi
+        memory: 512Mi
       requests:
-        cpu: 10m
-        memory: 1000Mi
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  agent-portal:
+    domain: m8xs.io
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  player-portal:
+    domain: m8xs.io
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/player-portal"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
     config:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
