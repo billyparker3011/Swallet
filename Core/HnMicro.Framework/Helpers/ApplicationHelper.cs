@@ -17,6 +17,7 @@ namespace HnMicro.Framework.Helpers
                 app.UseSwaggerUI();
             }
 
+            app.UseHealthChecks("/health-checks");
             app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseHttpsRedirection();
             app.UseOnlyCors();
