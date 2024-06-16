@@ -32,7 +32,8 @@ namespace Lottery.Core.Services.Statement
                     MatchId = f.Key,
                     TotalPoints = f.Sum(f1 => f1.Stake),
                     TotalPayout = f.Sum(f1 => f1.PlayerPayout),
-                    TotalWinlose = f.Sum(f1 => f1.PlayerWinLoss)
+                    TotalWinlose = f.Sum(f1 => f1.PlayerWinLoss),
+                    TotalDraftWinlose = f.Sum(f1 => f1.DraftPlayerWinLoss)
                 }).ToListAsync();
 
             var statements = new List<StatementModel>();
@@ -46,7 +47,8 @@ namespace Lottery.Core.Services.Statement
                     Kickofftime = match.KickOffTime,
                     TotalPoint = statementByMatch != null ? statementByMatch.TotalPoints : 0m,
                     TotalPayout = statementByMatch != null ? statementByMatch.TotalPayout : 0m,
-                    TotalWinlose = match.MatchState == MatchState.Completed.ToInt() && statementByMatch != null ? statementByMatch.TotalWinlose : null
+                    TotalWinlose = match.MatchState == MatchState.Completed.ToInt() && statementByMatch != null ? statementByMatch.TotalWinlose : null,
+                    TotalDraftWinlose = match.MatchState == MatchState.Completed.ToInt() && statementByMatch != null ? statementByMatch.TotalDraftWinlose : null
                 });
             }
             return statements;

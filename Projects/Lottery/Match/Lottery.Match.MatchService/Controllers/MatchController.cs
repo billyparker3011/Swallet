@@ -23,9 +23,9 @@ namespace Lottery.Match.MatchService.Controllers
         }
 
         [HttpGet, LotteryAuthorize(Permission.Management.Matches, Permission.Management.AdvancedTickets)]
-        public async Task<IActionResult> GetMatches([FromQuery] bool displayResult = false)
+        public async Task<IActionResult> GetMatches([FromQuery] bool? displayResult)
         {
-            return Ok(OkResponse.Create(await _matchService.GetMatches(30, displayResult)));
+            return Ok(OkResponse.Create(await _matchService.GetMatches(30, displayResult ?? false)));
         }
 
         [HttpPost, LotteryAuthorize(Permission.Management.Matches)]
@@ -71,7 +71,7 @@ namespace Lottery.Match.MatchService.Controllers
             return Ok(OkResponse.Create(await _matchService.GetRunningMatch()));
         }
 
-        [HttpPut("{matchId:long}/match-result/{regionId:int}/channels/{channelId:int}")]
+        [HttpPut("{matchId:long}/match-result/{regionId:int}/channels/{channelId:int}"), LotteryAuthorize(Permission.Management.Matches)]
         public async Task<IActionResult> UpdateMatchResult([FromRoute] long matchId, [FromRoute] int regionId, [FromRoute] int channelId, [FromBody] MatchResultRequest request)
         {
             await _matchService.UpdateMatchResults(new MatchResultModel

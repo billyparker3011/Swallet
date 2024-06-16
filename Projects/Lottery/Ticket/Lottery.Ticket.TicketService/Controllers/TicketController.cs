@@ -81,17 +81,33 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok(OkResponse.Create(await _playerTicketService.GetDetailTicket(ticketId)));
         }
 
-        [HttpGet("{matchId:long}/load-tickets")]
+        [HttpGet("{matchId:long}/load-tickets"), LotteryAuthorize(Permission.Management.Matches)]
         public async Task<IActionResult> LoadTicketsByMatch([FromRoute] long matchId, [FromQuery] int top = 1000)
         {
             await _ticketService.LoadTicketsByMatch(matchId, top);
             return Ok();
         }
 
-        [HttpGet("{matchId:long}/completed-tickets")]
-        public IActionResult CompletedTicketsByMatch([FromRoute] long matchId)
+        [HttpGet("{matchId:long}/draft-completed-tickets"), LotteryAuthorize(Permission.Management.Matches)]
+        public IActionResult DraftCompletedTicketsByMatch([FromRoute] long matchId)
         {
-            _completedMatchService.Enqueue(matchId);
+            _completedMatchService.Enqueue(new CompletedMatchInQueueModel
+            {
+                MatchId = matchId,
+                IsDraft = true
+            });
+            return Ok();
+        }
+
+        [HttpGet("{matchId:long}/completed-tickets-onemore"), LotteryAuthorize(Permission.Management.Matches)]
+        public IActionResult CompletedTicketsOneMoreByMatch([FromRoute] long matchId)
+        {
+            _completedMatchService.Enqueue(new CompletedMatchInQueueModel
+            {
+                MatchId = matchId,
+                IsDraft = false,
+                Recalculation = true
+            });
             return Ok();
         }
 

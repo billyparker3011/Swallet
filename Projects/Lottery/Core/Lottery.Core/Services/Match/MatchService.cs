@@ -66,7 +66,11 @@ namespace Lottery.Core.Services.Match
             await PublishUpdateMatch(matchId);
             if (match.MatchState != MatchState.Completed.ToInt()) return;
 
-            _completedMatchService.Enqueue(matchId);
+            _completedMatchService.Enqueue(new Models.Ticket.CompletedMatchInQueueModel
+            {
+                MatchId = matchId,
+                IsDraft = false
+            });
             await _redisCacheService.RemoveAsync(CachingConfigs.RunningMatchKey, CachingConfigs.RedisConnectionForApp);
         }
 

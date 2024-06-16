@@ -18,6 +18,7 @@
         public decimal TotalPoints { get; set; }
         public decimal TotalPayout { get; set; }
         public decimal? TotalWinlose { get; set; }
+        public decimal? TotalDraftWinlose { get; set; }
         public int State { get; set; }
         public bool? ShowMore { get; set; }
         public string IpAddress { get; set; }

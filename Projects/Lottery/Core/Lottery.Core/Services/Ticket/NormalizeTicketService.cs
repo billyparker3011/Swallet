@@ -22,6 +22,15 @@ public class NormalizeTicketService : HnMicroBaseService<NormalizeTicketService>
         _inMemoryUnitOfWork = inMemoryUnitOfWork;
     }
 
+    public void NormalizePlayer(List<TicketDetailModel> data, Dictionary<long, string> players)
+    {
+        data.ForEach(f =>
+        {
+            if (!players.TryGetValue(f.PlayerId, out string username)) return;
+            f.Username = username;
+        });
+    }
+
     public void NormalizeTicket(List<TicketDetailModel> data)
     {
         var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();

@@ -17,9 +17,9 @@ namespace Lottery.Core.Services.Ticket;
 public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, ICompletedMatchService, IDisposable
 {
     private Timer _timer;
-    private readonly ConcurrentQueue<long> _queue = new();
+    private readonly ConcurrentQueue<CompletedMatchInQueueModel> _queue = new();
     private readonly CompletedMatchOption _completedMatchOption;
-    private readonly List<long> _matchIds = new();
+    private readonly List<CompletedMatchInQueueModel> _matches = new();
     private readonly List<int> _statesOfTicket;
     private readonly ITicketProcessor _processor;
 
@@ -51,24 +51,26 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
 
     private void InternalCompletedMatch()
     {
-        _matchIds.Clear();
-        while (_queue.TryDequeue(out long matchId))
+        _matches.Clear();
+        while (_queue.TryDequeue(out CompletedMatchInQueueModel match))
         {
-            if (_matchIds.Contains(matchId)) continue;
-            _matchIds.Add(matchId);
+            if (_matches.Contains(match)) continue;
+            _matches.Add(match);
         }
-        if (_matchIds.Count == 0) return;
+        if (_matches.Count == 0) return;
 
         try
         {
+            var matchIds = _matches.Select(f => f.MatchId).ToList();
+
             using var scope = ServiceProvider.CreateScope();
             var lotteryUow = scope.ServiceProvider.GetService<ILotteryUow>();
 
             var matchResultRepository = lotteryUow.GetRepository<IMatchResultRepository>();
-            var matchResults = matchResultRepository.FindQueryBy(f => _matchIds.Contains(f.MatchId)).ToList();
+            var matchResults = matchResultRepository.FindQueryBy(f => matchIds.Contains(f.MatchId)).ToList();
 
             var ticketRepository = lotteryUow.GetRepository<ITicketRepository>();
-            var tickets = ticketRepository.FindQueryBy(f => _matchIds.Contains(f.MatchId) && _statesOfTicket.Contains(f.State)).ToList();
+            var tickets = ticketRepository.FindQueryBy(f => matchIds.Contains(f.MatchId) && _statesOfTicket.Contains(f.State)).ToList();
 
             var rootTickets = tickets.Where(f => !f.ParentId.HasValue).ToList();
             foreach (var item in rootTickets)
@@ -76,6 +78,9 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                 var matchResult = matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
                 if (matchResult == null || string.IsNullOrEmpty(matchResult.Results)) continue;
                 var result = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(matchResult.Results);
+
+                var matchInQueue = _matches.FirstOrDefault(f => f.MatchId == item.MatchId);
+                var isDraft = matchInQueue != null && matchInQueue.IsDraft;
 
                 var children = tickets.Where(f => f.ParentId == item.TicketId).ToList();
                 var resultTicket = _processor.CompletedTicket(item.BetKindId, new CompletedTicketModel
@@ -138,18 +143,38 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                 item.MixedTimes = resultTicket.MixedTimes;
 
                 item.State = resultTicket.State.ToInt();
-                item.PlayerWinLoss = resultTicket.PlayerWinLose;
 
-                item.AgentWinLoss = resultTicket.AgentWinLose;
-                item.AgentCommission = resultTicket.AgentCommission;
+                if (isDraft)
+                {
+                    item.DraftPlayerWinLoss = resultTicket.PlayerWinLoss;
 
-                item.MasterPayout = resultTicket.MasterWinLose;
-                item.MasterCommission = resultTicket.MasterCommission;
+                    item.DraftAgentWinLoss = resultTicket.AgentWinLoss;
+                    item.DraftAgentCommission = resultTicket.AgentCommission;
 
-                item.SupermasterPayout = resultTicket.SupermasterWinLose;
-                item.SupermasterCommission = resultTicket.SupermasterCommission;
+                    item.DraftMasterWinLoss = resultTicket.MasterWinLoss;
+                    item.DraftMasterCommission = resultTicket.MasterCommission;
 
-                item.CompanyWinLoss = resultTicket.CompanyWinLose;
+                    item.DraftSupermasterWinLoss = resultTicket.SupermasterWinLoss;
+                    item.DraftSupermasterCommission = resultTicket.SupermasterCommission;
+
+                    item.DraftCompanyWinLoss = resultTicket.CompanyWinLoss;
+                }
+                else
+                {
+                    item.PlayerWinLoss = resultTicket.PlayerWinLoss;
+
+                    item.AgentWinLoss = resultTicket.AgentWinLoss;
+                    item.AgentCommission = resultTicket.AgentCommission;
+
+                    item.MasterWinLoss = resultTicket.MasterWinLoss;
+                    item.MasterCommission = resultTicket.MasterCommission;
+
+                    item.SupermasterWinLoss = resultTicket.SupermasterWinLoss;
+                    item.SupermasterCommission = resultTicket.SupermasterCommission;
+
+                    item.CompanyWinLoss = resultTicket.CompanyWinLoss;
+                }
+
                 item.UpdatedAt = ClockService.GetUtcNow();
 
                 ticketRepository.Update(item);
@@ -164,18 +189,37 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
 
                     child.State = subTicket.State.ToInt();
 
-                    child.PlayerWinLoss = subTicket.PlayerWinLose;
+                    if (isDraft)
+                    {
+                        child.DraftPlayerWinLoss = subTicket.PlayerWinLoss;
 
-                    child.AgentWinLoss = subTicket.AgentWinLose;
-                    child.AgentCommission = subTicket.AgentCommission;
+                        child.DraftAgentWinLoss = subTicket.AgentWinLoss;
+                        child.DraftAgentCommission = subTicket.AgentCommission;
 
-                    child.MasterWinLoss = subTicket.MasterWinLose;
-                    child.MasterCommission = subTicket.MasterCommission;
+                        child.DraftMasterWinLoss = subTicket.MasterWinLoss;
+                        child.DraftMasterCommission = subTicket.MasterCommission;
 
-                    child.SupermasterWinLoss = subTicket.SupermasterWinLose;
-                    child.SupermasterCommission = subTicket.SupermasterCommission;
+                        child.DraftSupermasterWinLoss = subTicket.SupermasterWinLoss;
+                        child.DraftSupermasterCommission = subTicket.SupermasterCommission;
 
-                    child.CompanyWinLoss = subTicket.CompanyWinLose;
+                        child.DraftCompanyWinLoss = subTicket.CompanyWinLoss;
+                    }
+                    else
+                    {
+                        child.PlayerWinLoss = subTicket.PlayerWinLoss;
+
+                        child.AgentWinLoss = subTicket.AgentWinLoss;
+                        child.AgentCommission = subTicket.AgentCommission;
+
+                        child.MasterWinLoss = subTicket.MasterWinLoss;
+                        child.MasterCommission = subTicket.MasterCommission;
+
+                        child.SupermasterWinLoss = subTicket.SupermasterWinLoss;
+                        child.SupermasterCommission = subTicket.SupermasterCommission;
+
+                        child.CompanyWinLoss = subTicket.CompanyWinLoss;
+                    }
+
                     child.UpdatedAt = item.UpdatedAt;
 
                     ticketRepository.Update(child);
@@ -190,9 +234,9 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
         }
     }
 
-    public void Enqueue(long matchId)
+    public void Enqueue(CompletedMatchInQueueModel model)
     {
-        _queue.Enqueue(matchId);
+        _queue.Enqueue(model);
     }
 
     public void Dispose()
