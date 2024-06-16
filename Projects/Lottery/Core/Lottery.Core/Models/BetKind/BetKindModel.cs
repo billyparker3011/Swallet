@@ -6,6 +6,7 @@ public class BetKindModel
     public string Name { get; set; }
     public int RegionId { get; set; }
     public int CategoryId { get; set; }
+    public string CategoryName { get; set; }
     public bool IsLive { get; set; }
     public int? ReplaceByIdWhenLive { get; set; }
     public int OrderInCategory { get; set; }

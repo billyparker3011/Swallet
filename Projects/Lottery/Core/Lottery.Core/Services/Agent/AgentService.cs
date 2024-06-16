@@ -29,6 +29,7 @@ using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 using System.Linq.Expressions;
 
 namespace Lottery.Core.Services.Agent
@@ -36,6 +37,7 @@ namespace Lottery.Core.Services.Agent
     public class AgentService : LotteryBaseService<AgentService>, IAgentService
     {
         private readonly IAuditService _auditService;
+        private readonly CultureInfo _culture = CultureInfo.CreateSpecificCulture("de-DE");
         public AgentService(ILogger<AgentService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow, IAuditService auditService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _auditService = auditService;
@@ -114,7 +116,7 @@ namespace Lottery.Core.Services.Agent
                 AgentFirstName = newAgent.FirstName,
                 AgentLastName = newAgent.LastName,
                 Action = AuditDataHelper.Credit.Action.ActionSetCreditWhenUserCreated,
-                DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailSetCreditWhenUserCreated, ClientContext.Agent.UserName, newAgent.MemberMaxCredit, ClientContext.Agent.ParentId != 0 ? ClientContext.Agent.UserName : string.Empty),
+                DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailSetCreditWhenUserCreated, ClientContext.Agent.UserName, newAgent.MemberMaxCredit?.ToString("N3", _culture), ClientContext.Agent.ParentId != 0 ? ClientContext.Agent.UserName : string.Empty),
                 OldValue = 0m,
                 NewValue = newAgent.Credit,
                 SupermasterId = GetAuditSupermasterId(newAgent),
@@ -385,7 +387,7 @@ namespace Lottery.Core.Services.Agent
                     AgentFirstName = updatedAgent.FirstName,
                     AgentLastName = updatedAgent.LastName,
                     Action = AuditDataHelper.Credit.Action.ActionUpdateGivenCredit,
-                    DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdateGivenCreditWithMemberMaxCredit, updatedAgent.Username, updatedAgent.MemberMaxCredit, oldMemberMaxCreditValue),
+                    DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdateGivenCreditWithMemberMaxCredit, updatedAgent.Username, updatedAgent.MemberMaxCredit?.ToString("N3", _culture), oldMemberMaxCreditValue.ToString("N3", _culture)),
                     OldValue = oldCreditValue,
                     NewValue = updatedAgent.Credit,
                     SupermasterId = GetAuditSupermasterId(updatedAgent),
