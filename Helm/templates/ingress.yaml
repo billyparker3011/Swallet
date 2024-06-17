@@ -11,6 +11,7 @@ metadata:
     appgw.ingress.kubernetes.io/health-probe-path: "/health-checks"
 spec:
   rules:
+  {{- range .Values.applicationName.domain }}
   - host: {{ template "host" . }}
     http:
       paths:
@@ -21,8 +22,11 @@ spec:
               port:
                 number: {{ .Values.Port }}
           pathType: Prefix
+  {{- end }}
+  {{- range .Values.applicationName.domain }}
   tls:
   - hosts:
     - {{ template "host" . }}
     secretName: {{ .Release.Name }}-tls
+  {{- end }}
   
