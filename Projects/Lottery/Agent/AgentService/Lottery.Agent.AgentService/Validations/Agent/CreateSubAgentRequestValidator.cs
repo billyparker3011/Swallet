@@ -10,7 +10,13 @@ namespace Lottery.Agent.AgentService.Validations.Agent
         {
             RuleFor(x => x.Username)
                 .NotEmpty()
-                .WithMessage(Messages.Agent.UserNameIsRequired);
+                .WithMessage(Messages.Agent.UserNameIsRequired)
+                .Matches(@"^\S+$")
+                .WithMessage(Messages.Agent.UserNameNotContainsWhiteSpace)
+                .Matches(@"[A-Z\d]")
+                .WithMessage(Messages.Agent.UserNameDoesNotContainSpecialCharacters)
+                .MinimumLength(2)
+                .WithMessage(Messages.Agent.UserNameMustHaveAtLeastTwoCharacters);
             RuleFor(x => x.Password)
                 .NotEmpty()
                 .WithMessage(Messages.Agent.PasswordIsRequired);
