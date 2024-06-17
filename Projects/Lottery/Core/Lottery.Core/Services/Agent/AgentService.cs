@@ -222,11 +222,11 @@ namespace Lottery.Core.Services.Agent
 
             if (model.SortType == SortType.Descending)
             {
-                agentQuery = agentQuery.OrderByDescending(GetSortAgentProperty(model));
+                agentQuery = model.SortName == "state" ? agentQuery.OrderByDescending(x => x.State).ThenBy(x => x.Username) : agentQuery.OrderByDescending(GetSortAgentProperty(model));
             }
             else
             {
-                agentQuery = agentQuery.OrderBy(GetSortAgentProperty(model));
+                agentQuery = model.SortName == "state" ? agentQuery.OrderBy(x => x.State).ThenBy(x => x.Username) : agentQuery.OrderBy(GetSortAgentProperty(model));
             }
             var result = await agentRepos.PagingByAsync(agentQuery, model.PageIndex, model.PageSize);
             return new GetAgentsResult
@@ -276,11 +276,11 @@ namespace Lottery.Core.Services.Agent
 
             if (model.SortType == SortType.Descending)
             {
-                playerQuery = playerQuery.OrderByDescending(GetSortPlayerProperty(model));
+                playerQuery = model.SortName == "state" ? playerQuery.OrderByDescending(x => x.State).ThenBy(x => x.Username) : playerQuery.OrderByDescending(GetSortPlayerProperty(model));
             }
             else
             {
-                playerQuery = playerQuery.OrderBy(GetSortPlayerProperty(model));
+                playerQuery = model.SortName == "state" ? playerQuery.OrderBy(x => x.State).ThenBy(x => x.Username) : playerQuery.OrderBy(GetSortPlayerProperty(model));
             }
             var result = await playerRepos.PagingByAsync(playerQuery, model.PageIndex, model.PageSize);
             return new GetAgentsResult
