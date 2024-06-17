@@ -11,22 +11,18 @@ metadata:
     appgw.ingress.kubernetes.io/health-probe-path: "/health-checks"
 spec:
   rules:
-  {{- range $host := include "hosts" . | fromYaml }}
-  - host: {{ $host }}
+  - host: {{ template "host" . }}
     http:
       paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: {{ .Release.Name }}
-            port:
-              number: {{ .Values.Port }}
-  {{- end }}
+        - path: /
+          backend:
+            service:
+              name: {{ .Release.Name }}
+              port:
+                number: {{ .Values.Port }}
+          pathType: Prefix
   tls:
   - hosts:
-    {{- range $host := include "hosts" . | fromYaml }}
-    - {{ $host }}
-    {{- end }}
+    - {{ template "host" . }}
     secretName: {{ .Release.Name }}-tls
   

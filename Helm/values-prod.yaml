@@ -7,7 +7,7 @@ averageUtilization:
   memory: 90
 applications:
   agent-authentication:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-authentication"
@@ -22,7 +22,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent"
@@ -37,7 +37,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   log:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/log"
@@ -52,7 +52,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   match:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/match"
@@ -67,7 +67,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   odd:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/odd"
@@ -82,7 +82,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-authentication:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player-authentication"
@@ -97,7 +97,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player"
@@ -112,7 +112,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   ticket:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/ticket"
@@ -127,7 +127,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent-portal:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
@@ -141,7 +141,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-portal:
-    domains: ["m8xs.io", "m8xs.co"]
+    domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player-portal"
