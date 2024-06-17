@@ -11,7 +11,7 @@ namespace Lottery.Agent.AgentService.Validations.Agent
             RuleFor(x => x.Username)
                 .NotEmpty()
                 .WithMessage(Messages.Agent.UserNameIsRequired)
-                .Matches(@"[^\s]")
+                .Matches(@"^\S+$")
                 .WithMessage(Messages.Agent.UserNameNotContainsWhiteSpace)
                 .Matches(@"[A-Z\d]")
                 .WithMessage(Messages.Agent.UserNameDoesNotContainSpecialCharacters)
