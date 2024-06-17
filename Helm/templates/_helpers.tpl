@@ -5,5 +5,5 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "host" -}}
 {{- $domain := (index .Values.applications .Values.applicationName).domain -}}
-{{- printf "%s" $domain -}}
+{{- printf "%s.%s" .Values.applicationName $domain -}}
 {{- end -}}
