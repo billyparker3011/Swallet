@@ -19,7 +19,7 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpGet("audits/{type:int}")]
         public async Task<IActionResult> GetAuditsByType([FromRoute] int type, [FromQuery] GetAuditsByTypeRequest request)
         {
-            return Ok(OkResponse.Create(await _auditService.GetAuditsByType(new GetAuditsByTypeModel
+            var result = await _auditService.GetAuditsByType(new GetAuditsByTypeModel
             {
                 Type = type,
                 SearchTerm = request.SearchTerm,
@@ -28,7 +28,8 @@ namespace Lottery.Agent.AgentService.Controllers
                 PageSize = request.PageSize,
                 DateFrom = request.DateFrom,
                 DateTo = request.DateTo
-            })));
+            });
+            return Ok(OkResponse.Create(result.Audits, result.Metadata));
         }
     }
 }

@@ -114,28 +114,36 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             PlayerOdds = 0m,
             PlayerPayout = 0m,
             PlayerWinLoss = 0m,
+            DraftPlayerWinLoss = 0m,
 
             AgentOdds = 0m,
             AgentPayout = 0m,
             AgentWinLoss = 0m,
             AgentCommission = 0m,
             AgentPt = 0m,
+            DraftAgentWinLoss = 0m,
+            DraftAgentCommission = 0m,
 
             MasterOdds = 0m,
             MasterPayout = 0m,
             MasterWinLoss = 0m,
             MasterCommission = 0m,
             MasterPt = 0m,
+            DraftMasterWinLoss = 0m,
+            DraftMasterCommission = 0m,
 
             SupermasterOdds = 0m,
             SupermasterPayout = 0m,
             SupermasterWinLoss = 0m,
             SupermasterCommission = 0m,
             SupermasterPt = 0m,
+            DraftSupermasterWinLoss = 0m,
+            DraftSupermasterCommission = 0m,
 
             CompanyOdds = 0m,
             CompanyPayout = 0m,
             CompanyWinLoss = 0m,
+            DraftCompanyWinLoss = 0m,
 
             State = TicketState.Waiting.ToInt(),
             IsLive = processValidation.Metadata.IsLive,
@@ -283,25 +291,30 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
                     PlayerOdds = playerOddsValue + rateValue,
                     PlayerPayout = playerPayout,
                     PlayerWinLoss = ticket.PlayerWinLoss,
+                    DraftPlayerWinLoss = ticket.DraftPlayerWinLoss,
 
                     AgentOdds = aOddsValue,
                     AgentPayout = agentPayout,
                     AgentWinLoss = ticket.AgentWinLoss,
                     AgentPt = ticket.AgentPt,
+                    DraftAgentWinLoss = ticket.DraftAgentWinLoss,
 
                     MasterOdds = mOddsValue,
                     MasterPayout = masterPayout,
                     MasterWinLoss = ticket.MasterWinLoss,
                     MasterPt = ticket.MasterPt,
+                    DraftMasterWinLoss = ticket.DraftMasterWinLoss,
 
                     SupermasterOdds = sOddsValue,
                     SupermasterPayout = supermasterPayout,
                     SupermasterWinLoss = ticket.SupermasterWinLoss,
                     SupermasterPt = ticket.SupermasterPt,
+                    DraftSupermasterWinLoss = ticket.DraftSupermasterWinLoss,
 
                     CompanyOdds = cOddsValue,
                     CompanyPayout = companyPayout,
                     CompanyWinLoss = ticket.CompanyWinLoss,
+                    DraftCompanyWinLoss = ticket.DraftCompanyWinLoss,
 
                     State = ticket.State,
                     CreatedAt = ticket.CreatedAt,
@@ -516,22 +529,27 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             PlayerOdds = playerOddsValue,
             PlayerPayout = points * playerOddsValue,
             PlayerWinLoss = 0m,
+            DraftPlayerWinLoss = 0m,
             //  Agent
             AgentOdds = 0m,
             AgentPayout = 0m,
             AgentWinLoss = 0m,
+            DraftAgentWinLoss = 0m,
             //  Master
             MasterOdds = 0m,
             MasterPayout = 0m,
             MasterWinLoss = 0m,
+            DraftMasterWinLoss = 0m,
             //  Supermaster
             SupermasterOdds = 0m,
             SupermasterPayout = 0m,
             SupermasterWinLoss = 0m,
+            DraftSupermasterWinLoss = 0m,
             //  Company
             CompanyOdds = 0m,
             CompanyPayout = 0m,
             CompanyWinLoss = 0m,
+            DraftCompanyWinLoss = 0m,
             //  State & Others
             State = parentTicket.State,
             CreatedAt = parentTicket.CreatedAt,
@@ -565,22 +583,27 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             PlayerOdds = playerOddsValue,
             PlayerPayout = 0m,
             PlayerWinLoss = 0m,
+            DraftPlayerWinLoss = 0m,
             //  Agent
             AgentOdds = 0m,
             AgentPayout = 0m,
             AgentWinLoss = 0m,
+            DraftAgentWinLoss = 0m,
             //  Master
             MasterOdds = 0m,
             MasterPayout = 0m,
             MasterWinLoss = 0m,
+            DraftMasterWinLoss = 0m,
             //  Supermaster
             SupermasterOdds = 0m,
             SupermasterPayout = 0m,
             SupermasterWinLoss = 0m,
+            DraftSupermasterWinLoss = 0m,
             //  Company
             CompanyOdds = 0m,
             CompanyPayout = 0m,
             CompanyWinLoss = 0m,
+            DraftCompanyWinLoss = 0m,
             //  State & Others
             State = TicketState.Waiting.ToInt(),
             IpAddress = processValidation.ClientInformation.IpAddress,
@@ -615,23 +638,28 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             PlayerOdds = playerOddsValue,
             PlayerPayout = points * playerOddsValue,
             PlayerWinLoss = 0m,
+            DraftPlayerWinLoss = 0m,
             //  Agent
             AgentOdds = 0m,
             AgentPayout = 0m,
             AgentWinLoss = 0m,
             AgentPt = 0m,
+            DraftAgentWinLoss = 0m,
             //  Master
             MasterOdds = 0m,
             MasterPayout = 0m,
             MasterWinLoss = 0m,
+            DraftMasterWinLoss = 0m,
             //  Supermaster
             SupermasterOdds = 0m,
             SupermasterPayout = 0m,
             SupermasterWinLoss = 0m,
+            DraftSupermasterWinLoss = 0m,
             //  Company
             CompanyOdds = 0m,
             CompanyPayout = 0m,
             CompanyWinLoss = 0m,
+            DraftCompanyWinLoss = 0m,
             //  State & Others
             State = TicketState.Waiting.ToInt(),
             IpAddress = processValidation.ClientInformation.IpAddress,
@@ -743,8 +771,8 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
     {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var tickets = top < 0
-                    ? await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId).ToListAsync()
-                    : await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId).Take(top).ToListAsync();
+                    ? await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId && f.State == TicketState.Waiting.ToInt()).ToListAsync()
+                    : await ticketRepository.FindQueryBy(f => !f.ParentId.HasValue && f.MatchId == matchId && f.State == TicketState.Waiting.ToInt()).Take(top).ToListAsync();
         var ticketIds = tickets.Select(f => f.TicketId).ToList();
         var children = await ticketRepository.FindQueryBy(f => f.ParentId.HasValue && ticketIds.Contains(f.ParentId.Value)).ToListAsync();
 

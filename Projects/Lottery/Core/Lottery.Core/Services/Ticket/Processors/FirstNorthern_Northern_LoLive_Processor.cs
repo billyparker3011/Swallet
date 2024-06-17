@@ -45,24 +45,24 @@ public class FirstNorthern_Northern_LoLive_Processor : AbstractBetKindProcessor
             if (findChooseNumbers == null)
             {
                 dataResult.State = TicketState.Lose;
-                dataResult.PlayerWinLose = -1 * ticket.PlayerPayout;
+                dataResult.PlayerWinLoss = -1 * ticket.PlayerPayout;
             }
             else
             {
                 dataResult.State = TicketState.Won;
-                dataResult.PlayerWinLose = findChooseNumbers.Count * ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
+                dataResult.PlayerWinLoss = findChooseNumbers.Count * ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
             }
 
-            dataResult.AgentWinLose = -1 * dataResult.PlayerWinLose * ticket.AgentPt;
+            dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
             dataResult.AgentCommission = (ticket.PlayerOdds ?? 0m - ticket.AgentOdds ?? 0m) * ticket.Stake;
 
-            dataResult.MasterWinLose = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLose;
+            dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
             dataResult.MasterCommission = (ticket.AgentOdds ?? 0m - ticket.MasterOdds ?? 0m) * ticket.Stake;
 
-            dataResult.SupermasterWinLose = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLose;
+            dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
             dataResult.SupermasterCommission = (ticket.MasterOdds ?? 0m - ticket.SupermasterOdds ?? 0m) * ticket.Stake;
 
-            dataResult.CompanyWinLose = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLose;
+            dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
         }
         else
         {
@@ -94,37 +94,37 @@ public class FirstNorthern_Northern_LoLive_Processor : AbstractBetKindProcessor
                     child.State = TicketState.Won;
                     playerWinlose = findChooseNumbers.Count * item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
                 }
-                child.PlayerWinLose = playerWinlose;
-                child.AgentWinLose = -1 * playerWinlose * item.AgentPt;
+                child.PlayerWinLoss = playerWinlose;
+                child.AgentWinLoss = -1 * playerWinlose * item.AgentPt;
                 child.AgentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
 
-                child.MasterWinLose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
+                child.MasterWinLoss = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
                 child.MasterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
 
-                child.SupermasterWinLose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
+                child.SupermasterWinLoss = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
                 child.SupermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
-                child.CompanyWinLose = -1 * (1 - item.SupermasterPt) * playerWinlose;
+                child.CompanyWinLoss = -1 * (1 - item.SupermasterPt) * playerWinlose;
                 dataResult.Children.Add(child);
 
                 totalPlayerWinLose += playerWinlose;
-                totalAgentWinLose += child.AgentWinLose;
+                totalAgentWinLose += child.AgentWinLoss;
                 totalAgentCommission += child.AgentCommission;
-                totalMasterWinLose += child.MasterWinLose;
+                totalMasterWinLose += child.MasterWinLoss;
                 totalMasterCommission += child.MasterCommission;
-                totalSupermasterWinLose += child.SupermasterWinLose;
+                totalSupermasterWinLose += child.SupermasterWinLoss;
                 totalSupermasterCommission += child.SupermasterCommission;
-                totalCompanyWinLose += child.CompanyWinLose;
+                totalCompanyWinLose += child.CompanyWinLoss;
             }
 
             dataResult.State = totalPlayerWinLose > 0 ? TicketState.Won : TicketState.Lose;
-            dataResult.PlayerWinLose = totalPlayerWinLose;
-            dataResult.AgentWinLose = totalAgentWinLose;
+            dataResult.PlayerWinLoss = totalPlayerWinLose;
+            dataResult.AgentWinLoss = totalAgentWinLose;
             dataResult.AgentCommission = totalAgentCommission;
-            dataResult.MasterWinLose = totalMasterWinLose;
+            dataResult.MasterWinLoss = totalMasterWinLose;
             dataResult.MasterCommission = totalMasterCommission;
-            dataResult.SupermasterWinLose = totalSupermasterWinLose;
+            dataResult.SupermasterWinLoss = totalSupermasterWinLose;
             dataResult.SupermasterCommission = totalSupermasterCommission;
-            dataResult.CompanyWinLose = totalCompanyWinLose;
+            dataResult.CompanyWinLoss = totalCompanyWinLose;
         }
         return dataResult;
     }
