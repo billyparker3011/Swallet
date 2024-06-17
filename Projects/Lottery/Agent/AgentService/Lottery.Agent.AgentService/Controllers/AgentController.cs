@@ -2,6 +2,8 @@ using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Models;
 using HnMicro.Framework.Responses;
 using Lottery.Agent.AgentService.Requests.Agent;
+using Lottery.Core.Enums;
+using Lottery.Core.Filters.Authorization;
 using Lottery.Core.Models.Agent.CreateAgent;
 using Lottery.Core.Models.Agent.CreateSubAgent;
 using Lottery.Core.Models.Agent.GetAgentCreditBalance;
@@ -18,12 +20,23 @@ namespace Lottery.Agent.AgentService.Controllers
         private readonly IAgentService _agentService;
         private readonly IAgentBetSettingService _agentBetSettingService;
         private readonly IAgentPositionTakingService _agentPositionTakingService;
+        private readonly INormalizePlayerService _normalizePlayerService;
 
-        public AgentController(IAgentService agentService, IAgentBetSettingService agentBetSettingService, IAgentPositionTakingService agentPositionTakingService)
+        public AgentController(IAgentService agentService, IAgentBetSettingService agentBetSettingService,
+            IAgentPositionTakingService agentPositionTakingService,
+            INormalizePlayerService normalizePlayerService)
         {
             _agentService = agentService;
             _agentBetSettingService = agentBetSettingService;
             _agentPositionTakingService = agentPositionTakingService;
+            _normalizePlayerService = normalizePlayerService;
+        }
+
+        [HttpGet("normalize-players"), LotteryAuthorize(Permission.Management.DefaultBetSetting)]
+        public async Task<IActionResult> NormalizePlayerBySupermaster([FromQuery] List<long> supermasterIds)
+        {
+            await _normalizePlayerService.NormalizePlayerBySupermaster(supermasterIds);
+            return Ok();
         }
 
         [HttpPost("agent")]

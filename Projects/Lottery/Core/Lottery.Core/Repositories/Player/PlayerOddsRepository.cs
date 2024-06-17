@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lottery.Core.Repositories.Player
 {
-    public class PlayerOddRepository : EntityFrameworkCoreRepository<long, Data.Entities.PlayerOdd, LotteryContext>, IPlayerOddRepository
+    public class PlayerOddsRepository : EntityFrameworkCoreRepository<long, Data.Entities.PlayerOdd, LotteryContext>, IPlayerOddsRepository
     {
-        public PlayerOddRepository(LotteryContext context) : base(context)
+        public PlayerOddsRepository(LotteryContext context) : base(context)
         {
         }
 

@@ -24,7 +24,7 @@ namespace Lottery.Agent.AgentService.Controllers
             return Ok(OkResponse.Create(await _oddsService.GetDefaultOdds()));
         }
 
-        [HttpPost("update-default-odds"), LotteryAuthorize(Permission.Management.DefaultOdds)]
+        [HttpPost("update-default-odds"), LotteryAuthorize(Permission.Management.DefaultBetSetting)]
         public async Task<IActionResult> UpdateDefaultOdds([FromBody] UpdateOddsRequest request)
         {
             await _oddsService.UpdateAgentOdds(request.Odds.Select(f => new OddsModel

@@ -47,7 +47,7 @@ namespace Lottery.Core.Services.Agent
         {
             //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
-            var agentOddRepos = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
             var agentPositionTakingRepos = LotteryUow.GetRepository<IAgentPositionTakingRepository>();
 
             var targetAgentId = ClientContext.Agent.ParentId == 0
@@ -1253,7 +1253,7 @@ namespace Lottery.Core.Services.Agent
         public async Task UpdateAgentBetSetting(long agentId, List<AgentBetSettingDto> updateItems)
         {
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
-            var agentOddRepository = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
             var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
 
             var agent = await agentRepository.FindByIdAsync(agentId) ?? throw new NotFoundException();

@@ -31,7 +31,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<List<OddsModel>> GetDefaultOdds()
         {
-            var agentOddRepository = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
             var defaultOdds = await agentOddRepository.FindDefaultOdds();
             return defaultOdds.Select(f => new OddsModel
             {
@@ -48,7 +48,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<List<OddsModel>> GetDefaultOddsByBetKind(List<int> betKindIds)
         {
-            var agentOddRepository = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
             var defaultOdds = await agentOddRepository.FindDefaultOddsByBetKind(betKindIds);
             return defaultOdds.Select(f => new OddsModel
             {
@@ -65,7 +65,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<List<PlayerOddsModel>> GetMixedOddsBy(long playerId, List<int> betKindIds)
         {
-            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddRepository>();
+            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
             return await playerOddRepository.FindQueryBy(f => f.PlayerId == playerId && betKindIds.Contains(f.BetKindId)).Select(f => new PlayerOddsModel
             {
                 Id = f.Id,
@@ -77,7 +77,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<PlayerOddsModel> GetPlayerOddsBy(long playerId, int betKindId)
         {
-            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddRepository>();
+            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
             return await playerOddRepository.FindQueryBy(f => f.PlayerId == playerId && f.BetKindId == betKindId).Select(f => new PlayerOddsModel
             {
                 Id = f.Id,
@@ -89,7 +89,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<List<OddsModel>> GetAgentOddsBy(int betKindId, List<long> agentIds)
         {
-            var agentOddRepository = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
             return await agentOddRepository.FindQueryBy(f => agentIds.Contains(f.AgentId) && f.BetKindId == betKindId).Select(f => new OddsModel
             {
                 Id = f.Id,
@@ -107,7 +107,7 @@ namespace Lottery.Core.Services.Odds
         public async Task UpdateAgentOdds(List<OddsModel> model, bool updateForCompany = false)
         {
             var agentOddIds = model.Select(f => f.Id).Distinct().ToList();
-            var agentOddRepository = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
             var defaultOdds = new List<OddsModel>();
             var odds = await agentOddRepository.FindQueryBy(f => agentOddIds.Contains(f.Id)).ToListAsync();
             foreach (var item in odds)
@@ -139,7 +139,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<List<OddsModel>> GetAgentOddsBy(List<int> betKindIds, List<long> agentIds)
         {
-            var agentOddRepository = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
             return await agentOddRepository.FindQueryBy(f => agentIds.Contains(f.AgentId) && betKindIds.Contains(f.BetKindId)).Select(f => new OddsModel
             {
                 Id = f.Id,

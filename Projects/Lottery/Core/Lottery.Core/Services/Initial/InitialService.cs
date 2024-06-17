@@ -53,7 +53,7 @@ namespace Lottery.Core.Services.Initial
 
         private async Task GetAllDefaultOdds(ILotteryUow lotteryUow)
         {
-            var defaultOddsRepository = lotteryUow.GetRepository<IAgentOddRepository>();
+            var defaultOddsRepository = lotteryUow.GetRepository<IAgentOddsRepository>();
             var defaultOdds = await defaultOddsRepository.FindDefaultOdds();
 
             var defaultOddsInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IDefaultOddsInMemoryRepository>();
