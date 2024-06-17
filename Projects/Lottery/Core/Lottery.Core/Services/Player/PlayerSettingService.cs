@@ -92,7 +92,7 @@ namespace Lottery.Core.Services.Player
 
         private async Task<BetSettingModel> GetBetSettingInDb(long playerId, int betKindId)
         {
-            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddRepository>();
+            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
             var playerOdd = await playerOddRepository.GetBetSettingByPlayerAndBetKind(playerId, betKindId);
             if (playerOdd == null) return null;
             return new BetSettingModel
@@ -109,7 +109,7 @@ namespace Lottery.Core.Services.Player
             var minBetKey = playerId.GetMinBetPlayer(betKindId);
             var maxBetKey = playerId.GetMaxBetPlayer(betKindId);
             var maxPerNumberKey = playerId.GetMaxPerNumberPlayer(betKindId);
-            var oddsKey = playerId.GetPlayerOddByBetKind(betKindId);
+            var oddsKey = playerId.GetPlayerOddsByBetKind(betKindId);
 
             var minBet = await _cacheService.HashGetFieldsAsync(minBetKey.MainKey, new List<string> { minBetKey.SubKey }, CachingConfigs.RedisConnectionForApp);
             var maxBet = await _cacheService.HashGetFieldsAsync(maxBetKey.MainKey, new List<string> { maxBetKey.SubKey }, CachingConfigs.RedisConnectionForApp);
@@ -159,7 +159,7 @@ namespace Lottery.Core.Services.Player
                 { maxPerNumberKey.SubKey, setting.MaxPerNumber.ToString() }
             }, maxPerNumberKey.TimeSpan == TimeSpan.Zero ? null : maxPerNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
 
-            var oddsKey = playerId.GetPlayerOddByBetKind(betKindId);
+            var oddsKey = playerId.GetPlayerOddsByBetKind(betKindId);
             await _cacheService.HashSetAsync(oddsKey.MainKey, new Dictionary<string, string>
             {
                 { oddsKey.SubKey, setting.OddsValue.ToString() }

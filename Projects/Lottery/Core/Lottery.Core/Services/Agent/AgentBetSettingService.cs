@@ -31,7 +31,7 @@ namespace Lottery.Core.Services.Agent
         {
             //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
-            var agentOddRepos = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
 
             var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId);
             if (clientAgent is null) throw new NotFoundException();
@@ -80,7 +80,7 @@ namespace Lottery.Core.Services.Agent
         {
             //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
-            var agentOddRepos = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
 
             var targetAgent = await agentRepos.FindByIdAsync(agentId) ?? throw new NotFoundException();
 
@@ -143,7 +143,7 @@ namespace Lottery.Core.Services.Agent
         {
             //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
-            var agentOddRepos = LotteryUow.GetRepository<IAgentOddRepository>();
+            var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
             var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
 
             var targetAgentId = ClientContext.Agent.ParentId != 0L ? ClientContext.Agent.ParentId : ClientContext.Agent.AgentId;

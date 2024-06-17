@@ -19,16 +19,21 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
     private Timer _timer;
     private readonly ConcurrentQueue<CompletedMatchInQueueModel> _queue = new();
     private readonly CompletedMatchOption _completedMatchOption;
-    private readonly List<CompletedMatchInQueueModel> _matches = new();
-    private readonly List<int> _statesOfTicket;
+    private readonly List<int> _outsStates;
+    private readonly List<int> _recalculateStates;
     private readonly ITicketProcessor _processor;
+    private readonly List<CompletedMatchInQueueModel> _matches = new();
+    private readonly List<long> _matchIds = new();
+    private readonly List<Data.Entities.Ticket> _ticketsByMatch = new();
+    private readonly List<Data.Entities.MatchResult> _matchResults = new();
 
     public CompletedMatchService(ILogger<CompletedMatchService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService,
         ITicketProcessor processor) : base(logger, serviceProvider, configuration, clockService)
     {
         _completedMatchOption = configuration.GetSection(CompletedMatchOption.AppSettingName).Get<CompletedMatchOption>();
         _processor = processor;
-        _statesOfTicket = CommonHelper.OutsTicketState();
+        _outsStates = CommonHelper.OutsTicketState();
+        _recalculateStates = CommonHelper.RecalculateTicketState();
 
         InitTimer();
     }
@@ -59,23 +64,40 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
         }
         if (_matches.Count == 0) return;
 
+        _matchIds.Clear();
+        _ticketsByMatch.Clear();
+        _matchResults.Clear();
+
         try
         {
-            var matchIds = _matches.Select(f => f.MatchId).ToList();
+            _matchIds.AddRange(_matches.Select(f => f.MatchId));
 
             using var scope = ServiceProvider.CreateScope();
             var lotteryUow = scope.ServiceProvider.GetService<ILotteryUow>();
 
             var matchResultRepository = lotteryUow.GetRepository<IMatchResultRepository>();
-            var matchResults = matchResultRepository.FindQueryBy(f => matchIds.Contains(f.MatchId)).ToList();
+            _matchResults.AddRange(matchResultRepository.FindQueryBy(f => _matchIds.Contains(f.MatchId)));
 
             var ticketRepository = lotteryUow.GetRepository<ITicketRepository>();
-            var tickets = ticketRepository.FindQueryBy(f => matchIds.Contains(f.MatchId) && _statesOfTicket.Contains(f.State)).ToList();
+            _ticketsByMatch.AddRange(ticketRepository.FindQueryBy(f => _matchIds.Contains(f.MatchId)));
 
-            var rootTickets = tickets.Where(f => !f.ParentId.HasValue).ToList();
+            var tickets = new List<Data.Entities.Ticket>();
+            foreach (var itemMatch in _matches)
+            {
+                if (itemMatch.Recalculation)
+                {
+                    tickets.AddRange(_ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId && _recalculateStates.Contains(f.State)));
+                }
+                else
+                {
+                    tickets.AddRange(_ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId && _outsStates.Contains(f.State)));
+                }
+            }
+
+            var rootTickets = _ticketsByMatch.Where(f => !f.ParentId.HasValue).ToList();
             foreach (var item in rootTickets)
             {
-                var matchResult = matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
+                var matchResult = _matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
                 if (matchResult == null || string.IsNullOrEmpty(matchResult.Results)) continue;
                 var result = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(matchResult.Results);
 
@@ -221,7 +243,6 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                     }
 
                     child.UpdatedAt = item.UpdatedAt;
-
                     ticketRepository.Update(child);
                 }
             }

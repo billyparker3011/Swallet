@@ -44,7 +44,7 @@ namespace Lottery.Core.Services.Player
         {
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
-            var playerOddRepos = LotteryUow.GetRepository<IPlayerOddRepository>();
+            var playerOddRepos = LotteryUow.GetRepository<IPlayerOddsRepository>();
 
             var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
             if (clientAgent.RoleId != (int)Role.Agent) return;
@@ -172,7 +172,7 @@ namespace Lottery.Core.Services.Player
             var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
             var player = await playerRepository.FindByIdAsync(playerId) ?? throw new NotFoundException();
 
-            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddRepository>();
+            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
 
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
             var existedPlayerBetSettings = await playerOddRepository.FindQueryBy(x => x.PlayerId == player.PlayerId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
@@ -247,8 +247,8 @@ namespace Lottery.Core.Services.Player
         {
             //Init repos
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
-            var playerOddRepos = LotteryUow.GetRepository<IPlayerOddRepository>();
-            var agentOddRepos = LotteryUow.GetRepository<IAgentOddRepository>();
+            var playerOddRepos = LotteryUow.GetRepository<IPlayerOddsRepository>();
+            var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
 
             var targetPlayer = await playerRepos.FindByIdAsync(playerId) ?? throw new NotFoundException();
 

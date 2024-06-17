@@ -7,9 +7,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lottery.Core.Repositories.Agent
 {
-    public class AgentOddRepository : EntityFrameworkCoreRepository<long, AgentOdd, LotteryContext>, IAgentOddRepository
+    public class AgentOddsRepository : EntityFrameworkCoreRepository<long, AgentOdd, LotteryContext>, IAgentOddsRepository
     {
-        public AgentOddRepository(LotteryContext context) : base(context)
+        public AgentOddsRepository(LotteryContext context) : base(context)
         {
         }
 

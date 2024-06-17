@@ -36,7 +36,7 @@
             public const string Prizes = "[PR]";
             public const string Matches = "[MA]";
             public const string MatchResults = "[MR]";
-            public const string DefaultOdds = "[DO]";
+            public const string DefaultBetSetting = "[DO]";
             public const string DefaultPt = "[DPT]";
 
             public static class OddsTable

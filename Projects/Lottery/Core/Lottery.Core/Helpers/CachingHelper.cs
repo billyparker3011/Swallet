@@ -70,7 +70,7 @@ namespace Lottery.Core.Helpers
             };
         }
 
-        public static KeyOfRedisHash GetPlayerOddByBetKind(this long playerId, int betKindId)
+        public static KeyOfRedisHash GetPlayerOddsByBetKind(this long playerId, int betKindId)
         {
             return new KeyOfRedisHash
             {
