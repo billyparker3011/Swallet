@@ -38,6 +38,30 @@ namespace Lottery.Core.Services.Agent
                 if (itemByBetKind == null) return;
 
                 f.MinBet = itemByBetKind.MinBet;
+                agentOddsRepository.Update(f);
+            });
+            agentIds.ForEach(f =>
+            {
+                var agentBetSettings = otherBetSettings.Where(f1 => f1.AgentId == f).ToList();
+                foreach (var item in betSettings)
+                {
+                    var agentBetSettingItem = agentBetSettings.FirstOrDefault(f1 => f1.BetKindId == item.BetKindId);
+                    if (agentBetSettingItem != null) continue;
+
+                    agentOddsRepository.Add(new Data.Entities.AgentOdd
+                    {
+                        AgentId = f,
+                        BetKindId = item.BetKindId,
+                        Buy = item.Buy,
+                        MaxBet = item.MaxBet,
+                        MaxBuy = item.MaxBuy,
+                        MaxPerNumber = item.MaxPerNumber,
+                        MinBet = item.MinBet,
+                        MinBuy = item.MinBuy,
+                        CreatedAt = item.CreatedAt,
+                        CreatedBy = item.CreatedBy
+                    });
+                }
             });
 
             var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
@@ -52,6 +76,7 @@ namespace Lottery.Core.Services.Agent
                 if (itemByBetKind == null) return;
 
                 f.MinBet = itemByBetKind.MinBet;
+                playerOddsRepository.Update(f);
             });
 
             await LotteryUow.SaveChangesAsync();
