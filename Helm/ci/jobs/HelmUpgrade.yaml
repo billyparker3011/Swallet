@@ -29,33 +29,53 @@ jobs:
       AgentAuthentication:
         applicationName: "agent-authentication"
         applicationBuildNo: ${{ parameters.AgentAuthenticationBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       Agent:
         applicationName: "agent"
         applicationBuildNo: ${{ parameters.AgentBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       Log:
         applicationName: "log"
         applicationBuildNo: ${{ parameters.LogBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       Match:
         applicationName: "match"
         applicationBuildNo: ${{ parameters.MatchBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       Odd:
         applicationName: "odd"
         applicationBuildNo: ${{ parameters.OddBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       PlayerAuthentication:
         applicationName: "player-authentication"
         applicationBuildNo: ${{ parameters.PlayerAuthenticationBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       Player:
         applicationName: "player"
         applicationBuildNo: ${{ parameters.PlayerBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       Ticket:
         applicationName: "ticket"
         applicationBuildNo: ${{ parameters.TicketBuildNumber }}
+        customdomainEnabled: false
+        customdomain: null
       AgentPortal:
         applicationName: "agent-portal"
         applicationBuildNo: ${{ parameters.AgentPortalBuildNumber }}
+        customdomainEnabled: true
+        customdomain: "agent.m8xs.co"
       PlayerPortal:
         applicationName: "player-portal"
         applicationBuildNo: ${{ parameters.PlayerPortalBuildNumber }}
+        customdomainEnabled: true
+        customdomain: "m8xs.co"
   steps:
   - template: ../steps/KubectlInstaller.yaml
   - template: ../steps/HelmInstaller.yaml

@@ -21,8 +21,24 @@ spec:
               port:
                 number: {{ .Values.Port }}
           pathType: Prefix
+  {{- if eq .Values.customdomainEnabled true }}
+  - host: {{ .Values.customdomain }}
+    http:
+      paths:
+        - path: /
+          backend:
+            service:
+              name: {{ .Release.Name }}
+              port:
+                number: {{ .Values.Port }}
+          pathType: Prefix
+  {{- end }}
   tls:
   - hosts:
     - {{ template "host" . }}
     secretName: {{ .Release.Name }}-tls
-  
+  {{- if eq .Values.customdomainEnabled true }}
+  - hosts:
+    - {{ .Values.customdomain }}
+    secretName: {{ .Values.customdomain }}-tls
+  {{- end }}
