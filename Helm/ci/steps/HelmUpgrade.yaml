@@ -9,7 +9,7 @@ steps:
     command: 'upgrade'
     chartType: 'FilePath'
     chartPath: '$(Pipeline.Workspace)/a/HnX-1.0.0.tgz'
-    releaseName: 'app-hnx-$(applicationName)-${{ parameters.Environment }}-$(location)'
+    releaseName: 'app-$(applicationName)'
     overrideValues: 'applicationName=$(applicationName),applications.$(applicationName).image="$(DockerRegistryURL)/$(applicationName):$(applicationBuildNo)",customdomainEnabled=$(customdomainEnabled),customdomain=$(customdomain)'
     valueFile: '$(Pipeline.Workspace)/s/Helm/values-${{ parameters.Environment }}.yaml'
     arguments: '--create-namespace --timeout 60s'
