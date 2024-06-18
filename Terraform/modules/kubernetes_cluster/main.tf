@@ -52,7 +52,8 @@ resource "azurerm_kubernetes_cluster" "kubernetes_cluster" {
 
   lifecycle {
     ignore_changes = [
-      microsoft_defender
+      microsoft_defender,
+      upgrade_settings
     ]
   }
 }
