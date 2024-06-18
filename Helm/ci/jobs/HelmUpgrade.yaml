@@ -70,12 +70,12 @@ jobs:
         applicationName: "agent-portal"
         applicationBuildNo: ${{ parameters.AgentPortalBuildNumber }}
         customdomainEnabled: true
-        customdomain: "agent.m8xs.co"
+        customdomain: $(agent-portal-customdomain)
       PlayerPortal:
         applicationName: "player-portal"
         applicationBuildNo: ${{ parameters.PlayerPortalBuildNumber }}
         customdomainEnabled: true
-        customdomain: "m8xs.co"
+        customdomain: $(player-portal-customdomain)
   steps:
   - template: ../steps/KubectlInstaller.yaml
   - template: ../steps/HelmInstaller.yaml

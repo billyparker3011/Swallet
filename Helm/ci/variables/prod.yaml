@@ -5,3 +5,7 @@ variables:
   value: "Production Environment Agent Pool"
 - name: DockerRegistryURL
   value: "crhnxprodsoutheastasia.azurecr.io"
+- name: agent-portal-customdomain
+  value: "agent.m8xs.co"
+- name: player-portal-customdomain
+  value: "m8xs.co"

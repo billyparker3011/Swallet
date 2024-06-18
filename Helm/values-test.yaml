@@ -1,0 +1,156 @@
+location: #{location}#
+Port: 80
+protocol: TCP
+replicas: 1
+averageUtilization:
+  cpu: 75
+  memory: 90
+applications:
+  agent-authentication:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/agent-authentication"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  agent:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/agent"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  log:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/log"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  match:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/match"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  odd:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/odd"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  player-authentication:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/player-authentication"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  player:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/player"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  ticket:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/ticket"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      ASPNETCORE_ENVIRONMENT: "Development"
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  agent-portal:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  player-portal:
+    domain: m8xs.co
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxprodsoutheastasia.azurecr.io/player-portal"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
