@@ -7,7 +7,7 @@ averageUtilization:
   memory: 90
 applications:
   agent-authentication:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/agent-authentication"
@@ -22,7 +22,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/agent"
@@ -37,7 +37,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   log:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/log"
@@ -52,7 +52,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   match:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/match"
@@ -67,7 +67,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   odd:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/odd"
@@ -82,7 +82,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-authentication:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/player-authentication"
@@ -97,7 +97,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/player"
@@ -112,7 +112,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   ticket:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/ticket"
@@ -127,7 +127,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent-portal:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/agent-portal"
@@ -141,7 +141,7 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-portal:
-    domain: m8xs.bet
+    domain: svgo247.cc
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxtestsoutheastasia.azurecr.io/player-portal"
