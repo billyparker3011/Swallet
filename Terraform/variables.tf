@@ -80,6 +80,7 @@ variable "linux_web_apps" {
     app_settings      = map(string)
   }))
   description = "(Required) The name which should be used for this Linux Web App. Changing this forces a new Linux Web App to be created."
+  default     = []
 }
 
 ######################################################
