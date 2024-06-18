@@ -1,6 +1,6 @@
 variables:
 - name: AgentPool
-  value: "Development Environment Agent Pool"
+  value: "Testing Environment Agent Pool"
 - name: DockerRegistry
   value: "Testing Azure Container Registry"
 - name: ResourceGroupName

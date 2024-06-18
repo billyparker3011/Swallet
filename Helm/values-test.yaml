@@ -10,7 +10,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/agent-authentication"
+    image: "crhnxtestsoutheastasia.azurecr.io/agent-authentication"
     resources:
       limits:
         memory: 512Mi
@@ -25,7 +25,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/agent"
+    image: "crhnxtestsoutheastasia.azurecr.io/agent"
     resources:
       limits:
         memory: 512Mi
@@ -40,7 +40,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/log"
+    image: "crhnxtestsoutheastasia.azurecr.io/log"
     resources:
       limits:
         memory: 512Mi
@@ -55,7 +55,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/match"
+    image: "crhnxtestsoutheastasia.azurecr.io/match"
     resources:
       limits:
         memory: 512Mi
@@ -70,7 +70,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/odd"
+    image: "crhnxtestsoutheastasia.azurecr.io/odd"
     resources:
       limits:
         memory: 512Mi
@@ -85,7 +85,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/player-authentication"
+    image: "crhnxtestsoutheastasia.azurecr.io/player-authentication"
     resources:
       limits:
         memory: 512Mi
@@ -100,7 +100,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/player"
+    image: "crhnxtestsoutheastasia.azurecr.io/player"
     resources:
       limits:
         memory: 512Mi
@@ -115,7 +115,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/ticket"
+    image: "crhnxtestsoutheastasia.azurecr.io/ticket"
     resources:
       limits:
         memory: 512Mi
@@ -130,7 +130,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
+    image: "crhnxtestsoutheastasia.azurecr.io/agent-portal"
     resources:
       limits:
         memory: 512Mi
@@ -144,7 +144,7 @@ applications:
     domain: m8xs.co
     minReplicas: 1
     maxReplicas: 3
-    image: "crhnxprodsoutheastasia.azurecr.io/player-portal"
+    image: "crhnxtestsoutheastasia.azurecr.io/player-portal"
     resources:
       limits:
         memory: 512Mi

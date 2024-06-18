@@ -1,0 +1,11 @@
+variables:
+- name: location
+  value: "southeastasia"
+- name: pool
+  value: "Testing Environment Agent Pool"
+- name: DockerRegistryURL
+  value: "crhnxtestsoutheastasia.azurecr.io"
+- name: agent-portal-customdomain
+  value: "agent.svgo247.cc"
+- name: player-portal-customdomain
+  value: "svgo247.cc"
