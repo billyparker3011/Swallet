@@ -10,7 +10,7 @@ site        = "__site__"
 ##              API Management Service              ##
 ######################################################
 api_management_names    = ["agent", "player"]
-api_management_sku_name = "Developer_1"
+api_management_sku_name = "Premium_1"
 
 ######################################################
 ##                   App Service                    ##
@@ -90,6 +90,14 @@ linux_web_apps = [
 shareable_link_enabled = true
 
 ######################################################
+##             Azure Kubernetes Service             ##
+######################################################
+kubernetes_version              = "1.29.4"
+aks_default_node_pool_vm_size   = "Standard_D4s_v3"
+aks_default_node_pool_max_count = 10
+aks_default_node_pool_min_count = 1
+
+######################################################
 ##            MSSQL Azure Database Server           ##
 ######################################################
 administrator_login           = "hnxadmin"
@@ -161,5 +169,16 @@ subnets = [
     name           = "AzureBastionSubnet"
     address_prefix = "172.16.8.0/22"
   },
+  {
+    name           = "aks"
+    address_prefix = "172.16.12.0/22"
+  },
+  {
+    name           = "agw"
+    address_prefix = "172.16.16.0/22"
+  },
+  {
+    name           = "apim"
+    address_prefix = "172.16.20.0/22"
+  }
 ]
-
