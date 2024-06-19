@@ -7,7 +7,6 @@ using Lottery.Core.Dtos.Agent;
 using Lottery.Core.Dtos.Audit;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
-using Lottery.Core.Localizations;
 using Lottery.Core.Models.Agent.CreateAgent;
 using Lottery.Core.Models.Agent.CreateSubAgent;
 using Lottery.Core.Models.Agent.GetAgentCreditBalance;
@@ -71,7 +70,7 @@ namespace Lottery.Core.Services.Agent
                 Credit = model.Credit,
                 MemberMaxCredit = model.MemberMaxCredit,
                 RoleId = clientAgent.RoleId + 1,
-                Permissions = AgentConsts.DefaultPermissionForAgent,
+                Permissions = AgentHelper.DefaultPermissions,
                 State = UserState.Open.ToInt(),
                 SupermasterId = GetSuperMasterId(clientAgent),
                 MasterId = GetMasterId(clientAgent),
@@ -583,7 +582,7 @@ namespace Lottery.Core.Services.Agent
             {
                 (int)Role.Company => await playerRepos.FindQueryBy(x => x.CreatedAt.Month == ClockService.GetUtcNow().Month)
                                                             .OrderByDescending(x => x.CreatedAt)
-                                                            .Take(AgentConsts.MinimumPlayerQuantity)
+                                                            .Take(AgentHelper.MinimumPlayerQuantity)
                                                             .Select(x => new AgentSumarryInfo
                                                             {
                                                                 Username = x.Username,
@@ -594,7 +593,7 @@ namespace Lottery.Core.Services.Agent
                                                             }).ToListAsync(),
                 (int)Role.Supermaster => await playerRepos.FindQueryBy(x => x.CreatedAt.Month == ClockService.GetUtcNow().Month && x.SupermasterId == clientAgent.AgentId)
                                             .OrderByDescending(x => x.CreatedAt)
-                                            .Take(AgentConsts.MinimumPlayerQuantity)
+                                            .Take(AgentHelper.MinimumPlayerQuantity)
                                             .Select(x => new AgentSumarryInfo
                                             {
                                                 Username = x.Username,
@@ -605,7 +604,7 @@ namespace Lottery.Core.Services.Agent
                                             }).ToListAsync(),
                 (int)Role.Master => await playerRepos.FindQueryBy(x => x.CreatedAt.Month == ClockService.GetUtcNow().Month && x.MasterId == clientAgent.AgentId)
                                             .OrderByDescending(x => x.CreatedAt)
-                                            .Take(AgentConsts.MinimumPlayerQuantity)
+                                            .Take(AgentHelper.MinimumPlayerQuantity)
                                             .Select(x => new AgentSumarryInfo
                                             {
                                                 Username = x.Username,
@@ -616,7 +615,7 @@ namespace Lottery.Core.Services.Agent
                                             }).ToListAsync(),
                 (int)Role.Agent => await playerRepos.FindQueryBy(x => x.CreatedAt.Month == ClockService.GetUtcNow().Month && x.AgentId == clientAgent.AgentId)
                                             .OrderByDescending(x => x.CreatedAt)
-                                            .Take(AgentConsts.MinimumPlayerQuantity)
+                                            .Take(AgentHelper.MinimumPlayerQuantity)
                                             .Select(x => new AgentSumarryInfo
                                             {
                                                 Username = x.Username,

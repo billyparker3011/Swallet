@@ -6,8 +6,10 @@ using Lottery.Core.Helpers;
 using Lottery.Core.Helpers.Converters.Tickets;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Repositories.Match;
+using Lottery.Core.Repositories.Player;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.UnitOfWorks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -57,6 +59,11 @@ public class AgentTicketService : LotteryBaseService<AgentTicketService>, IAgent
         var result = await ticketRepository.PagingByAsync(ticketQuery, model.PageIndex, model.PageSize);
         var tickets = result.Items.Select(f => f.ToTicketDetailModel()).ToList();
         _normalizeTicketService.NormalizeTicket(tickets);
+
+        var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
+        var listPlayerId = tickets.Select(f => f.PlayerId).Distinct().ToList();
+        var players = await playerRepository.FindQueryBy(f => listPlayerId.Contains(f.PlayerId)).ToListAsync();
+        _normalizeTicketService.NormalizePlayer(tickets, players.ToDictionary(f => f.PlayerId, f => f.Username));
         return new AgentTicketResultModel
         {
             Items = tickets,

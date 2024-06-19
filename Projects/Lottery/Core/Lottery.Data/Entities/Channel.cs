@@ -7,6 +7,7 @@ namespace Lottery.Data.Entities
     public class Channel
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
 
         [Required, MaxLength(500)]
