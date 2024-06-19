@@ -116,7 +116,7 @@ namespace Lottery.Core.Services.Agent
                 AgentFirstName = newAgent.FirstName,
                 AgentLastName = newAgent.LastName,
                 Action = AuditDataHelper.Credit.Action.ActionSetCreditWhenUserCreated,
-                DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailSetCreditWhenUserCreated, ClientContext.Agent.UserName, newAgent.MemberMaxCredit?.ToString("N3", _culture), ClientContext.Agent.ParentId != 0 ? ClientContext.Agent.UserName : string.Empty),
+                DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailSetCreditWhenUserCreated, newAgent.Username, newAgent.MemberMaxCredit?.ToString("N3", _culture), ClientContext.Agent.ParentId != 0 ? ClientContext.Agent.UserName : string.Empty),
                 OldValue = 0m,
                 NewValue = newAgent.Credit,
                 SupermasterId = GetAuditSupermasterId(newAgent),
@@ -1496,30 +1496,34 @@ namespace Lottery.Core.Services.Agent
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var updatedAgent = await agentRepos.FindByIdAsync(updateItem.AgentId) ?? throw new NotFoundException();
 
-            decimal outstanding = updatedAgent.RoleId == Role.Agent.ToInt() ? await playerRepos.FindQueryBy(x => x.AgentId == updatedAgent.AgentId).SumAsync(x => x.Credit)
+            decimal totalCreditUsedOfTargetAgent = updatedAgent.RoleId == Role.Agent.ToInt() ? await playerRepos.FindQueryBy(x => x.AgentId == updatedAgent.AgentId).SumAsync(x => x.Credit)
                                                                            : await agentRepos.SumAllCreditByTypeIdAsync(updatedAgent.AgentId, (Role)updatedAgent.RoleId);
             decimal maxCreditToCompare = 0m;
             switch (updatedAgent.RoleId)
             {
                 case (int)Role.Supermaster:
-                    maxCreditToCompare = decimal.MaxValue;
+                    maxCreditToCompare = updatedAgent.Credit > 1000000
+                                            ? updatedAgent.Credit < 1000000000
+                                                ? updatedAgent.Credit * 100
+                                                : updatedAgent.Credit * 5
+                                            : 5000000;
                     break;
                 case (int)Role.Master:
                     var supermaster = await agentRepos.FindByIdAsync(updatedAgent.SupermasterId) ?? throw new NotFoundException();
                     var totalSupermasterCreditUsed = await agentRepos.SumAllCreditByTypeIdAsync(supermaster.AgentId, (Role)supermaster.RoleId);
-                    maxCreditToCompare = supermaster.Credit - totalSupermasterCreditUsed - outstanding;
+                    maxCreditToCompare = supermaster.Credit - totalSupermasterCreditUsed + updatedAgent.Credit;
                     break;
                 case (int)Role.Agent:
                     var master = await agentRepos.FindByIdAsync(updatedAgent.MasterId) ?? throw new NotFoundException();
                     var totalMasterCreditUsed = await agentRepos.SumAllCreditByTypeIdAsync(master.AgentId, (Role)master.RoleId);
-                    maxCreditToCompare = master.Credit - totalMasterCreditUsed - outstanding;
+                    maxCreditToCompare = master.Credit - totalMasterCreditUsed + updatedAgent.Credit;
                     break;
                 default:
                     maxCreditToCompare = 0m;
                     break;
             }
 
-            if (updatedAgent.RoleId != Role.Supermaster.ToInt() && (updateItem.Credit < outstanding || updateItem.Credit > maxCreditToCompare + updatedAgent.Credit))
+            if (updateItem.Credit < totalCreditUsedOfTargetAgent || updateItem.Credit > maxCreditToCompare)
                 throw new BadRequestException(ErrorCodeHelper.Agent.InvalidCredit);
             var oldCreditValue = updatedAgent.Credit;
             updatedAgent.Credit = updateItem.Credit;
@@ -1551,7 +1555,7 @@ namespace Lottery.Core.Services.Agent
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var targetAgent = await agentRepos.FindByIdAsync(agentId) ?? throw new NotFoundException();
 
-            decimal outstanding = targetAgent.RoleId == Role.Agent.ToInt() ? await playerRepos.FindQueryBy(x => x.AgentId == targetAgent.AgentId).SumAsync(x => x.Credit)
+            decimal totalCreditUsedOfTargetAgent = targetAgent.RoleId == Role.Agent.ToInt() ? await playerRepos.FindQueryBy(x => x.AgentId == targetAgent.AgentId).SumAsync(x => x.Credit)
                                                                            : await agentRepos.SumAllCreditByTypeIdAsync(targetAgent.AgentId, (Role)targetAgent.RoleId);
             decimal maxCreditToCompare = 0m;
             decimal minMemberMaxCredit = 0m;
@@ -1567,12 +1571,12 @@ namespace Lottery.Core.Services.Agent
                 case (int)Role.Master:
                     var supermaster = await agentRepos.FindByIdAsync(targetAgent.SupermasterId) ?? throw new NotFoundException();
                     var totalSupermasterCreditUsed = await agentRepos.SumAllCreditByTypeIdAsync(supermaster.AgentId, (Role)supermaster.RoleId);
-                    maxCreditToCompare = supermaster.Credit - totalSupermasterCreditUsed - outstanding;
+                    maxCreditToCompare = supermaster.Credit - totalSupermasterCreditUsed + targetAgent.Credit;
                     break;
                 case (int)Role.Agent:
                     var master = await agentRepos.FindByIdAsync(targetAgent.MasterId) ?? throw new NotFoundException();
                     var totalMasterCreditUsed = await agentRepos.SumAllCreditByTypeIdAsync(master.AgentId, (Role)master.RoleId);
-                    maxCreditToCompare = master.Credit - totalMasterCreditUsed - outstanding;
+                    maxCreditToCompare = master.Credit - totalMasterCreditUsed + targetAgent.Credit;
                     var greatestCreditPlayer = await playerRepos.FindQueryBy(x => x.AgentId == targetAgent.AgentId).OrderByDescending(x => x.Credit).FirstOrDefaultAsync();
                     minMemberMaxCredit = greatestCreditPlayer?.Credit ?? 0m;
                     break;
@@ -1584,8 +1588,8 @@ namespace Lottery.Core.Services.Agent
             {
                 CurrentGivenCredit = targetAgent.Credit,
                 GivenCredit = targetAgent.Credit,
-                MinCredit = outstanding,
-                MaxCredit = maxCreditToCompare + targetAgent.Credit,
+                MinCredit = totalCreditUsedOfTargetAgent,
+                MaxCredit = maxCreditToCompare,
                 MinMemberMaxCredit = minMemberMaxCredit
             };
         }
