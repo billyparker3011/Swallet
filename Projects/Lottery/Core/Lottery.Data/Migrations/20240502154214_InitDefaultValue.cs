@@ -32,7 +32,7 @@ namespace Lottery.Data.Migrations
                 "   Values (" +
                 "       0, 'M8XS', '" + "QaWsEd135!#%".Md5() + "', " +
                 "       0, 0, 0, " +
-                "       0, '[AV],[AU],[AFC],[R]', 0, " +
+                "       0, '[AV],[AU],[AFC],[R],[BL],[VL]', 0, " +
                 "       0, GETDATE(), 0); " +
                 "   " +
                 "   Set @agentId = SCOPE_IDENTITY();" +
@@ -45,9 +45,9 @@ namespace Lottery.Data.Migrations
             migrationBuilder.Sql(File.ReadAllText(sqlInitDefaultOdd));
             var sqlInitDefaultPositionTaking = Path.Combine(baseScriptDirectory, "CreatePTForCompany.sql");
             migrationBuilder.Sql(File.ReadAllText(sqlInitDefaultPositionTaking));
-            //  Child User
-            var sqlCreateChildUser = Path.Combine(baseScriptDirectory, "CreateSupermasterMasterAgentPlayer.sql");
-            migrationBuilder.Sql(File.ReadAllText(sqlCreateChildUser).Replace("<ENCRYPTED_PASSWORD>", "QaWsEd135!#%".Md5()));
+            ////  Child User - Don't need use below migration.
+            //var sqlCreateChildUser = Path.Combine(baseScriptDirectory, "CreateSupermasterMasterAgentPlayer.sql");
+            //migrationBuilder.Sql(File.ReadAllText(sqlCreateChildUser).Replace("<ENCRYPTED_PASSWORD>", "QaWsEd135!#%".Md5()));
         }
 
         /// <inheritdoc />
