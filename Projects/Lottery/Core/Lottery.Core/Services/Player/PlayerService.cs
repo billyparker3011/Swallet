@@ -319,12 +319,29 @@ namespace Lottery.Core.Services.Player
             if (updateItem.Credit < outstanding || updateItem.Credit > maxCreditToCompare)
                 throw new BadRequestException(ErrorCodeHelper.Agent.InvalidCredit);
 
+            var oldCreditValue = updatedPlayer.Credit;
             updatedPlayer.Credit = updateItem.Credit;
             updatedPlayer.UpdatedAt = ClockService.GetUtcNow();
             updatedPlayer.UpdatedBy = ClientContext.Agent.AgentId;
             playerRepos.Update(updatedPlayer);
 
             await LotteryUow.SaveChangesAsync();
+
+            await _auditService.SaveAuditData(new AuditParams
+            {
+                Type = (int)AuditType.Credit,
+                EditedUsername = ClientContext.Agent.UserName,
+                AgentUserName = updatedPlayer.Username,
+                AgentFirstName = updatedPlayer.FirstName,
+                AgentLastName = updatedPlayer.LastName,
+                Action = AuditDataHelper.Credit.Action.ActionUpdatePlayerCredit,
+                DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdatePlayerCredit, updatedPlayer.Username),
+                OldValue = oldCreditValue,
+                NewValue = updatedPlayer.Credit,
+                SupermasterId = updatedPlayer.SupermasterId,
+                MasterId = updatedPlayer.MasterId,
+                AgentId = updatedPlayer.AgentId
+            });
 
             await _processTicketService.BuildGivenCreditCache(updatedPlayer.PlayerId, updatedPlayer.Credit);
         }

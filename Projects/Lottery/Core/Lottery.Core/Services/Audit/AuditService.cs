@@ -66,7 +66,7 @@ namespace Lottery.Core.Services.Audit
             var result = await auditRepos.PagingByAsync(auditQuery, query.PageIndex, query.PageSize);
             return new GetAuditsByTypeResult
             {
-                Audits = result.Items.Select(x => new AuditDto
+                Audits = result.Items.OrderByDescending(x => x.CreatedAt).Select(x => new AuditDto
                 {
                     AuditId = x.AuditId,
                     Action = x.Action,

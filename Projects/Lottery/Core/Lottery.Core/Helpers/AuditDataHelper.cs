@@ -24,6 +24,7 @@
                 public const string ActionSetCreditWhenUserCreated = "Set Credit when Agent's created";
                 public const string ActionUpdateGivenCredit = "Update Given Credit";
                 public const string ActionUpdateAgentCredit = "Update Agent's Credit";
+                public const string ActionUpdatePlayerCredit = "Update Player's Credit";
             }
             public static class DetailMessage
             {
@@ -31,6 +32,7 @@
                 public const string DetailUpdateGivenCredit = "Update Given Credit for Account {0}";
                 public const string DetailUpdateGivenCreditWithMemberMaxCredit = "Update Given Credit for Account {0} - Member's Max Credit (from {1} to {2})";
                 public const string DetailUpdateAgentCredit = "Update credit for agent account {0}";
+                public const string DetailUpdatePlayerCredit = "Update credit for player account {0}";
             }
         }
         public static class State
