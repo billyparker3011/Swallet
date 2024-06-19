@@ -3,6 +3,7 @@ using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.Agent;
+using Lottery.Core.Dtos.Audit;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Models.Agent.GetAgentBetSettings;
@@ -13,7 +14,9 @@ using Lottery.Core.Models.Player.UpdatePlayer;
 using Lottery.Core.Models.Player.UpdatePlayerCreditBalance;
 using Lottery.Core.Models.Setting;
 using Lottery.Core.Repositories.Agent;
+using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Player;
+using Lottery.Core.Services.Audit;
 using Lottery.Core.Services.Authentication;
 using Lottery.Core.Services.Caching.Player;
 using Lottery.Core.UnitOfWorks;
@@ -29,15 +32,18 @@ namespace Lottery.Core.Services.Player
         private readonly ISessionService _sessionService;
         private readonly IProcessTicketService _processTicketService;
         private readonly IPlayerSettingService _playerSettingService;
+        private readonly IAuditService _auditService;
 
         public PlayerService(ILogger<PlayerService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
             ISessionService sessionService,
             IProcessTicketService processTicketService,
-            IPlayerSettingService playerSettingService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+            IPlayerSettingService playerSettingService,
+            IAuditService auditService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _sessionService = sessionService;
             _processTicketService = processTicketService;
             _playerSettingService = playerSettingService;
+            _auditService = auditService;
         }
 
         public async Task CreatePlayer(CreatePlayerModel model)
@@ -105,6 +111,22 @@ namespace Lottery.Core.Services.Player
             //  Process cache
             await _processTicketService.BuildGivenCreditCache(player.PlayerId, player.Credit);
             await _playerSettingService.BuildSettingByBetKindCache(player.PlayerId, dictBetSettings);
+
+            await _auditService.SaveAuditData(new AuditParams
+            {
+                Type = (int)AuditType.Credit,
+                EditedUsername = ClientContext.Agent.UserName,
+                AgentUserName = player.Username,
+                AgentFirstName = player.FirstName,
+                AgentLastName = player.LastName,
+                Action = AuditDataHelper.Credit.Action.ActionSetCreditWhenUserCreated,
+                DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailSetCreditWhenUserCreated, player.Username, string.Empty, ClientContext.Agent.ParentId != 0 ? ClientContext.Agent.UserName : string.Empty),
+                OldValue = 0m,
+                NewValue = player.Credit,
+                SupermasterId = player.SupermasterId,
+                MasterId = player.MasterId,
+                AgentId = player.AgentId
+            });
         }
 
         public async Task UpdatePlayer(UpdatePlayerModel model)
@@ -114,15 +136,51 @@ namespace Lottery.Core.Services.Player
 
             updatedPlayer.FirstName = model.FirstName ?? updatedPlayer.FirstName;
             updatedPlayer.LastName = model.LastName ?? updatedPlayer.LastName;
+            var oldStateValue = updatedPlayer.State;
             updatedPlayer.State = model.State.HasValue && model.State.Value != UserState.All.ToInt() ? model.State.Value : updatedPlayer.State;
 
             updatedPlayer.UpdatedAt = ClockService.GetUtcNow();
             updatedPlayer.UpdatedBy = ClientContext.Agent.AgentId;
 
+            var oldCreditValue = updatedPlayer.Credit;
             updatedPlayer.Credit = model.Credit ?? updatedPlayer.Credit;
             playerRepository.Update(updatedPlayer);
 
             await LotteryUow.SaveChangesAsync();
+
+            if (model.Credit.HasValue)
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = (int)AuditType.Credit,
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = updatedPlayer.Username,
+                    Action = AuditDataHelper.Credit.Action.ActionUpdateGivenCredit,
+                    DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdateGivenCredit, updatedPlayer.Username),
+                    OldValue = oldCreditValue,
+                    NewValue = updatedPlayer.Credit,
+                    SupermasterId = updatedPlayer.SupermasterId,
+                    MasterId = updatedPlayer.MasterId,
+                    AgentId = updatedPlayer.AgentId
+                });
+            }
+
+            if (model.State.HasValue && model.State.Value != UserState.All.ToInt())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = (int)AuditType.State,
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = updatedPlayer.Username,
+                    Action = AuditDataHelper.State.Action.ActionUpdateState,
+                    DetailMessage = string.Format(AuditDataHelper.State.DetailMessage.DetailUpdateState, updatedPlayer.Username, Enum.GetName(typeof(UserState), oldStateValue), Enum.GetName(typeof(UserState), updatedPlayer.State)),
+                    OldValue = oldStateValue,
+                    NewValue = updatedPlayer.State,
+                    SupermasterId = updatedPlayer.SupermasterId,
+                    MasterId = updatedPlayer.MasterId,
+                    AgentId= updatedPlayer.AgentId
+                });
+            }
 
             await _processTicketService.BuildGivenCreditCache(updatedPlayer.PlayerId, updatedPlayer.Credit);
         }
@@ -170,11 +228,14 @@ namespace Lottery.Core.Services.Player
         public async Task UpdatePlayerBetSetting(long playerId, List<AgentBetSettingDto> updateItems)
         {
             var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
+            var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
             var player = await playerRepository.FindByIdAsync(playerId) ?? throw new NotFoundException();
 
             var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
 
+            var auditBetSettings = new List<AuditSettingData>();
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
+            var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedPlayerBetSettings = await playerOddRepository.FindQueryBy(x => x.PlayerId == player.PlayerId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
 
             var dictBetSettings = new Dictionary<int, BetSettingModel>();
@@ -183,6 +244,9 @@ namespace Lottery.Core.Services.Player
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
                 {
+                    var oldMinBetValue = item.MinBet;
+                    var oldMaxBetValue = item.MaxBet;
+                    var oldMaxPerNumber = item.MaxPerNumber;
                     item.MinBet = updateItem.ActualMinBet;
                     item.MaxBet = updateItem.ActualMaxBet;
                     item.MaxPerNumber = updateItem.ActualMaxPerNumber;
@@ -194,9 +258,49 @@ namespace Lottery.Core.Services.Player
                         MaxPerNumber = updateItem.ActualMaxPerNumber,
                         OddsValue = item.Buy
                     };
+
+                    auditBetSettings.AddRange(new List<AuditSettingData>
+                    {
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.MinBetTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldMinBetValue,
+                            NewValue = item.MinBet
+                        },
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.MaxBetTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldMaxBetValue,
+                            NewValue = item.MaxBet
+                        },
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.MaxPerNumberTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldMaxPerNumber,
+                            NewValue = item.MaxPerNumber
+                        }
+                    });
                 }
             });
             await LotteryUow.SaveChangesAsync();
+
+            if (existedPlayerBetSettings.Any())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = AuditType.Setting.ToInt(),
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = player.Username,
+                    Action = AuditDataHelper.Setting.Action.ActionUpdateBetSetting,
+                    SupermasterId = player.SupermasterId,
+                    MasterId = player.MasterId,
+                    AgentId = player.AgentId,
+                    AuditSettingDatas = auditBetSettings.OrderBy(x => x.BetKind).ToList()
+                });
+            }
 
             //  Process cache
             await _playerSettingService.BuildSettingByBetKindCache(player.PlayerId, dictBetSettings);
@@ -210,8 +314,9 @@ namespace Lottery.Core.Services.Player
 
             decimal outstanding = 0m;
             var agent = await agentRepos.FindByIdAsync(updatedPlayer.AgentId) ?? throw new NotFoundException();
-            var maxCreditToCompare = agent.MemberMaxCredit.HasValue ? Math.Min(agent.MemberMaxCredit.Value, agent.Credit - outstanding) : agent.Credit - outstanding;
-            if (updateItem.Credit < outstanding || updateItem.Credit > maxCreditToCompare + updatedPlayer.Credit)
+            var availableCreditOfAgent = await playerRepos.FindQueryBy(x => x.AgentId == agent.AgentId).SumAsync(x => x.Credit);
+            var maxCreditToCompare = agent.MemberMaxCredit.HasValue ? Math.Min(agent.MemberMaxCredit.Value, agent.Credit - outstanding - availableCreditOfAgent) : agent.Credit - outstanding - availableCreditOfAgent;
+            if (updateItem.Credit < outstanding || updateItem.Credit > maxCreditToCompare)
                 throw new BadRequestException(ErrorCodeHelper.Agent.InvalidCredit);
 
             updatedPlayer.Credit = updateItem.Credit;
@@ -230,16 +335,18 @@ namespace Lottery.Core.Services.Player
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var targetPlayer = await playerRepos.FindByIdAsync(playerId) ?? throw new NotFoundException();
 
-            decimal outstanding = 0m;
+            decimal outstanding = 0m; //TODO: update later
             var agent = await agentRepos.FindByIdAsync(targetPlayer.AgentId) ?? throw new NotFoundException();
-            var maxCreditToCompare = agent.MemberMaxCredit.HasValue ? Math.Min(agent.MemberMaxCredit.Value, agent.Credit - outstanding) : agent.Credit - outstanding;
+            var availableCreditOfAgent = await playerRepos.FindQueryBy(x => x.AgentId == agent.AgentId).SumAsync(x => x.Credit);
+            
+            var maxCreditToCompare = agent.MemberMaxCredit.HasValue ? Math.Min(agent.MemberMaxCredit.Value, agent.Credit - outstanding - availableCreditOfAgent) : agent.Credit - outstanding - availableCreditOfAgent;
 
             return new GetCreditBalanceDetailPopupResult
             {
                 CurrentGivenCredit = targetPlayer.Credit,
                 GivenCredit = targetPlayer.Credit,
                 MinCredit = outstanding,
-                MaxCredit = maxCreditToCompare + targetPlayer.Credit
+                MaxCredit = maxCreditToCompare
             };
         }
 
