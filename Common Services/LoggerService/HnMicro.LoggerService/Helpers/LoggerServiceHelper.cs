@@ -11,6 +11,7 @@ namespace HnMicro.LoggerService.Helpers
     {
         public static void BuildLoggerService(this WebApplicationBuilder builder)
         {
+            builder.Services.AddHealthChecks();
             builder.Services.AddDependencies();
             builder.BuildRedis();
             builder.Services.AddSingleton<ISubscribeLoggerUsingRedisService, SubscribeLoggerUsingRedisService>();   //  We use this module in HostedService, we cannot automatic register to services.
