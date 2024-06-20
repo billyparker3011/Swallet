@@ -1,3 +1,4 @@
+using HnMicro.Core.Helpers;
 using HnMicro.LoggerService.Helpers;
 
 namespace HnMicro.LoggerService
@@ -13,6 +14,7 @@ namespace HnMicro.LoggerService
             var app = builder.Build();
 
             app.Migrate();
+            app.UseHealthChecks(OtherHelper.HealthChecksPath);
             app.Run();
         }
     }
