@@ -33,7 +33,7 @@ namespace Lottery.Core.Services.Authentication
             ILotteryUow lotteryUow,
             IJwtTokenService jwtTokenService,
             ISessionService sessionService,
-            IAuditService auditService) 
+            IAuditService auditService)
             : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _jwtTokenService = jwtTokenService;
@@ -46,7 +46,7 @@ namespace Lottery.Core.Services.Authentication
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
             var matchingUsername = await agentRepository.FindByUsername(model.Username.ToUpper()) ?? throw new BadRequestException(ErrorCodeHelper.Auth.UserPasswordIsWrong);
             var user = await agentRepository.FindByUsernamePassword(model.Username.ToUpper(), model.Password.DecodePassword().Md5());
-            if(user == null)
+            if (user == null)
             {
                 await _auditService.SaveAuditData(new AuditParams
                 {
@@ -62,7 +62,7 @@ namespace Lottery.Core.Services.Authentication
                 });
                 throw new BadRequestException(ErrorCodeHelper.Auth.UserPasswordIsWrong);
             }
-            if (user.State == UserState.Closed.ToInt()) 
+            if (user.State == UserState.Closed.ToInt())
             {
                 await _auditService.SaveAuditData(new AuditParams
                 {
@@ -77,7 +77,7 @@ namespace Lottery.Core.Services.Authentication
                     AgentId = GetAgentId(user)
                 });
                 throw new BadRequestException(ErrorCodeHelper.Auth.UserClosed);
-            } 
+            }
 
             var isExpiredPassword = user.LatestChangePassword != null && user.LatestChangePassword.Value.IsExpiredDate();
             var isExpiredSecurityCode = user.LatestChangeSecurityCode != null && user.LatestChangeSecurityCode.Value.IsExpiredDate();

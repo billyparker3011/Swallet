@@ -1,4 +1,5 @@
-﻿using HnMicro.Framework.Models;
+﻿using HnMicro.Framework.Helpers;
+using HnMicro.Framework.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
 using Microsoft.Net.Http.Headers;
@@ -26,13 +27,16 @@ namespace HnMicro.Framework.Contexts
                 }
             }
 
+            var userAgent = GetUserAgent();
+            var browser = userAgent.GetBrowser();
+
             return new ClientInformation
             {
                 IpAddress = GetIpAddress(),
-                UserAgent = GetUserAgent(),
+                UserAgent = userAgent,
                 Platform = GetPlatform(),
                 Header = string.Join(Environment.NewLine, headers),
-                Browser = GetUserBrowser(),
+                Browser = browser,
                 Domain = GetUserDomain()
             };
         }
@@ -42,14 +46,6 @@ namespace HnMicro.Framework.Contexts
             if (HttpContextAccessor.HttpContext.Request.Headers == null) return string.Empty;
             if (!HttpContextAccessor.HttpContext.Request.Headers.TryGetValue("Origin", out StringValues domainValue)) return string.Empty;
             return domainValue.ToString().Replace("\"", "");
-        }
-
-        private string GetUserBrowser()
-        {
-            if (HttpContextAccessor.HttpContext.Request.Headers == null) return string.Empty;
-            if (!HttpContextAccessor.HttpContext.Request.Headers.TryGetValue("sec-ch-ua", out StringValues browserInfo)) return string.Empty;
-            var browserValue = browserInfo.ToString().Replace("\"", "");
-            return browserValue.Split(";", StringSplitOptions.None).FirstOrDefault();
         }
 
         private string GetPlatform()
