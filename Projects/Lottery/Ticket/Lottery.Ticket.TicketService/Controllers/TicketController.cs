@@ -136,9 +136,16 @@ namespace Lottery.Ticket.TicketService.Controllers
         }
 
         [HttpPost("refund-reject-tickets"), LotteryAuthorize(Permission.Management.AdvancedTickets)]
-        public async Task<IActionResult> RefunRejectTickets([FromBody] RefundRejectTicketsRequest request)
+        public async Task<IActionResult> RefundRejectTickets([FromBody] RefundRejectTicketsRequest request)
         {
             await _advancedSearchTicketsService.RefundRejectTickets(request.TicketIds);
+            return Ok();
+        }
+
+        [HttpPost("refund-reject-tickets-by-numbers"), LotteryAuthorize(Permission.Management.AdvancedTickets)]
+        public async Task<IActionResult> RefundRejectTicketsByNumbers([FromBody] RefundRejectTicketsByNumbersRequest request)
+        {
+            await _advancedSearchTicketsService.RefundRejectTicketsByNumbers(request.TicketIds, request.Numbers);
             return Ok();
         }
     }

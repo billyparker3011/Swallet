@@ -42,7 +42,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
     public TicketService(ILogger<TicketService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         IInMemoryUnitOfWork inMemoryUnitOfWork,
-        ITicketProcessor validationTicketHandler,
+        ITicketProcessor ticketProcessor,
         IAgentPositionTakingService agentPositionTakingService,
         IPlayerService playerService,
         IPlayerSettingService playerSettingService,
@@ -50,7 +50,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         IProcessOddsService processOddsService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _inMemoryUnitOfWork = inMemoryUnitOfWork;
-        _ticketProcessor = validationTicketHandler;
+        _ticketProcessor = ticketProcessor;
         _agentPositionTakingService = agentPositionTakingService;
         _playerService = playerService;
         _playerSettingService = playerSettingService;

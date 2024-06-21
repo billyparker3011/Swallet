@@ -9,6 +9,11 @@ public abstract class AbstractBetKindProcessor : IBetKindProcessor
 {
     public abstract int BetKindId { get; set; }
 
+    public virtual RefundRejectTicketResultModel AllowRefundRejectTicketsByNumbers(RefundRejectTicketModel model)
+    {
+        return null;
+    }
+
     public virtual CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
         return null;

@@ -16,6 +16,13 @@ public class TicketProcessor : ITicketProcessor
         LoadBetKindProcessors();
     }
 
+    public RefundRejectTicketResultModel AllowRefundRejectTicketsByNumbers(int betKindId, RefundRejectTicketModel model)
+    {
+        var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);
+        if (handler == null) return null;
+        return handler.AllowRefundRejectTicketsByNumbers(model);
+    }
+
     public CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, List<Models.MatchResult.PrizeMatchResultModel> result)
     {
         var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);

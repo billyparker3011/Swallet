@@ -9,6 +9,7 @@ public interface IBetKindProcessor
 {
     int BetKindId { get; set; }
 
+    RefundRejectTicketResultModel AllowRefundRejectTicketsByNumbers(RefundRejectTicketModel model);
     CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result);
     bool EnableStats();
     decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null);

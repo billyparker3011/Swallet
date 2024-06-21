@@ -190,4 +190,40 @@ public class FirstNorthern_Northern_De_Processor : AbstractBetKindProcessor
         }
         return dataResult;
     }
+
+    public override RefundRejectTicketResultModel AllowRefundRejectTicketsByNumbers(RefundRejectTicketModel model)
+    {
+        var result = new RefundRejectTicketResultModel
+        {
+            Allow = true,
+            Ticket = model.Ticket,
+            Children = model.Children
+        };
+        if (model.Children.Count == 0)
+        {
+            if (model.RefundRejectNumbers.Contains(model.Ticket.ChoosenNumbers)) result.Ticket.State = model.Ticket.IsLive.GetRefundRejectStateByIsLive();
+        }
+        else
+        {
+            foreach (var item in result.Children)
+            {
+                if (model.RefundRejectNumbers.Contains(item.ChoosenNumbers)) item.State = item.IsLive.GetRefundRejectStateByIsLive();
+            }
+
+            var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+            var noOfChildrenTickets = result.Children.Count();
+            var noOfRefundRejectTickets = result.Children.Count(f => refundRejectTicketState.Contains(f.State.ToInt()));
+            if (noOfChildrenTickets == noOfRefundRejectTickets) result.Ticket.State = model.Ticket.IsLive.GetRefundRejectStateByIsLive();
+            else
+            {
+                result.Ticket.Stake = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.Stake);
+                result.Ticket.PlayerPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.PlayerPayout);
+                result.Ticket.AgentPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.AgentPayout);
+                result.Ticket.MasterPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.MasterPayout);
+                result.Ticket.SupermasterPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.SupermasterPayout);
+                result.Ticket.CompanyPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.CompanyPayout);
+            }
+        }
+        return result;
+    }
 }

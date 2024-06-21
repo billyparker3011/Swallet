@@ -1,10 +1,16 @@
-﻿using System.Linq.Expressions;
+﻿using Lottery.Core.Enums;
+using System.Linq.Expressions;
 
 namespace Lottery.Core.Helpers
 {
     public static class TicketHelper
     {
-        public static Expression<Func<Data.Entities.Ticket, bool>> ContainsNumbers(this List<int> chooseNumbers, Enums.ContainNumberOperator @operator)
+        public static TicketState GetRefundRejectStateByIsLive(this bool isLive)
+        {
+            return isLive == true ? TicketState.Reject : TicketState.Refund;
+        }
+
+        public static Expression<Func<Data.Entities.Ticket, bool>> ContainsNumbers(this List<int> chooseNumbers, ContainNumberOperator @operator)
         {
             var param = Expression.Parameter(typeof(Data.Entities.Ticket), "p");
             Expression body = null;

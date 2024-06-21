@@ -16,11 +16,14 @@ namespace Lottery.Core.Services.Ticket;
 
 public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTicketsService>, IAdvancedSearchTicketsService
 {
+    private readonly ITicketProcessor _ticketProcessor;
     private readonly INormalizeTicketService _normalizeTicketService;
 
     public AdvancedSearchTicketsService(ILogger<AdvancedSearchTicketsService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
+        ITicketProcessor ticketProcessor,
         INormalizeTicketService normalizeTicketService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
+        _ticketProcessor = ticketProcessor;
         _normalizeTicketService = normalizeTicketService;
     }
 
@@ -76,6 +79,124 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
             });
         }
         await LotteryUow.SaveChangesAsync();
+
+        //  Process outs by player
+        //  Process outs by player, number
+    }
+
+    public async Task RefundRejectTicketsByNumbers(List<long> ticketIds, List<int> numbers)
+    {
+        var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+
+        var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
+        var tickets = await ticketRepository.FindQueryBy(f => ticketIds.Contains(f.TicketId) || (f.ParentId.HasValue && ticketIds.Contains(f.ParentId.Value))).ToListAsync();
+        var parentTickets = tickets.Where(f => !f.ParentId.HasValue).ToList();
+        foreach (var ticket in parentTickets)
+        {
+            var childs = tickets.Where(f => f.ParentId.HasValue && f.ParentId.Value == ticket.TicketId).ToList();
+
+            var result = _ticketProcessor.AllowRefundRejectTicketsByNumbers(ticket.BetKindId, new RefundRejectTicketModel
+            {
+                RefundRejectNumbers = numbers.Select(f => f.NormalizeNumber()).ToList(),
+                Ticket = new RefundRejectTicketDetailModel
+                {
+                    TicketId = ticket.TicketId,
+                    ChoosenNumbers = ticket.ChoosenNumbers,
+                    State = ticket.State.ToEnum<TicketState>(),
+                    IsLive = ticket.IsLive,
+                    Stake = ticket.Stake,
+                    PlayerPayout = ticket.PlayerPayout,
+                    AgentPayout = ticket.AgentPayout,
+                    MasterPayout = ticket.MasterPayout,
+                    SupermasterPayout = ticket.SupermasterPayout,
+                    CompanyPayout = ticket.CompanyPayout
+                },
+                Children = childs.Select(f => new RefundRejectTicketDetailModel
+                {
+                    TicketId = f.TicketId,
+                    ChoosenNumbers = f.ChoosenNumbers,
+                    State = f.State.ToEnum<TicketState>(),
+                    IsLive = ticket.IsLive,
+                    Stake = f.Stake,
+                    PlayerPayout = f.PlayerPayout,
+                    AgentPayout = f.AgentPayout,
+                    MasterPayout = f.MasterPayout,
+                    SupermasterPayout = f.SupermasterPayout,
+                    CompanyPayout = f.CompanyPayout
+                }).ToList()
+            });
+            if (result == null || !result.Allow) continue;
+
+            ticket.State = result.Ticket.State.ToInt();
+            if (refundRejectTicketState.Contains(ticket.State))
+            {
+                ticket.PlayerWinLoss = 0m;
+                ticket.DraftPlayerWinLoss = 0m;
+
+                ticket.AgentWinLoss = 0m;
+                ticket.AgentCommission = 0m;
+                ticket.DraftAgentWinLoss = 0m;
+                ticket.DraftAgentCommission = 0m;
+
+                ticket.MasterWinLoss = 0m;
+                ticket.MasterCommission = 0m;
+                ticket.DraftMasterWinLoss = 0m;
+                ticket.DraftMasterCommission = 0m;
+
+                ticket.SupermasterWinLoss = 0m;
+                ticket.SupermasterCommission = 0m;
+                ticket.DraftSupermasterWinLoss = 0m;
+                ticket.DraftSupermasterCommission = 0m;
+
+                ticket.CompanyWinLoss = 0m;
+                ticket.DraftCompanyWinLoss = 0m;
+            }
+            else
+            {
+                ticket.Stake = result.Ticket.Stake;
+                ticket.PlayerPayout = result.Ticket.PlayerPayout;
+                ticket.AgentPayout = result.Ticket.PlayerPayout;
+                ticket.MasterPayout = result.Ticket.PlayerPayout;
+                ticket.SupermasterPayout = result.Ticket.PlayerPayout;
+                ticket.CompanyPayout = result.Ticket.PlayerPayout;
+            }
+            ticketRepository.Update(ticket);
+
+            childs.ForEach(f =>
+            {
+                var updatedChild = result.Children.FirstOrDefault(f1 => f1.TicketId == f.TicketId);
+                if (updatedChild == null) return;
+
+                f.State = updatedChild.State.ToInt();
+                if (refundRejectTicketState.Contains(f.State))
+                {
+                    f.PlayerWinLoss = 0m;
+                    f.DraftPlayerWinLoss = 0m;
+
+                    f.AgentWinLoss = 0m;
+                    f.AgentCommission = 0m;
+                    f.DraftAgentWinLoss = 0m;
+                    f.DraftAgentCommission = 0m;
+
+                    f.MasterWinLoss = 0m;
+                    f.MasterCommission = 0m;
+                    f.DraftMasterWinLoss = 0m;
+                    f.DraftMasterCommission = 0m;
+
+                    f.SupermasterWinLoss = 0m;
+                    f.SupermasterCommission = 0m;
+                    f.DraftSupermasterWinLoss = 0m;
+                    f.DraftSupermasterCommission = 0m;
+
+                    f.CompanyWinLoss = 0m;
+                    f.DraftCompanyWinLoss = 0m;
+                }
+                ticketRepository.Update(f);
+            });
+        }
+        await LotteryUow.SaveChangesAsync();
+
+        //  Process outs by player
     }
 
     public async Task<AdvancedSearchTicketsResultModel> Search(AdvancedSearchTicketsModel model)
