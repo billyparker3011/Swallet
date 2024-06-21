@@ -11,6 +11,7 @@ public class AdvancedSearchTicketsRequest : QueryAdvance
     public int RegionId { get; set; }
     public int ChannelId { get; set; }
     public List<int> ChooseNumbers { get; set; } = new List<int>();
+    public int ContainNumberOperator { get; set; }
     public List<int> States { get; set; } = new List<int>();
     public List<bool> LiveStates { get; set; } = new List<bool>();
     public List<int> Prizes { get; set; } = new List<int>();

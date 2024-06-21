@@ -116,17 +116,18 @@ namespace Lottery.Ticket.TicketService.Controllers
         {
             var data = await _advancedSearchTicketsService.Search(new AdvancedSearchTicketsModel
             {
+                MatchId = request.MatchId,
+                RegionId = request.RegionId,
                 BetKindIds = request.BetKindIds,
                 ChannelId = request.ChannelId,
-                ChooseNumbers = request.ChooseNumbers,
                 LiveStates = request.LiveStates,
-                MatchId = request.MatchId,
-                Positions = request.Positions,
-                Prizes = request.Prizes,
-                RegionId = request.RegionId,
-                States = request.States,
                 TicketIds = request.TicketIds,
                 Username = request.Username,
+                Prizes = request.Prizes,
+                Positions = request.Positions,
+                ChooseNumbers = request.ChooseNumbers,
+                ContainNumberOperator = request.ContainNumberOperator,
+                States = request.States,
                 PageIndex = request.PageIndex,
                 PageSize = request.PageSize,
                 SortType = request.SortType
