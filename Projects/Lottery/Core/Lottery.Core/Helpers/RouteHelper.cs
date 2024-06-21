@@ -23,6 +23,11 @@
             {
                 public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/position-taking";
             }
+
+            public static class Announcement
+            {
+                public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/announcements";
+            }
         }
     }
 }

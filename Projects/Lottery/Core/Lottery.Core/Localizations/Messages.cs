@@ -61,5 +61,10 @@
             public const string MaxPerNumberIsBlank = "MaxPerNumber is required.";
             public const string MaxPerNumberIsGreaterThanZero = "MaxPerNumber is grerater than zero.";
         }
+
+        public static class Announcement
+        {
+            public const string AnnouncementLevelIsRequired = "Announcement level is required.";
+        }
     }
 }
