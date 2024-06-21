@@ -93,19 +93,11 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
         if (model.BetKindIds.Count > 0) ticketQuery = ticketQuery.Where(f => model.BetKindIds.Contains(f.BetKindId));
         if (model.RegionId > 0) ticketQuery = ticketQuery.Where(f => f.RegionId == model.RegionId);
         if (model.ChannelId > 0) ticketQuery = ticketQuery.Where(f => f.ChannelId == model.ChannelId);
-        if (model.ChooseNumbers.Count > 0)
-        {
-            var chooseNumbers = new List<string>();
-            model.ChooseNumbers.ForEach(f =>
-            {
-                chooseNumbers.Add(f.NormalizeNumber());
-            });
-            ticketQuery = ticketQuery.Where(f => chooseNumbers.Contains(f.ChoosenNumbers));
-        }
+        if (model.ChooseNumbers.Count > 0) ticketQuery = ticketQuery.Where(model.ChooseNumbers.ContainsNumbers(model.ContainNumberOperator.ToEnum<Core.Enums.ContainNumberOperator>()));
         if (model.States.Count > 0) ticketQuery = ticketQuery.Where(f => model.States.Contains(f.State));
         if (model.Prizes.Count > 0) ticketQuery = ticketQuery.Where(f => model.Prizes.Contains(f.Prize.Value));
 
-        ticketQuery = ticketQuery.OrderByDescending(f => f.CreatedAt);
+        ticketQuery = ticketQuery.OrderByDescending(f => f.TicketId);
         var result = await ticketRepository.PagingByAsync(ticketQuery, model.PageIndex, model.PageSize);
         var tickets = result.Items.Select(f => f.ToTicketDetailModel()).ToList();
         _normalizeTicketService.NormalizeTicket(tickets);
