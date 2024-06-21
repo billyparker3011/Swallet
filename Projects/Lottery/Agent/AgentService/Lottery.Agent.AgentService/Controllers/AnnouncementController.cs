@@ -26,7 +26,8 @@ namespace Lottery.Agent.AgentService.Controllers
             {
                 AnnouncementType = type,
                 AnnouncementLevel = request.Level,
-                AnnouncementContent = request.Content
+                AnnouncementContent = request.Content,
+                ReceivedIds = request.ReceivedIds
             });
             return Ok();
         }
