@@ -30,6 +30,9 @@ namespace Lottery.Data
 
         public virtual DbSet<Audit> Audits { get; set; }
 
+        public virtual DbSet<Announcement> Announcements { get; set; }
+        public virtual DbSet<AgentAnnouncement> AgentAnnouncements { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
