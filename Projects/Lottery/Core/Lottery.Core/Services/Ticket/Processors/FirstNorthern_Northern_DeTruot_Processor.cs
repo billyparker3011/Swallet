@@ -11,15 +11,14 @@ namespace Lottery.Core.Services.Ticket.Processors;
 public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
 {
     private const int _prize = 9;
-    private const int _acceptedPrize = 6;
+    private const int _nOOfNumbers = 10;
 
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_DeTruot.ToInt();
 
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
     {
-        if (model.Numbers.Count < 10) return ErrorCodeHelper.ProcessTicket.FirstNorthern_Northern_DeTruot_MustChooseAtLeast10;
-        if (!metadata.IsLive) return 0;
-        return metadata.Prize.HasValue && metadata.Prize.Value > _acceptedPrize ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
+        if (model.Numbers.Count < _nOOfNumbers) return ErrorCodeHelper.ProcessTicket.FirstNorthern_Northern_DeTruot_MustChooseAtLeast10;
+        return metadata.IsLive ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
     }
 
     public override decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null)
@@ -106,11 +105,72 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
 
     public override RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(RefundRejectTicketByNumbersModel model)
     {
-        return null;
+        var result = new RefundRejectTicketByNumbersResultModel
+        {
+            Allow = true,
+            Ticket = model.Ticket,
+            Children = model.Children
+        };
+        var enableStats = EnableStats();
+        var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+        foreach (var item in result.Children)
+        {
+            if (model.RefundRejectNumbers.Contains(item.ChoosenNumbers) && !refundRejectTicketState.Contains(item.State.ToInt()))
+            {
+                item.State = item.IsLive.GetRefundRejectStateByIsLive();
+                result.DifferentPlayerPayout += item.PlayerPayout;
+                result.OutsByNumbers[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                result.PointsByNumbers[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                if (enableStats)
+                {
+                    result.OutsByBetKind[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                    result.PointsByBetKind[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                }
+            }
+        }
+
+        var noOfWaitingRunningTickets = result.Children.Count(f => !refundRejectTicketState.Contains(f.State.ToInt()));
+        if (noOfWaitingRunningTickets < _nOOfNumbers)
+        {
+            result.Ticket.State = model.Ticket.IsLive.GetRefundRejectStateByIsLive();
+            foreach (var item in result.Children)
+            {
+                if (refundRejectTicketState.Contains(item.State.ToInt())) continue;
+                item.State = result.Ticket.State;
+                result.DifferentPlayerPayout += item.PlayerPayout;
+            }
+        }
+        else
+        {
+            result.Ticket.Stake = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.Stake);
+            result.Ticket.PlayerPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.PlayerPayout);
+            result.Ticket.AgentPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.AgentPayout);
+            result.Ticket.MasterPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.MasterPayout);
+            result.Ticket.SupermasterPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.SupermasterPayout);
+            result.Ticket.CompanyPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.CompanyPayout);
+        }
+        return result;
     }
 
     public override RefundRejectTicketResultModel RefundRejectTicket(RefundRejectTicketModel model)
     {
-        return null;
+        var result = new RefundRejectTicketResultModel();
+        var enableStats = EnableStats();
+        var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+        foreach (var item in model.Children)
+        {
+            if (!refundRejectTicketState.Contains(item.State.ToInt()))
+            {
+                result.DifferentPlayerPayout += item.PlayerPayout;
+                result.OutsByNumbers[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                result.PointsByNumbers[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                if (enableStats)
+                {
+                    result.OutsByBetKind[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                    result.PointsByBetKind[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                }
+            }
+        }
+        return result;
     }
 }
