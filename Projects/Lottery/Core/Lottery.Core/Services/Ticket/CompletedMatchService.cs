@@ -21,6 +21,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
     private readonly CompletedMatchOption _completedMatchOption;
     private readonly List<int> _outsStates;
     private readonly List<int> _recalculateStates;
+    private readonly List<int> _refundRejectTicketStates;
     private readonly ITicketProcessor _processor;
     private readonly List<CompletedMatchInQueueModel> _matches = new();
     private readonly List<long> _matchIds = new();
@@ -34,6 +35,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
         _processor = processor;
         _outsStates = CommonHelper.OutsTicketState();
         _recalculateStates = CommonHelper.RecalculateTicketState();
+        _refundRejectTicketStates = CommonHelper.RefundRejectTicketState();
 
         InitTimer();
     }
@@ -97,6 +99,8 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             var rootTickets = _ticketsByMatch.Where(f => !f.ParentId.HasValue).ToList();
             foreach (var item in rootTickets)
             {
+                if (_refundRejectTicketStates.Contains(item.State)) continue;
+
                 var matchResult = _matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
                 if (matchResult == null || string.IsNullOrEmpty(matchResult.Results)) continue;
                 var result = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(matchResult.Results);
@@ -137,6 +141,8 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                     {
                         TicketId = f.TicketId,
                         ParentId = f.ParentId,
+                        State = f.State,
+
                         ChoosenNumbers = f.ChoosenNumbers,
                         Stake = f.Stake,
 

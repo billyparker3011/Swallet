@@ -50,7 +50,27 @@ namespace Lottery.Core.Services.Caching.Player
             }, outsKey.TimeSpan == TimeSpan.Zero ? null : outsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
         }
 
-        public async Task BuildOutsByMatchAndNumbersCache(long playerId, long matchId, Dictionary<int, decimal> pointsByMatchAndNumbers, Dictionary<int, decimal> pointByNumbers)
+        public async Task UpdateOutsByMatchCache(Dictionary<long, Dictionary<long, decimal>> downOuts)
+        {
+            foreach (var item in downOuts)
+            {
+                var playerId = item.Key;
+                foreach (var subItem in item.Value)
+                {
+                    var outsKey = playerId.GetPlayerOutsByMatch(subItem.Key);
+                    var currentOuts = await _cacheService.HashGetFieldsAsync(outsKey.MainKey, new List<string> { outsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                    if (currentOuts == null || currentOuts.Count == 0) continue;
+                    if (!currentOuts.TryGetValue(outsKey.SubKey, out string sOuts)) continue;
+                    if (!decimal.TryParse(sOuts, out decimal outs)) continue;
+                    if (outs < subItem.Value) continue;
+
+                    currentOuts[outsKey.SubKey] = (outs - subItem.Value).ToString();
+                    await _cacheService.HashSetFieldsAsync(outsKey.MainKey, currentOuts, outsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                }
+            }
+        }
+
+        public async Task BuildPointsByMatchAndNumbersCache(long playerId, long matchId, Dictionary<int, decimal> pointsByMatchAndNumbers, Dictionary<int, decimal> pointByNumbers)
         {
             foreach (var item in pointByNumbers)
             {
@@ -61,6 +81,29 @@ namespace Lottery.Core.Services.Caching.Player
                 {
                     { pointsByMatchAndNumberKey.SubKey, newVal.ToString() }
                 }, pointsByMatchAndNumberKey.TimeSpan == TimeSpan.Zero ? null : pointsByMatchAndNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+            }
+        }
+
+        public async Task UpdatePointsByMatchAndNumbersCache(Dictionary<long, Dictionary<long, Dictionary<int, decimal>>> points)
+        {
+            //  Key = PlayerId => Key = MatchId => Key = Number
+            foreach (var itemPoint in points)
+            {
+                foreach (var itemMatch in itemPoint.Value)
+                {
+                    foreach (var itemNumber in itemMatch.Value)
+                    {
+                        var pointsByMatchAndNumberKey = itemMatch.Key.GetPlayerPointsByMatchAndNumber(itemMatch.Key, itemNumber.Key);
+                        var currentPoints = await _cacheService.HashGetFieldsAsync(pointsByMatchAndNumberKey.MainKey, new List<string> { pointsByMatchAndNumberKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                        if (currentPoints == null || currentPoints.Count == 0) continue;
+                        if (!currentPoints.TryGetValue(pointsByMatchAndNumberKey.SubKey, out string sPoints)) continue;
+                        if (!decimal.TryParse(sPoints, out decimal valPoints)) continue;
+                        if (valPoints < itemNumber.Value) continue;
+
+                        currentPoints[pointsByMatchAndNumberKey.SubKey] = (valPoints - itemNumber.Value).ToString();
+                        await _cacheService.HashSetFieldsAsync(pointsByMatchAndNumberKey.MainKey, currentPoints, pointsByMatchAndNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                    }
+                }
             }
         }
 
@@ -92,6 +135,49 @@ namespace Lottery.Core.Services.Caching.Player
                 {
                     { payoutStatsByMatchAndNumbersKey.SubKey, newPayout.ToString() }
                 }, payoutStatsByMatchAndNumbersKey.TimeSpan == TimeSpan.Zero ? null : payoutStatsByMatchAndNumbersKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+            }
+        }
+
+        public async Task UpdateStatsByMatchBetKindAndNumbers(Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> outs, Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> points)
+        {
+            //  Outs
+            foreach (var itemBetKind in outs)
+            {
+                foreach (var itemMatch in itemBetKind.Value)
+                {
+                    foreach (var itemNumber in itemMatch.Value)
+                    {
+                        var outsKey = itemMatch.Key.GetPayoutStatsKeyByMatchBetKindNumber(itemBetKind.Key, itemNumber.Key);
+                        var outsVals = await _cacheService.HashGetFieldsAsync(outsKey.MainKey, new List<string> { outsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                        if (outsVals == null || outsVals.Count == 0) continue;
+                        if (!outsVals.TryGetValue(outsKey.SubKey, out string sCurrentOuts)) continue;
+                        if (!decimal.TryParse(sCurrentOuts, out decimal currentOuts)) continue;
+                        if (currentOuts < itemNumber.Value) continue;
+
+                        outsVals[outsKey.SubKey] = (currentOuts - itemNumber.Value).ToString();
+                        await _cacheService.HashSetFieldsAsync(outsKey.MainKey, outsVals, outsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                    }
+                }
+            }
+            //  Points
+            foreach (var itemBetKind in points)
+            {
+                foreach (var itemMatch in itemBetKind.Value)
+                {
+                    foreach (var itemNumber in itemMatch.Value)
+                    {
+                        var pointsKey = itemMatch.Key.GetPointStatsKeyByMatchBetKindNumber(itemBetKind.Key, itemNumber.Key);
+
+                        var pointsVals = await _cacheService.HashGetFieldsAsync(pointsKey.MainKey, new List<string> { pointsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                        if (pointsVals == null || pointsVals.Count == 0) continue;
+                        if (!pointsVals.TryGetValue(pointsKey.SubKey, out string sCurrentPoints)) continue;
+                        if (!decimal.TryParse(sCurrentPoints, out decimal currentPoints)) continue;
+                        if (currentPoints < itemNumber.Value) continue;
+
+                        pointsVals[pointsKey.SubKey] = (currentPoints - itemNumber.Value).ToString();
+                        await _cacheService.HashSetFieldsAsync(pointsKey.MainKey, pointsVals, pointsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                    }
+                }
             }
         }
 

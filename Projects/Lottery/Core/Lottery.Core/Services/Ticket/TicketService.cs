@@ -42,7 +42,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
     public TicketService(ILogger<TicketService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         IInMemoryUnitOfWork inMemoryUnitOfWork,
-        ITicketProcessor validationTicketHandler,
+        ITicketProcessor ticketProcessor,
         IAgentPositionTakingService agentPositionTakingService,
         IPlayerService playerService,
         IPlayerSettingService playerSettingService,
@@ -50,7 +50,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         IProcessOddsService processOddsService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _inMemoryUnitOfWork = inMemoryUnitOfWork;
-        _ticketProcessor = validationTicketHandler;
+        _ticketProcessor = ticketProcessor;
         _agentPositionTakingService = agentPositionTakingService;
         _playerService = playerService;
         _playerSettingService = playerSettingService;
@@ -345,7 +345,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         await LotteryUow.SaveChangesAsync();
 
         await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPlayerPayout);
-        await _processTicketService.BuildOutsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
+        await _processTicketService.BuildPointsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
         if (enableStats) await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers);
 
         AddToAcceptedScanService(ticket, childTickets);

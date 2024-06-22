@@ -8,9 +8,13 @@ namespace Lottery.Core.Services.Caching.Player
     public interface IProcessTicketService : IScopedDependency
     {
         Task BuildGivenCreditCache(long playerId, decimal credit);
-        Task BuildOutsByMatchAndNumbersCache(long playerId, long matchId, Dictionary<int, decimal> pointsByMatchAndNumbers, Dictionary<int, decimal> pointByNumbers);
+        Task BuildPointsByMatchAndNumbersCache(long playerId, long matchId, Dictionary<int, decimal> pointsByMatchAndNumbers, Dictionary<int, decimal> pointByNumbers);
         Task BuildOutsByMatchCache(long playerId, long matchId, decimal totalOuts);
         Task BuildStatsByMatchBetKindAndNumbers(long matchId, int betKindId, Dictionary<int, decimal> pointByNumbers, Dictionary<int, decimal> payoutByNumbers);
+
+        Task UpdateOutsByMatchCache(Dictionary<long, Dictionary<long, decimal>> downOuts);
+        Task UpdatePointsByMatchAndNumbersCache(Dictionary<long, Dictionary<long, Dictionary<int, decimal>>> points);
+        Task UpdateStatsByMatchBetKindAndNumbers(Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> outs, Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> points);
 
         Task<AgentOddsForProcessModel> GetAgentOdds(int betKindId, long supermasterId, long masterId, long agentId);
         Task<AgentMixedOddsModel> GetAgentMixedOdds(int originBetKindId, List<int> subBetKindIds, long supermasterId, long masterId, long agentId);
