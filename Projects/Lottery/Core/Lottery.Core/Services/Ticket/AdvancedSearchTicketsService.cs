@@ -387,6 +387,11 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
         if (model.ChooseNumbers.Count > 0) ticketQuery = ticketQuery.Where(model.ChooseNumbers.ContainsNumbers(model.ContainNumberOperator.ToEnum<Core.Enums.ContainNumberOperator>()));
         if (model.States.Count > 0) ticketQuery = ticketQuery.Where(f => model.States.Contains(f.State));
         if (model.Prizes.Count > 0) ticketQuery = ticketQuery.Where(f => model.Prizes.Contains(f.Prize.Value));
+        if (model.LiveStates.HasValue)
+        {
+            if (model.LiveStates.Value == 1) ticketQuery = ticketQuery.Where(f => !f.IsLive);    //  None Live
+            else if (model.LiveStates.Value == 2) ticketQuery = ticketQuery.Where(f => f.IsLive); //  Live
+        }
 
         ticketQuery = ticketQuery.OrderByDescending(f => f.TicketId);
         var result = await ticketRepository.PagingByAsync(ticketQuery, model.PageIndex, model.PageSize);

@@ -13,7 +13,7 @@ public class AdvancedSearchTicketsRequest : QueryAdvance
     public List<int> ChooseNumbers { get; set; } = new List<int>();
     public int ContainNumberOperator { get; set; }
     public List<int> States { get; set; } = new List<int>();
-    public List<bool> LiveStates { get; set; } = new List<bool>();
+    public int? LiveStates { get; set; }
     public List<int> Prizes { get; set; } = new List<int>();
     public List<int> Positions { get; set; } = new List<int>();
 }
