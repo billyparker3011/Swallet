@@ -9,6 +9,13 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public abstract class AbstractBetKindProcessor : IBetKindProcessor
 {
+    protected List<string> SplitChooseNumbers(string chooseNumbers)
+    {
+        chooseNumbers = string.IsNullOrEmpty(chooseNumbers) ? string.Empty : chooseNumbers.Trim();
+        if (string.IsNullOrEmpty(chooseNumbers)) return new List<string>();
+        return chooseNumbers.Split(new[] { "," }, StringSplitOptions.TrimEntries).ToList();
+    }
+
     public abstract int BetKindId { get; set; }
 
     public virtual RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(RefundRejectTicketByNumbersModel model)

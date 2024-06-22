@@ -192,4 +192,101 @@ public class FirstNorthern_Northern_Xien_3_Processor : AbstractBetKindProcessor
         dataResult.CompanyWinLoss = totalCompanyWinLose;
         return dataResult;
     }
+
+    public override RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(RefundRejectTicketByNumbersModel model)
+    {
+        var result = new RefundRejectTicketByNumbersResultModel
+        {
+            Allow = true,
+            Ticket = model.Ticket,
+            Children = model.Children
+        };
+        var enableStats = EnableStats();
+        if (model.Children.Count == 0)
+        {
+            var choosenNumbers = SplitChooseNumbers(model.Ticket.ChoosenNumbers);
+            if (choosenNumbers.Any(model.RefundRejectNumbers.Contains))
+            {
+                result.Ticket.State = model.Ticket.IsLive.GetRefundRejectStateByIsLive();
+                result.DifferentPlayerPayout += model.Ticket.PlayerPayout;
+                //result.OutsByNumbers[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.PlayerPayout;
+                //result.PointsByNumbers[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.Stake;
+                //if (enableStats)
+                //{
+                //    result.OutsByBetKind[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.PlayerPayout;
+                //    result.PointsByBetKind[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.Stake;
+                //}
+            }
+        }
+        else
+        {
+            var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+            foreach (var item in result.Children)
+            {
+                var choosenNumbers = SplitChooseNumbers(item.ChoosenNumbers);
+                if (choosenNumbers.Any(model.RefundRejectNumbers.Contains) && !refundRejectTicketState.Contains(item.State.ToInt()))
+                {
+                    item.State = item.IsLive.GetRefundRejectStateByIsLive();
+                    result.DifferentPlayerPayout += item.PlayerPayout;
+                    //result.OutsByNumbers[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                    //result.PointsByNumbers[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                    //if (enableStats)
+                    //{
+                    //    result.OutsByBetKind[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                    //    result.PointsByBetKind[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                    //}
+                }
+            }
+
+            var noOfChildrenTickets = result.Children.Count();
+            var noOfRefundRejectTickets = result.Children.Count(f => refundRejectTicketState.Contains(f.State.ToInt()));
+            if (noOfChildrenTickets == noOfRefundRejectTickets) result.Ticket.State = model.Ticket.IsLive.GetRefundRejectStateByIsLive();
+            else
+            {
+                result.Ticket.Stake = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.Stake);
+                result.Ticket.PlayerPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.PlayerPayout);
+                result.Ticket.AgentPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.AgentPayout);
+                result.Ticket.MasterPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.MasterPayout);
+                result.Ticket.SupermasterPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.SupermasterPayout);
+                result.Ticket.CompanyPayout = result.Children.Where(f => !refundRejectTicketState.Contains(f.State.ToInt())).Sum(f => f.CompanyPayout);
+            }
+        }
+        return result;
+    }
+
+    public override RefundRejectTicketResultModel RefundRejectTicket(RefundRejectTicketModel model)
+    {
+        var result = new RefundRejectTicketResultModel();
+        //var enableStats = EnableStats();
+        if (model.Children.Count == 0)
+        {
+            result.DifferentPlayerPayout += model.Ticket.PlayerPayout;
+            //result.OutsByNumbers[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.PlayerPayout;
+            //result.PointsByNumbers[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.Stake;
+            //if (enableStats)
+            //{
+            //    result.OutsByBetKind[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.PlayerPayout;
+            //    result.PointsByBetKind[int.Parse(model.Ticket.ChoosenNumbers)] = model.Ticket.Stake;
+            //}
+        }
+        else
+        {
+            var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+            foreach (var item in model.Children)
+            {
+                if (!refundRejectTicketState.Contains(item.State.ToInt()))
+                {
+                    result.DifferentPlayerPayout += item.PlayerPayout;
+                    //result.OutsByNumbers[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                    //result.PointsByNumbers[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                    //if (enableStats)
+                    //{
+                    //    result.OutsByBetKind[int.Parse(item.ChoosenNumbers)] = item.PlayerPayout;
+                    //    result.PointsByBetKind[int.Parse(item.ChoosenNumbers)] = item.Stake;
+                    //}
+                }
+            }
+        }
+        return result;
+    }
 }
