@@ -158,7 +158,7 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
         var parentTickets = tickets.Where(f => !f.ParentId.HasValue).ToList();
         foreach (var ticket in parentTickets)
         {
-            //if (refundRejectTicketState.Contains(ticket.State)) continue;
+            if (refundRejectTicketState.Contains(ticket.State)) continue;
 
             var childs = tickets.Where(f => f.ParentId.HasValue && f.ParentId.Value == ticket.TicketId).ToList();
 
