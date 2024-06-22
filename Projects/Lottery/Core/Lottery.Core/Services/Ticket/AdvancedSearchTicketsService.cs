@@ -7,6 +7,7 @@ using Lottery.Core.Helpers.Converters.Tickets;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Repositories.Ticket;
+using Lottery.Core.Services.Caching.Player;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -17,13 +18,16 @@ namespace Lottery.Core.Services.Ticket;
 public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTicketsService>, IAdvancedSearchTicketsService
 {
     private readonly ITicketProcessor _ticketProcessor;
+    private readonly IProcessTicketService _processTicketService;
     private readonly INormalizeTicketService _normalizeTicketService;
 
     public AdvancedSearchTicketsService(ILogger<AdvancedSearchTicketsService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         ITicketProcessor ticketProcessor,
+        IProcessTicketService processTicketService,
         INormalizeTicketService normalizeTicketService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _ticketProcessor = ticketProcessor;
+        _processTicketService = processTicketService;
         _normalizeTicketService = normalizeTicketService;
     }
 
@@ -87,6 +91,7 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
     public async Task RefundRejectTicketsByNumbers(List<long> ticketIds, List<int> numbers)
     {
         var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+        var playerOuts = new Dictionary<long, Dictionary<long, decimal>>();
 
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var tickets = await ticketRepository.FindQueryBy(f => ticketIds.Contains(f.TicketId) || (f.ParentId.HasValue && ticketIds.Contains(f.ParentId.Value))).ToListAsync();
@@ -126,6 +131,7 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
                 }).ToList()
             });
             if (result == null || !result.Allow) continue;
+            var oldPlayerPayout = ticket.PlayerPayout;
 
             ticket.State = result.Ticket.State.ToInt();
             if (refundRejectTicketState.Contains(ticket.State))
@@ -161,7 +167,6 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
                 ticket.CompanyPayout = result.Ticket.PlayerPayout;
             }
             ticketRepository.Update(ticket);
-
             childs.ForEach(f =>
             {
                 var updatedChild = result.Children.FirstOrDefault(f1 => f1.TicketId == f.TicketId);
@@ -193,10 +198,22 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
                 }
                 ticketRepository.Update(f);
             });
+
+            var newPlayerPayout = ticket.PlayerPayout;
+            var subPlayerPayout = Math.Abs(newPlayerPayout - oldPlayerPayout);
+            if (!playerOuts.TryGetValue(ticket.PlayerId, out Dictionary<long, decimal> playerOutsDetail))
+            {
+                playerOutsDetail = new Dictionary<long, decimal>();
+                playerOuts[ticket.PlayerId] = playerOutsDetail;
+            }
+            if (playerOutsDetail.ContainsKey(ticket.MatchId)) playerOutsDetail[ticket.MatchId] += subPlayerPayout;
+            else playerOutsDetail[ticket.MatchId] = subPlayerPayout;
         }
         await LotteryUow.SaveChangesAsync();
 
-        //  Process outs by player
+        await _processTicketService.UpdateOutsByMatchCache(playerOuts);
+        //await _processTicketService.BuildOutsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
+        //if (enableStats) await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers);
     }
 
     public async Task<AdvancedSearchTicketsResultModel> Search(AdvancedSearchTicketsModel model)

@@ -50,6 +50,26 @@ namespace Lottery.Core.Services.Caching.Player
             }, outsKey.TimeSpan == TimeSpan.Zero ? null : outsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
         }
 
+        public async Task UpdateOutsByMatchCache(Dictionary<long, Dictionary<long, decimal>> downOuts)
+        {
+            foreach (var item in downOuts)
+            {
+                var playerId = item.Key;
+                foreach (var subItem in item.Value)
+                {
+                    var outsKey = playerId.GetPlayerOutsByMatch(subItem.Key);
+                    var currentOuts = await _cacheService.HashGetFieldsAsync(outsKey.MainKey, new List<string> { outsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                    if (currentOuts == null || currentOuts.Count == 0) continue;
+                    if (!currentOuts.TryGetValue(outsKey.SubKey, out string sOuts)) continue;
+                    if (!decimal.TryParse(sOuts, out decimal outs)) continue;
+                    if (outs < subItem.Value) continue;
+
+                    currentOuts[outsKey.SubKey] = (outs - subItem.Value).ToString();
+                    await _cacheService.HashSetFieldsAsync(outsKey.MainKey, currentOuts, outsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                }
+            }
+        }
+
         public async Task BuildOutsByMatchAndNumbersCache(long playerId, long matchId, Dictionary<int, decimal> pointsByMatchAndNumbers, Dictionary<int, decimal> pointByNumbers)
         {
             foreach (var item in pointByNumbers)

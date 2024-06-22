@@ -12,6 +12,8 @@ namespace Lottery.Core.Services.Caching.Player
         Task BuildOutsByMatchCache(long playerId, long matchId, decimal totalOuts);
         Task BuildStatsByMatchBetKindAndNumbers(long matchId, int betKindId, Dictionary<int, decimal> pointByNumbers, Dictionary<int, decimal> payoutByNumbers);
 
+        Task UpdateOutsByMatchCache(Dictionary<long, Dictionary<long, decimal>> downOuts);
+
         Task<AgentOddsForProcessModel> GetAgentOdds(int betKindId, long supermasterId, long masterId, long agentId);
         Task<AgentMixedOddsModel> GetAgentMixedOdds(int originBetKindId, List<int> subBetKindIds, long supermasterId, long masterId, long agentId);
         Task<Dictionary<int, decimal>> GetMatchPlayerOddsByBetKindAndNumbers(long playerId, decimal defaultOddsValue, long matchId, int betKindId, List<int> numbers);
