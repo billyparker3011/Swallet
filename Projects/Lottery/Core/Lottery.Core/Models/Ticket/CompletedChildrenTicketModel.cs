@@ -4,6 +4,8 @@
     {
         public long TicketId { get; set; }
         public long? ParentId { get; set; }
+        public int State { get; set; }
+
         public string ChoosenNumbers { get; set; }
         public decimal Stake { get; set; }
 

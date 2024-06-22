@@ -33,12 +33,54 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
 
     public async Task RefundRejectTickets(List<long> ticketIds)
     {
+        var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
+        var playerOuts = new Dictionary<long, Dictionary<long, decimal>>();
+        var playerMatchByNumbersOuts = new Dictionary<long, Dictionary<long, Dictionary<int, decimal>>>(); //  Key = PlayerId; Key = MatchId; Key = Number
+        var playerMatchByNumbersPoints = new Dictionary<long, Dictionary<long, Dictionary<int, decimal>>>(); //  Key = PlayerId; Key = MatchId; Key = Number
+        var betKindMatchByNumbersOuts = new Dictionary<int, Dictionary<long, Dictionary<int, decimal>>>();  //  Key = BetKindId; Key = MatchId; Key = Number
+        var betKindMatchByNumbersPoints = new Dictionary<int, Dictionary<long, Dictionary<int, decimal>>>();  //  Key = BetKindId; Key = MatchId; Key = Number
+
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var tickets = await ticketRepository.FindQueryBy(f => ticketIds.Contains(f.TicketId) || (f.ParentId.HasValue && ticketIds.Contains(f.ParentId.Value))).ToListAsync();
         var parentTickets = tickets.Where(f => !f.ParentId.HasValue).ToList();
         foreach (var ticket in parentTickets)
         {
-            ticket.State = ticket.IsLive ? TicketState.Reject.ToInt() : TicketState.Refund.ToInt();
+            if (refundRejectTicketState.Contains(ticket.State)) continue;
+
+            var childs = tickets.Where(f => f.ParentId.HasValue && f.ParentId.Value == ticket.TicketId).ToList();
+            var result = _ticketProcessor.RefundRejectTicket(ticket.BetKindId, new RefundRejectTicketModel
+            {
+                Ticket = new RefundRejectTicketDetailModel
+                {
+                    TicketId = ticket.TicketId,
+                    ChoosenNumbers = ticket.ChoosenNumbers,
+                    State = ticket.State.ToEnum<TicketState>(),
+                    IsLive = ticket.IsLive,
+                    Stake = ticket.Stake,
+                    PlayerPayout = ticket.PlayerPayout,
+                    AgentPayout = ticket.AgentPayout,
+                    MasterPayout = ticket.MasterPayout,
+                    SupermasterPayout = ticket.SupermasterPayout,
+                    CompanyPayout = ticket.CompanyPayout
+                },
+                Children = childs.Select(f => new RefundRejectTicketDetailModel
+                {
+                    TicketId = f.TicketId,
+                    ChoosenNumbers = f.ChoosenNumbers,
+                    State = f.State.ToEnum<TicketState>(),
+                    IsLive = ticket.IsLive,
+                    Stake = f.Stake,
+                    PlayerPayout = f.PlayerPayout,
+                    AgentPayout = f.AgentPayout,
+                    MasterPayout = f.MasterPayout,
+                    SupermasterPayout = f.SupermasterPayout,
+                    CompanyPayout = f.CompanyPayout
+                }).ToList()
+            });
+            if (result == null) continue;
+            var oldPlayerPayout = ticket.PlayerPayout;
+
+            ticket.State = ticket.IsLive.GetRefundRejectStateByIsLive().ToInt();
             ticket.PlayerWinLoss = 0m;
             ticket.DraftPlayerWinLoss = 0m;
 
@@ -59,10 +101,8 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
 
             ticket.CompanyWinLoss = 0m;
             ticket.DraftCompanyWinLoss = 0m;
-
             ticketRepository.Update(ticket);
 
-            var childs = tickets.Where(f => f.ParentId.HasValue && f.ParentId.Value == ticket.TicketId).ToList();
             childs.ForEach(f =>
             {
                 f.State = ticket.State;
@@ -81,26 +121,48 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
 
                 ticketRepository.Update(f);
             });
+
+            //  Process Outs of Player
+            InternalProcessOutsOfPlayer(ticket, playerOuts, result.DifferentPlayerPayout);
+
+            //  Process Outs of Player and Match
+            InternalProcessOutsOfPlayerByMatch(playerMatchByNumbersOuts, ticket, result.OutsByNumbers);
+
+            //  Process Points of Player and Match
+            InternalProcessPointsOfPlayerByMatch(playerMatchByNumbersPoints, ticket, result.PointsByNumbers);
+
+            //  Process Outs of BetKind and Match
+            var enableStats = _ticketProcessor.EnableStats(ticket.BetKindId);
+            if (!enableStats) continue;
+            InternalProcessOutsOfBetKindAndMatch(betKindMatchByNumbersOuts, ticket, result.OutsByBetKind);
+            InternalProcessPointsOfBetKindAndMatch(betKindMatchByNumbersPoints, ticket, result.PointsByBetKind);
         }
         await LotteryUow.SaveChangesAsync();
 
-        //  Process outs by player
-        //  Process outs by player, number
+        await _processTicketService.UpdateOutsByMatchCache(playerOuts);
+        await _processTicketService.UpdatePointsByMatchAndNumbersCache(playerMatchByNumbersPoints);
+        await _processTicketService.UpdateStatsByMatchBetKindAndNumbers(betKindMatchByNumbersOuts, betKindMatchByNumbersPoints);
     }
 
     public async Task RefundRejectTicketsByNumbers(List<long> ticketIds, List<int> numbers)
     {
         var refundRejectTicketState = CommonHelper.RefundRejectTicketState();
         var playerOuts = new Dictionary<long, Dictionary<long, decimal>>();
+        var playerMatchByNumbersOuts = new Dictionary<long, Dictionary<long, Dictionary<int, decimal>>>(); //  Key = PlayerId; Key = MatchId; Key = Number
+        var playerMatchByNumbersPoints = new Dictionary<long, Dictionary<long, Dictionary<int, decimal>>>(); //  Key = PlayerId; Key = MatchId; Key = Number
+        var betKindMatchByNumbersOuts = new Dictionary<int, Dictionary<long, Dictionary<int, decimal>>>();  //  Key = BetKindId; Key = MatchId; Key = Number
+        var betKindMatchByNumbersPoints = new Dictionary<int, Dictionary<long, Dictionary<int, decimal>>>();  //  Key = BetKindId; Key = MatchId; Key = Number
 
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var tickets = await ticketRepository.FindQueryBy(f => ticketIds.Contains(f.TicketId) || (f.ParentId.HasValue && ticketIds.Contains(f.ParentId.Value))).ToListAsync();
         var parentTickets = tickets.Where(f => !f.ParentId.HasValue).ToList();
         foreach (var ticket in parentTickets)
         {
+            //if (refundRejectTicketState.Contains(ticket.State)) continue;
+
             var childs = tickets.Where(f => f.ParentId.HasValue && f.ParentId.Value == ticket.TicketId).ToList();
 
-            var result = _ticketProcessor.AllowRefundRejectTicketsByNumbers(ticket.BetKindId, new RefundRejectTicketModel
+            var result = _ticketProcessor.RefundRejectTicketByNumbers(ticket.BetKindId, new RefundRejectTicketByNumbersModel
             {
                 RefundRejectNumbers = numbers.Select(f => f.NormalizeNumber()).ToList(),
                 Ticket = new RefundRejectTicketDetailModel
@@ -131,7 +193,6 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
                 }).ToList()
             });
             if (result == null || !result.Allow) continue;
-            var oldPlayerPayout = ticket.PlayerPayout;
 
             ticket.State = result.Ticket.State.ToInt();
             if (refundRejectTicketState.Contains(ticket.State))
@@ -199,21 +260,113 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
                 ticketRepository.Update(f);
             });
 
-            var newPlayerPayout = ticket.PlayerPayout;
-            var subPlayerPayout = Math.Abs(newPlayerPayout - oldPlayerPayout);
-            if (!playerOuts.TryGetValue(ticket.PlayerId, out Dictionary<long, decimal> playerOutsDetail))
-            {
-                playerOutsDetail = new Dictionary<long, decimal>();
-                playerOuts[ticket.PlayerId] = playerOutsDetail;
-            }
-            if (playerOutsDetail.ContainsKey(ticket.MatchId)) playerOutsDetail[ticket.MatchId] += subPlayerPayout;
-            else playerOutsDetail[ticket.MatchId] = subPlayerPayout;
+            //  Process Outs of Player
+            InternalProcessOutsOfPlayer(ticket, playerOuts, result.DifferentPlayerPayout);
+
+            //  Process Outs of Player and Match
+            InternalProcessOutsOfPlayerByMatch(playerMatchByNumbersOuts, ticket, result.OutsByNumbers);
+
+            //  Process Points of Player and Match
+            InternalProcessPointsOfPlayerByMatch(playerMatchByNumbersPoints, ticket, result.PointsByNumbers);
+
+            //  Process Outs of BetKind and Match
+            var enableStats = _ticketProcessor.EnableStats(ticket.BetKindId);
+            if (!enableStats) continue;
+            InternalProcessOutsOfBetKindAndMatch(betKindMatchByNumbersOuts, ticket, result.OutsByBetKind);
+            InternalProcessPointsOfBetKindAndMatch(betKindMatchByNumbersPoints, ticket, result.PointsByBetKind);
         }
         await LotteryUow.SaveChangesAsync();
 
         await _processTicketService.UpdateOutsByMatchCache(playerOuts);
-        //await _processTicketService.BuildOutsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
-        //if (enableStats) await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers);
+        await _processTicketService.UpdatePointsByMatchAndNumbersCache(playerMatchByNumbersPoints);
+        await _processTicketService.UpdateStatsByMatchBetKindAndNumbers(betKindMatchByNumbersOuts, betKindMatchByNumbersPoints);
+    }
+
+    private void InternalProcessPointsOfBetKindAndMatch(Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> betKindMatchByNumbersPoints, Data.Entities.Ticket ticket, Dictionary<int, decimal> pointsByBetKind)
+    {
+        if (!betKindMatchByNumbersPoints.TryGetValue(ticket.BetKindId, out Dictionary<long, Dictionary<int, decimal>> pointsByBetKindAndMatch))
+        {
+            pointsByBetKindAndMatch = new Dictionary<long, Dictionary<int, decimal>>();
+            betKindMatchByNumbersPoints[ticket.BetKindId] = pointsByBetKindAndMatch;
+        }
+        if (!pointsByBetKindAndMatch.TryGetValue(ticket.MatchId, out Dictionary<int, decimal> pointsByBetKindAndMatchDetail))
+        {
+            pointsByBetKindAndMatchDetail = new Dictionary<int, decimal>();
+            pointsByBetKindAndMatch[ticket.MatchId] = pointsByBetKindAndMatchDetail;
+        }
+        foreach (var item in pointsByBetKind)
+        {
+            if (pointsByBetKindAndMatchDetail.ContainsKey(item.Key)) pointsByBetKindAndMatchDetail[item.Key] += item.Value;
+            else pointsByBetKindAndMatchDetail[item.Key] = item.Value;
+        }
+    }
+
+    private void InternalProcessOutsOfBetKindAndMatch(Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> betKindMatchByNumbersOuts, Data.Entities.Ticket ticket, Dictionary<int, decimal> outsByBetKind)
+    {
+        if (!betKindMatchByNumbersOuts.TryGetValue(ticket.BetKindId, out Dictionary<long, Dictionary<int, decimal>> outsByBetKindAndMatch))
+        {
+            outsByBetKindAndMatch = new Dictionary<long, Dictionary<int, decimal>>();
+            betKindMatchByNumbersOuts[ticket.BetKindId] = outsByBetKindAndMatch;
+        }
+        if (!outsByBetKindAndMatch.TryGetValue(ticket.MatchId, out Dictionary<int, decimal> outsByBetKindAndMatchDetail))
+        {
+            outsByBetKindAndMatchDetail = new Dictionary<int, decimal>();
+            outsByBetKindAndMatch[ticket.MatchId] = outsByBetKindAndMatchDetail;
+        }
+        foreach (var item in outsByBetKind)
+        {
+            if (outsByBetKindAndMatchDetail.ContainsKey(item.Key)) outsByBetKindAndMatchDetail[item.Key] += item.Value;
+            else outsByBetKindAndMatchDetail[item.Key] = item.Value;
+        }
+    }
+
+    private void InternalProcessPointsOfPlayerByMatch(Dictionary<long, Dictionary<long, Dictionary<int, decimal>>> playerMatchByNumbersPoints, Data.Entities.Ticket ticket, Dictionary<int, decimal> pointsByNumbers)
+    {
+        if (!playerMatchByNumbersPoints.TryGetValue(ticket.PlayerId, out Dictionary<long, Dictionary<int, decimal>> pointsByPlayerAndMatch))
+        {
+            pointsByPlayerAndMatch = new Dictionary<long, Dictionary<int, decimal>>();
+            playerMatchByNumbersPoints[ticket.PlayerId] = pointsByPlayerAndMatch;
+        }
+        if (!pointsByPlayerAndMatch.TryGetValue(ticket.MatchId, out Dictionary<int, decimal> pointsByPlayerAndMatchDetail))
+        {
+            pointsByPlayerAndMatchDetail = new Dictionary<int, decimal>();
+            pointsByPlayerAndMatch[ticket.MatchId] = pointsByPlayerAndMatchDetail;
+        }
+        foreach (var item in pointsByNumbers)
+        {
+            if (pointsByPlayerAndMatchDetail.ContainsKey(item.Key)) pointsByPlayerAndMatchDetail[item.Key] += item.Value;
+            else pointsByPlayerAndMatchDetail[item.Key] = item.Value;
+        }
+    }
+
+    private void InternalProcessOutsOfPlayerByMatch(Dictionary<long, Dictionary<long, Dictionary<int, decimal>>> playerMatchByNumbersOuts, Data.Entities.Ticket ticket, Dictionary<int, decimal> outsByNumbers)
+    {
+        if (!playerMatchByNumbersOuts.TryGetValue(ticket.PlayerId, out Dictionary<long, Dictionary<int, decimal>> outsByPlayerAndMatch))
+        {
+            outsByPlayerAndMatch = new Dictionary<long, Dictionary<int, decimal>>();
+            playerMatchByNumbersOuts[ticket.PlayerId] = outsByPlayerAndMatch;
+        }
+        if (!outsByPlayerAndMatch.TryGetValue(ticket.MatchId, out Dictionary<int, decimal> outsByPlayerAndMatchDetail))
+        {
+            outsByPlayerAndMatchDetail = new Dictionary<int, decimal>();
+            outsByPlayerAndMatch[ticket.MatchId] = outsByPlayerAndMatchDetail;
+        }
+        foreach (var item in outsByNumbers)
+        {
+            if (outsByPlayerAndMatchDetail.ContainsKey(item.Key)) outsByPlayerAndMatchDetail[item.Key] += item.Value;
+            else outsByPlayerAndMatchDetail[item.Key] = item.Value;
+        }
+    }
+
+    private void InternalProcessOutsOfPlayer(Data.Entities.Ticket ticket, Dictionary<long, Dictionary<long, decimal>> playerOuts, decimal differentPlayerPayout)
+    {
+        if (!playerOuts.TryGetValue(ticket.PlayerId, out Dictionary<long, decimal> playerOutsDetail))
+        {
+            playerOutsDetail = new Dictionary<long, decimal>();
+            playerOuts[ticket.PlayerId] = playerOutsDetail;
+        }
+        if (playerOutsDetail.ContainsKey(ticket.MatchId)) playerOutsDetail[ticket.MatchId] += differentPlayerPayout;
+        else playerOutsDetail[ticket.MatchId] = differentPlayerPayout;
     }
 
     public async Task<AdvancedSearchTicketsResultModel> Search(AdvancedSearchTicketsModel model)

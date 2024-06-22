@@ -103,4 +103,14 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
         dataResult.CompanyWinLoss = totalCompanyWinLose;
         return dataResult;
     }
+
+    public override RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(RefundRejectTicketByNumbersModel model)
+    {
+        return null;
+    }
+
+    public override RefundRejectTicketResultModel RefundRejectTicket(RefundRejectTicketModel model)
+    {
+        return null;
+    }
 }
