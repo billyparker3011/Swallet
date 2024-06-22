@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lottery.Data.Migrations
 {
     [DbContext(typeof(LotteryContext))]
-    [Migration("20240621165802_AddAnnouncementTable")]
+    [Migration("20240622021558_AddAnnouncementTable")]
     partial class AddAnnouncementTable
     {
         /// <inheritdoc />
