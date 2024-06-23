@@ -445,12 +445,14 @@ namespace Lottery.Core.Services.Match
                 if (item.Results.Count != prizeItem.Results.Count) throw new BadRequestException();
             }
             var detailResults = orderedResults.SelectMany(f => f.Results).OrderBy(f => f.Position).ToList();
+            //  Verify result
             var countDetailResults = detailResults.Count;
             for (var i = 1; i < countDetailResults; i++)
             {
                 var previousDetailResult = detailResults[i - 1];
                 var currentDetailResult = detailResults[i];
                 if (!string.IsNullOrEmpty(currentDetailResult.Result) && string.IsNullOrEmpty(previousDetailResult.Result)) throw new BadRequestException();
+                if (!currentDetailResult.AllowProcessTicket && previousDetailResult.AllowProcessTicket) throw new BadRequestException();
             }
 
             var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
