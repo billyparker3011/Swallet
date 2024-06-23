@@ -53,22 +53,29 @@ namespace Lottery.Match.MatchService.Controllers
             return Ok(OkResponse.Create(await _matchService.GetMatchById(matchId)));
         }
 
-        [HttpPut("{matchId:long}/on-off-process-ticket"), LotteryAuthorize(Permission.Management.Matches)]
-        public async Task<IActionResult> OnOffProcessTicketOfChannel([FromRoute] long matchId, [FromBody] OnOffProcessTicketOfChannelRequest request)
+        [HttpGet("running-match")]
+        public async Task<IActionResult> GetRunningMatch()
         {
-            await _matchService.OnOffProcessTicketOfChannel(new OnOffProcessTicketOfChannelModel
+            return Ok(OkResponse.Create(await _matchService.GetRunningMatch()));
+        }
+
+        [HttpGet("results/{kickOffTime:datetime}")]
+        public async Task<IActionResult> GetResults([FromRoute] DateTime kickOffTime)
+        {
+            return Ok(OkResponse.Create(await _matchService.ResultsByKickoff(kickOffTime)));
+        }
+
+        #region Obsever
+        [HttpPut("{matchId:long}/on-off-process-ticket"), LotteryAuthorize(Permission.Management.Matches)]
+        public async Task<IActionResult> OnOffProcessTicketOfChannel([FromRoute] long matchId, [FromBody] StartStopProcessTicketOfChannelRequest request)
+        {
+            await _matchService.StartStopProcessTicket(new StartStopProcessTicketModel
             {
                 MatchId = matchId,
                 RegionId = request.RegionId,
                 ChannelId = request.ChannelId
             });
             return Ok();
-        }
-
-        [HttpGet("running-match")]
-        public async Task<IActionResult> GetRunningMatch()
-        {
-            return Ok(OkResponse.Create(await _matchService.GetRunningMatch()));
         }
 
         [HttpPut("{matchId:long}/match-result/{regionId:int}/channels/{channelId:int}"), LotteryAuthorize(Permission.Management.Matches)]
@@ -94,11 +101,6 @@ namespace Lottery.Match.MatchService.Controllers
             });
             return Ok();
         }
-
-        [HttpGet("results/{kickOffTime:datetime}")]
-        public async Task<IActionResult> GetResults([FromRoute] DateTime kickOffTime)
-        {
-            return Ok(OkResponse.Create(await _matchService.ResultsByKickoff(kickOffTime)));
-        }
+        #endregion
     }
 }

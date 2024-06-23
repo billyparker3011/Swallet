@@ -58,7 +58,7 @@ namespace Lottery.Player.OddsService.Services.PubSub
 
         private void ProcessStartLive(string message)
         {
-            var model = Newtonsoft.Json.JsonConvert.DeserializeObject<StartLiveModel>(message);
+            var model = Newtonsoft.Json.JsonConvert.DeserializeObject<StartLiveEventModel>(message);
             if (model == null) return;
             Task.Run(async () => await _oddsHubHandler.StartLive(model));
         }

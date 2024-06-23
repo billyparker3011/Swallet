@@ -28,6 +28,11 @@
             {
                 public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/announcements";
             }
+
+            public static class MatchResult
+            {
+                public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/match-result";
+            }
         }
     }
 }

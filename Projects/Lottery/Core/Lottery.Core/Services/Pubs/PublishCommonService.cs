@@ -48,7 +48,7 @@ namespace Lottery.Core.Services.Pubs
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.PrizeConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(updatedPrizes), CachingConfigs.RedisConnectionForApp);
         }
 
-        public async Task PublishStartLive(StartLiveModel model)
+        public async Task PublishStartLive(StartLiveEventModel model)
         {
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.StartLiveConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }

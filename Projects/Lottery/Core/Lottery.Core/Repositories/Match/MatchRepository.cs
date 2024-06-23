@@ -24,7 +24,7 @@ namespace Lottery.Core.Repositories.Match
 
         public async Task<Data.Entities.Match> GetRunningMatch()
         {
-            return await FindQueryBy(f => f.MatchState == MatchState.Running.ToInt()).FirstOrDefaultAsync();
+            return await FindQueryBy(f => f.MatchState == MatchState.Running.ToInt()).Include(f => f.MatchResults).FirstOrDefaultAsync();
         }
 
         public async Task<Data.Entities.Match> GetMatchByKickoffTime(DateTime kickOffTime)

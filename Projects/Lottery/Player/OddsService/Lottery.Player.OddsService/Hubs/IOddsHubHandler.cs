@@ -10,6 +10,6 @@ namespace Lottery.Player.OddsService.Hubs
         void DeleteConnection(string connectionId);
         Task UpdateMatch(UpdateMatchModel model);
         Task UpdateOdds(RateOfOddsValueModel rateOfOddsValue);
-        Task StartLive(StartLiveModel model);
+        Task StartLive(StartLiveEventModel model);
     }
 }
