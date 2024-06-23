@@ -167,7 +167,7 @@ namespace Lottery.Player.OddsService.Hubs
             }));
         }
 
-        public async Task StartLive(StartLiveModel model)
+        public async Task StartLive(StartLiveEventModel model)
         {
             await _hubContext.Clients.All.StartLive(Newtonsoft.Json.JsonConvert.SerializeObject(new StartLiveMessage
             {

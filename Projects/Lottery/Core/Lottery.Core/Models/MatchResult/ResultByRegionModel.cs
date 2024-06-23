@@ -6,6 +6,6 @@
         public string ChannelName { get; set; }
         public bool IsLive { get; set; }
         public bool EnabledProcessTicket { get; set; }
-        public List<PrizeMatchResultModel> Prize { get; set; }
+        public List<PrizeResultModel> Prize { get; set; }
     }
 }
