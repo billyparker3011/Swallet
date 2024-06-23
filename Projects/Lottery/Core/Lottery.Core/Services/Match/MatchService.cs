@@ -215,98 +215,8 @@ namespace Lottery.Core.Services.Match
                 MatchCode = runningMatch.MatchCode,
                 KickoffTime = runningMatch.KickOffTime,
                 State = runningMatch.MatchState,
-                MatchResult = await GetMatchResults(runningMatch.MatchId, runningMatch.KickOffTime)
+                MatchResult = GetMatchResults(runningMatch)
             };
-        }
-
-        private async Task<Dictionary<int, List<ResultByRegionModel>>> GetMatchResults(long matchId, DateTime kickoffTime)
-        {
-            var dict = new Dictionary<long, DateTime>
-            {
-                { matchId, kickoffTime }
-            };
-            var results = await GetMatchResults(dict);
-            if (!results.TryGetValue(matchId, out Dictionary<int, List<ResultByRegionModel>> v)) return new Dictionary<int, List<ResultByRegionModel>>();
-            return v;
-        }
-
-        private async Task<Dictionary<long, Dictionary<int, List<ResultByRegionModel>>>> GetMatchResults(Dictionary<long, DateTime> matches)
-        {
-            var matchIds = matches.Keys.ToList();
-
-            var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
-            var matchResults = await matchResultRepository.FindByMatchIds(matchIds);
-
-            var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
-            var regions = regionInMemoryRepository.GetAll().ToList();
-
-            var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
-            var channels = channelInMemoryRepository.GetAll().ToList();
-
-            var prizeInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IPrizeInMemoryRepository>();
-            var prizes = prizeInMemoryRepository.GetAll().ToList();
-
-            var resultsByMatchId = new Dictionary<long, Dictionary<int, List<ResultByRegionModel>>>();
-            foreach (var item in matches)
-            {
-                var resultByRegion = new Dictionary<int, List<ResultByRegionModel>>();
-                foreach (var region in regions)
-                {
-                    if (!resultByRegion.TryGetValue(region.Id.ToInt(), out List<ResultByRegionModel> regionDetail))
-                    {
-                        regionDetail = new List<ResultByRegionModel>();
-                        resultByRegion[region.Id.ToInt()] = regionDetail;
-                    }
-
-                    var channelsOfRegion = channels.Where(f => f.RegionId == region.Id.ToInt() && f.DayOfWeeks.Any(f1 => f1 == (int)item.Value.DayOfWeek)).ToList();
-                    foreach (var itemChannel in channelsOfRegion)
-                    {
-                        var listPrize = new List<PrizeResultModel>();
-                        var currentMatchResult = matchResults.FirstOrDefault(f => f.MatchId == item.Key && f.RegionId == region.Id.ToInt() && f.ChannelId == itemChannel.Id);
-                        if (currentMatchResult == null || string.IsNullOrEmpty(currentMatchResult.Results))
-                        {
-                            var regionPrizes = prizes.Where(f => f.RegionId == region.Id.ToInt()).OrderBy(f => f.Id).ToList();
-                            regionPrizes.ForEach(f =>
-                            {
-                                listPrize.Add(new PrizeResultModel
-                                {
-                                    NoOfNumbers = f.NoOfNumbers,
-                                    Order = f.Order,
-                                    Prize = f.PrizeId
-                                });
-                            });
-                        }
-                        else listPrize = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeResultModel>>(currentMatchResult.Results);
-                        listPrize.ForEach(f =>
-                        {
-                            var regionPrizes = prizes.Where(f1 => f1.RegionId == region.Id.ToInt()).ToList();
-                            var currentPrize = regionPrizes.FirstOrDefault(f1 => f1.PrizeId == f.Prize);
-                            if (currentPrize == null) return;
-
-                            f.PrizeName = currentPrize.Name;
-                            f.Order = currentPrize.Order;
-                            f.NoOfNumbers = currentPrize.NoOfNumbers;
-                            for (var i = 0; i < f.NoOfNumbers; i++)
-                            {
-                                var position = f.Prize.GetPositionOfPrize(i);
-                                var itemPosition = f.Results.FirstOrDefault(f2 => f2.Position == position);
-                                if (itemPosition == null) f.Results.Add(new PrizeResultDetailModel { Position = position, Result = string.Empty });
-                            }
-                        });
-                        regionDetail.Add(new ResultByRegionModel
-                        {
-                            ChannelId = itemChannel.Id,
-                            ChannelName = itemChannel.Name,
-                            IsLive = currentMatchResult != null && currentMatchResult.IsLive,
-                            Prize = listPrize,
-                            EnabledProcessTicket = currentMatchResult != null && currentMatchResult.EnabledProcessTicket
-                        });
-                    }
-                }
-
-                resultsByMatchId[item.Key] = resultByRegion;
-            }
-            return resultsByMatchId;
         }
 
         private async Task CreateOrUpdateRunningMatchInCache(MatchModel matchModel)
@@ -363,31 +273,33 @@ namespace Lottery.Core.Services.Match
         public async Task<List<MatchModel>> GetMatches(int top = 30, bool displayResult = false)
         {
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-            var data = await matchRepository.FindQueryBy(f => true).OrderByDescending(f => f.MatchId).Take(top).Select(f => new MatchModel
+            var matches = await matchRepository.FindQueryBy(f => true).Include(f => f.MatchResults).OrderByDescending(f => f.MatchId).Take(top).ToListAsync();
+            if (!displayResult)
+            {
+                return matches.Select(f => new MatchModel
+                {
+                    MatchId = f.MatchId,
+                    KickoffTime = f.KickOffTime,
+                    MatchCode = f.MatchCode,
+                    State = f.MatchState,
+                    CreatedAt = f.CreatedAt,
+                    MatchResult = GetMatchResults(f)
+                }).ToList();
+            }
+            return matches.Select(f => new MatchModel
             {
                 MatchId = f.MatchId,
                 KickoffTime = f.KickOffTime,
                 MatchCode = f.MatchCode,
                 State = f.MatchState,
                 CreatedAt = f.CreatedAt
-            }).ToListAsync();
-            if (!displayResult)
-            {
-                var dict = data.ToDictionary(f => f.MatchId, f => f.KickoffTime);
-                var results = await GetMatchResults(dict);
-                data.ForEach(f =>
-                {
-                    if (!results.TryGetValue(f.MatchId, out Dictionary<int, List<ResultByRegionModel>> v)) v = new Dictionary<int, List<ResultByRegionModel>>();
-                    f.MatchResult = v;
-                });
-            }
-            return data;
+            }).ToList();
         }
 
         public async Task<MatchModel> GetMatchById(long matchId)
         {
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-            var match = await matchRepository.FindByIdAsync(matchId);
+            var match = await matchRepository.FindQueryBy(f => f.MatchId == matchId).Include(f => f.MatchResults).FirstOrDefaultAsync();
             if (match == null) return null;
             return new MatchModel
             {
@@ -395,34 +307,60 @@ namespace Lottery.Core.Services.Match
                 MatchCode = match.MatchCode,
                 KickoffTime = match.KickOffTime,
                 State = match.MatchState,
-                MatchResult = await GetMatchResults(match.MatchId, match.KickOffTime)
+                MatchResult = GetMatchResults(match)
             };
         }
 
         public async Task StartStopProcessTicket(StartStopProcessTicketModel model)
         {
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-            var match = await matchRepository.FindByIdAsync(model.MatchId) ?? throw new NotFoundException();
+            var match = await matchRepository.FindQueryBy(f => true).Include(f => f.MatchResults).FirstOrDefaultAsync(f => f.MatchId == model.MatchId) ?? throw new NotFoundException();
             if (match.MatchState != MatchState.Running.ToInt()) return;
 
             var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
-            var matchResult = await matchResultRepository.FindQueryBy(f => f.MatchId == model.MatchId && f.RegionId == model.RegionId && f.ChannelId == model.ChannelId).FirstOrDefaultAsync();
+            var matchResult = match.MatchResults.FirstOrDefault(f => f.RegionId == model.RegionId && f.ChannelId == model.ChannelId);
             if (matchResult == null) return;
 
             matchResult.EnabledProcessTicket = !matchResult.EnabledProcessTicket;
             matchResultRepository.Update(matchResult);
             await LotteryUow.SaveChangesAsync();
 
-            var matchResults = await GetMatchResults(match.MatchId, match.KickOffTime);
             await CreateOrUpdateRunningMatchInCache(new MatchModel
             {
                 MatchId = match.MatchId,
                 CreatedAt = match.CreatedAt,
                 KickoffTime = match.KickOffTime,
                 MatchCode = match.MatchCode,
-                MatchResult = matchResults,
+                MatchResult = GetMatchResults(match),
                 State = match.MatchState
             });
+        }
+
+        private Dictionary<int, List<ResultByRegionModel>> GetMatchResults(Data.Entities.Match match)
+        {
+            var channelIds = match.MatchResults.Select(f => f.ChannelId).ToList();
+            var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
+            var channels = channelInMemoryRepository.FindBy(f => channelIds.Contains(f.Id)).ToList();
+            var resultsByRegion = new Dictionary<int, List<ResultByRegionModel>>();
+            foreach (var item in match.MatchResults)
+            {
+                if (!resultsByRegion.TryGetValue(item.RegionId, out List<ResultByRegionModel> resultsByRegionDetail))
+                {
+                    resultsByRegionDetail = new List<ResultByRegionModel>();
+                    resultsByRegion[item.RegionId] = resultsByRegionDetail;
+                }
+                var itemChannel = channels.FirstOrDefault(f => f.Id == item.ChannelId);
+                if (itemChannel == null) continue;
+                resultsByRegionDetail.Add(new ResultByRegionModel
+                {
+                    ChannelId = itemChannel.Id,
+                    ChannelName = itemChannel.Name,
+                    EnabledProcessTicket = item.EnabledProcessTicket,
+                    IsLive = item.IsLive,
+                    Prize = DeserializeResults(item.Results)
+                });
+            }
+            return resultsByRegion;
         }
 
         public async Task StartStopLive(StartStopLiveModel model)
@@ -464,7 +402,7 @@ namespace Lottery.Core.Services.Match
         public async Task UpdateResult(UpdateResultModel model)
         {
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-            var match = await matchRepository.FindByIdAsync(model.MatchId) ?? throw new NotFoundException();
+            var match = await matchRepository.FindQueryBy(f => f.MatchId == model.MatchId).Include(f => f.MatchResults).FirstOrDefaultAsync() ?? throw new NotFoundException();
 
             var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
             var region = regionInMemoryRepository.FindById(model.RegionId.ToEnum<Region>()) ?? throw new NotFoundException();
@@ -516,16 +454,15 @@ namespace Lottery.Core.Services.Match
 
             await LotteryUow.SaveChangesAsync();
 
-            var matchResults = await GetMatchResults(match.MatchId, match.KickOffTime);
-            //await CreateOrUpdateRunningMatch(new MatchModel
-            //{
-            //    MatchId = match.MatchId,
-            //    CreatedAt = match.CreatedAt,
-            //    KickoffTime = match.KickOffTime,
-            //    MatchCode = match.MatchCode,
-            //    MatchResult = matchResults,
-            //    State = match.MatchState
-            //});
+            await CreateOrUpdateRunningMatchInCache(new MatchModel
+            {
+                MatchId = match.MatchId,
+                CreatedAt = match.CreatedAt,
+                KickoffTime = match.KickOffTime,
+                MatchCode = match.MatchCode,
+                MatchResult = GetMatchResults(match),
+                State = match.MatchState
+            });
         }
 
         private List<PrizeResultModel> CreateDefaultResults(int regionId, bool includePrizeName = false)
@@ -563,11 +500,16 @@ namespace Lottery.Core.Services.Match
             return Newtonsoft.Json.JsonConvert.SerializeObject(results);
         }
 
+        private List<PrizeResultModel> DeserializeResults(string results)
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeResultModel>>(results);
+        }
+
         #region Obsever
         public async Task UpdateMatchResults(MatchResultModel model)
         {
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-            var match = await matchRepository.FindByIdAsync(model.MatchId) ?? throw new NotFoundException();
+            var match = await matchRepository.FindQueryBy(f => f.MatchId == model.MatchId).Include(f => f.MatchResults).FirstOrDefaultAsync() ?? throw new NotFoundException();
 
             var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
             var region = regionInMemoryRepository.FindById(model.RegionId.ToEnum<Region>()) ?? throw new NotFoundException();
@@ -609,14 +551,13 @@ namespace Lottery.Core.Services.Match
 
             await LotteryUow.SaveChangesAsync();
 
-            var matchResults = await GetMatchResults(match.MatchId, match.KickOffTime);
             await CreateOrUpdateRunningMatchInCache(new MatchModel
             {
                 MatchId = match.MatchId,
                 CreatedAt = match.CreatedAt,
                 KickoffTime = match.KickOffTime,
                 MatchCode = match.MatchCode,
-                MatchResult = matchResults,
+                MatchResult = GetMatchResults(match),
                 State = match.MatchState
             });
             if (!isStartLive) return;
