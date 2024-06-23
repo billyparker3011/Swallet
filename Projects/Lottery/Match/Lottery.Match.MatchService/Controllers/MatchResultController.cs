@@ -65,5 +65,19 @@ namespace Lottery.Match.MatchService.Controllers
             });
             return Ok();
         }
+
+        [HttpGet("{matchId:long}/results/{regionId:int}/channels/{channelId:int}/prizes/{prizeId:int}/positions/{position:int}"), LotteryAuthorize(Permission.Management.Matches)]
+        public async Task<IActionResult> StartStopProcessTicketByPosition([FromRoute] long matchId, [FromRoute] int regionId, [FromRoute] int channelId, [FromRoute] int prizeId, [FromRoute] int position)
+        {
+            await _matchService.StartStopProcessTicketByPosition(new StartStopProcessTicketByPositionModel
+            {
+                MatchId = matchId,
+                RegionId = regionId,
+                ChannelId = channelId,
+                PrizeId = prizeId,
+                Position = position
+            });
+            return Ok();
+        }
     }
 }

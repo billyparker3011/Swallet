@@ -351,16 +351,48 @@ namespace Lottery.Core.Services.Match
                 }
                 var itemChannel = channels.FirstOrDefault(f => f.Id == item.ChannelId);
                 if (itemChannel == null) continue;
+
+                var detailResults = DeserializeResults(item.Results);
+                var startOfPosition = item.RegionId.GetStartOfPosition();
+                var noOfRemainingNumbers = detailResults.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count(f => string.IsNullOrEmpty(f.Result));
+
                 resultsByRegionDetail.Add(new ResultByRegionModel
                 {
                     ChannelId = itemChannel.Id,
                     ChannelName = itemChannel.Name,
                     EnabledProcessTicket = item.EnabledProcessTicket,
                     IsLive = item.IsLive,
-                    Prize = DeserializeResults(item.Results)
+                    NoOfRemainingNumbers = noOfRemainingNumbers,
+                    Prize = detailResults
                 });
             }
             return resultsByRegion;
+        }
+
+        public async Task StartStopProcessTicketByPosition(StartStopProcessTicketByPositionModel model)
+        {
+            var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
+            var match = await matchRepository.FindQueryBy(f => true).Include(f => f.MatchResults).FirstOrDefaultAsync(f => f.MatchId == model.MatchId) ?? throw new NotFoundException();
+            if (match.MatchState != MatchState.Running.ToInt()) return;
+
+            var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
+            var matchResult = match.MatchResults.FirstOrDefault(f => f.RegionId == model.RegionId && f.ChannelId == model.ChannelId);
+            if (matchResult == null) return;
+
+            var detailResults = DeserializeResults(matchResult.Results);
+            var prize = detailResults.FirstOrDefault(f => f.Prize == model.PrizeId);
+            if (prize == null) return;
+
+            var position = prize.Results.FirstOrDefault(f => f.Position == model.Position);
+            if (position == null) return;
+
+            position.AllowProcessTicket = !position.AllowProcessTicket;
+
+            matchResult.Results = SerializeResults(detailResults);
+            matchResult.UpdatedAt = ClockService.GetUtcNow();
+            matchResult.UpdatedBy = ClientContext.Agent.AgentId;
+            matchResultRepository.Update(matchResult);
+            await LotteryUow.SaveChangesAsync();
         }
 
         public async Task StartStopLive(StartStopLiveModel model)

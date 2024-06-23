@@ -17,6 +17,7 @@ namespace Lottery.Core.Services.Match
         Task<MatchModel> GetMatchById(long matchId);
 
         Task StartStopProcessTicket(StartStopProcessTicketModel model);
+        Task StartStopProcessTicketByPosition(StartStopProcessTicketByPositionModel model);
         Task StartStopLive(StartStopLiveModel model);
         Task UpdateResult(UpdateResultModel model);
     }
