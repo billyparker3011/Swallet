@@ -8,7 +8,6 @@ using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Channel;
-using Lottery.Core.InMemory.Prize;
 using Lottery.Core.InMemory.Ticket;
 using Lottery.Core.Models.BetKind;
 using Lottery.Core.Models.MatchResult;
@@ -16,11 +15,10 @@ using Lottery.Core.Models.PositionTakings;
 using Lottery.Core.Models.Setting;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
-using Lottery.Core.Repositories.Match;
-using Lottery.Core.Repositories.MatchResult;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.Services.Agent;
 using Lottery.Core.Services.Caching.Player;
+using Lottery.Core.Services.Match;
 using Lottery.Core.Services.Odds;
 using Lottery.Core.Services.Player;
 using Lottery.Core.UnitOfWorks;
@@ -33,6 +31,7 @@ namespace Lottery.Core.Services.Ticket;
 public class TicketService : LotteryBaseService<TicketService>, ITicketService
 {
     private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
+    private readonly IRunningMatchService _runningMatchService;
     private readonly ITicketProcessor _ticketProcessor;
     private readonly IAgentPositionTakingService _agentPositionTakingService;
     private readonly IPlayerService _playerService;
@@ -42,6 +41,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
     public TicketService(ILogger<TicketService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         IInMemoryUnitOfWork inMemoryUnitOfWork,
+        IRunningMatchService runningMatchService,
         ITicketProcessor ticketProcessor,
         IAgentPositionTakingService agentPositionTakingService,
         IPlayerService playerService,
@@ -50,6 +50,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         IProcessOddsService processOddsService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _inMemoryUnitOfWork = inMemoryUnitOfWork;
+        _runningMatchService = runningMatchService;
         _ticketProcessor = ticketProcessor;
         _agentPositionTakingService = agentPositionTakingService;
         _playerService = playerService;
@@ -104,7 +105,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             BetKindId = processValidation.BetKind.Id,
             SportKindId = SportKind.Lottery.ToInt(),
             MatchId = processValidation.Match.MatchId,
-            KickOffTime = processValidation.Match.KickOffTime,
+            KickOffTime = processValidation.Match.KickoffTime,
             RegionId = processValidation.BetKind.RegionId,
             ChannelId = processValidation.Channel.Id,
             ChoosenNumbers = string.Empty,
@@ -568,7 +569,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             BetKindId = betKindId,
             SportKindId = SportKind.Lottery.ToInt(),
             MatchId = processValidation.Match.MatchId,
-            KickOffTime = processValidation.Match.KickOffTime,
+            KickOffTime = processValidation.Match.KickoffTime,
             RegionId = processValidation.BetKind.RegionId,
             ChannelId = processValidation.Channel.Id,
             ChoosenNumbers = JoinNumbers(normalizedNumbers),
@@ -624,7 +625,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             BetKindId = betKind.Id,
             SportKindId = SportKind.Lottery.ToInt(),
             MatchId = processValidation.Match.MatchId,
-            KickOffTime = processValidation.Match.KickOffTime,
+            KickOffTime = processValidation.Match.KickoffTime,
             RegionId = processValidation.BetKind.RegionId,
             ChannelId = processValidation.Channel.Id,
             ChoosenNumbers = JoinNumbers(normalizedNumbers),
@@ -677,8 +678,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         if (clientInformation == null || player == null || player.PlayerId <= 0L) throw new UnauthorizedException();
 
         //  Player information
-        var playerInfo = await _playerService.GetPlayer(player.PlayerId);
-        if (playerInfo == null) throw new UnauthorizedException();
+        var playerInfo = await _playerService.GetPlayer(player.PlayerId) ?? throw new UnauthorizedException();
         if (playerInfo.Lock) throw new UnauthorizedException();
         if (playerInfo.State.IsSuspended() || (playerInfo.ParentState != null && playerInfo.ParentState.Value.IsSuspended())) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PlayerIsSuspended);
         if (playerInfo.State.IsClosed() || (playerInfo.ParentState != null && playerInfo.ParentState.Value.IsClosed())) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PlayerIsClosed);
@@ -689,43 +689,40 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         if (!betKind.Enabled) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.TheBetKindDoesNotAllowProcessing);
 
         //  Check MatchId
-        var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-        var match = await matchRepository.FindByIdAsync(matchId) ?? throw new NotFoundException();
-        if (match.MatchState != MatchState.Running.ToInt()) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MatchClosedOrSuspended);
+        var match = await _runningMatchService.GetRunningMatch() ?? throw new NotFoundException();
+        if (match.State != MatchState.Running.ToInt()) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MatchClosedOrSuspended);
+        if (!match.MatchResult.TryGetValue(betKind.RegionId, out List<ResultByRegionModel> matchResultDetail)) throw new NotFoundException();
 
         //  Channel
         var channelRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
-        var channel = channelRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickOffTime.DayOfWeek) ?? throw new NotFoundException();
-
-        var ticketMetadata = new TicketMetadataModel();
+        var channel = channelRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickoffTime.DayOfWeek) ?? throw new NotFoundException();
 
         //  MatchResult
-        var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
-        var matchResult = await matchResultRepository.FindByMatchIdAndRegionIdAndChannelId(match.MatchId, betKind.RegionId, channel.Id);
-        if (matchResult != null)
-        {
-            ticketMetadata.IsLive = matchResult.IsLive;
-            if (!matchResult.EnabledProcessTicket) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.ChannelIsClosed);
-            if (!string.IsNullOrEmpty(matchResult.Results))
-            {
-                var matchResultItems = GetPrizesByRegion(betKind.RegionId, matchResult.Results);
-                int? position = null;
-                if (ticketMetadata.IsLive)
-                {
-                    position = CommonHelper.GetDefaultPositionOfPrize();
-                    var firstResult = matchResultItems.SelectMany(f => f.Results).OrderBy(f => f.Position).FirstOrDefault(f => string.IsNullOrEmpty(f.Result));
-                    if (firstResult != null) position = firstResult.Position;
-                }
-                foreach (var item in matchResultItems)
-                {
-                    var countResult = item.Results.Count(f => !string.IsNullOrEmpty(f.Result));
-                    if (item.Results.Count == countResult) continue;
+        var resultByChannel = matchResultDetail.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
+        if (!resultByChannel.EnabledProcessTicket) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.ChannelIsClosed);
 
-                    ticketMetadata.Position = position;
-                    ticketMetadata.Prize = item.Prize;
-                    ticketMetadata.EnabledProcessTicket = item.EnabledProcessTicket;
+        var ticketMetadata = new TicketMetadataModel
+        {
+            IsLive = resultByChannel.IsLive
+        };
+        if (ticketMetadata.IsLive)
+        {
+            var stop = false;
+            var prizes = resultByChannel.Prize.OrderBy(f => f.Prize).ToList();
+            foreach (var itemPrize in prizes)
+            {
+                foreach (var itemResult in itemPrize.Results)
+                {
+                    if (!string.IsNullOrEmpty(itemResult.Result)) continue;
+
+                    ticketMetadata.Prize = itemPrize.Prize;
+                    ticketMetadata.Position = itemResult.Position;
+                    ticketMetadata.AllowProcessTicket = itemResult.AllowProcessTicket;
+                    stop = true;
                     break;
                 }
+                if (!stop) continue;
+                break;
             }
         }
 
@@ -738,28 +735,6 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             Match = match,
             Metadata = ticketMetadata
         };
-    }
-
-    private List<PrizeMatchResultModel> GetPrizesByRegion(int regionId, string results)
-    {
-        var data = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(results).OrderBy(f => f.Prize).ToList();
-        var prizeInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IPrizeInMemoryRepository>();
-        var prizesByRegion = prizeInMemoryRepository.FindByRegion(regionId);
-        data.ForEach(f =>
-        {
-            var prize = prizesByRegion.Find(f1 => f1.PrizeId == f.Prize);
-            if (prize == null) return;
-
-            f.PrizeName = prize.Name;
-            f.NoOfNumbers = prize.NoOfNumbers;
-            for (var i = 0; i < prize.NoOfNumbers; i++)
-            {
-                var position = f.Prize.GetPositionOfPrize(i);
-                var itemPosition = f.Results.FirstOrDefault(f1 => f1.Position == position);
-                if (itemPosition == null) f.Results.Add(new PrizeMatchResultDetailModel { Position = position, Result = string.Empty });
-            }
-        });
-        return data;
     }
 
     private string JoinNumbers(List<string> normalizedNumbers)

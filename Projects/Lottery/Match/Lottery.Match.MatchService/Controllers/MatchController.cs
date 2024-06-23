@@ -13,10 +13,12 @@ namespace Lottery.Match.MatchService.Controllers
     public class MatchController : HnControllerBase
     {
         private readonly IMatchService _matchService;
+        private readonly IRunningMatchService _runningMatchService;
 
-        public MatchController(IMatchService matchService)
+        public MatchController(IMatchService matchService, IRunningMatchService runningMatchService)
         {
             _matchService = matchService;
+            _runningMatchService = runningMatchService;
         }
 
         [HttpGet, LotteryAuthorize(Permission.Management.Matches, Permission.Management.AdvancedTickets)]
@@ -53,7 +55,7 @@ namespace Lottery.Match.MatchService.Controllers
         [HttpGet("running-match")]
         public async Task<IActionResult> GetRunningMatch()
         {
-            return Ok(OkResponse.Create(await _matchService.GetRunningMatch()));
+            return Ok(OkResponse.Create(await _runningMatchService.GetRunningMatch()));
         }
 
         [HttpGet("results/{kickOffTime:datetime}")]

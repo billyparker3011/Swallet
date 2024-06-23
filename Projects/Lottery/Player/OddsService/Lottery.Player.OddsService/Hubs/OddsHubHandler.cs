@@ -65,8 +65,8 @@ namespace Lottery.Player.OddsService.Hubs
 
             using var scope = _serviceProvider.CreateScope();
 
-            var matchService = scope.ServiceProvider.GetService<IMatchService>();
-            var runningMatch = await matchService.GetRunningMatch();
+            var runningMatchService = scope.ServiceProvider.GetService<IRunningMatchService>();
+            var runningMatch = await runningMatchService.GetRunningMatch();
 
             var oddsService = scope.ServiceProvider.GetService<IOddsService>();
             var playerOdds = await oddsService.GetMixedOddsBy(playerId, betKindIds);
