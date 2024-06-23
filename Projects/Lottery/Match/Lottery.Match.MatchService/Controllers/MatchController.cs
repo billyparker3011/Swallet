@@ -2,13 +2,10 @@ using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Responses;
 using Lottery.Core.Enums;
 using Lottery.Core.Filters.Authorization;
-using Lottery.Core.Models.Match;
 using Lottery.Core.Models.Match.ChangeState;
 using Lottery.Core.Models.Match.CreateMatch;
-using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Services.Match;
 using Lottery.Match.MatchService.Requests.Match;
-using Lottery.Match.MatchService.Requests.MatchResult;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lottery.Match.MatchService.Controllers
@@ -71,43 +68,5 @@ namespace Lottery.Match.MatchService.Controllers
             await _matchService.UpdateRunningMatch();
             return Ok();
         }
-
-        #region Obsever
-        [HttpPut("{matchId:long}/on-off-process-ticket"), LotteryAuthorize(Permission.Management.Matches)]
-        public async Task<IActionResult> OnOffProcessTicketOfChannel([FromRoute] long matchId, [FromBody] StartStopProcessTicketOfChannelRequest request)
-        {
-            await _matchService.StartStopProcessTicket(new StartStopProcessTicketModel
-            {
-                MatchId = matchId,
-                RegionId = request.RegionId,
-                ChannelId = request.ChannelId
-            });
-            return Ok();
-        }
-
-        [HttpPut("{matchId:long}/match-result/{regionId:int}/channels/{channelId:int}"), LotteryAuthorize(Permission.Management.Matches)]
-        public async Task<IActionResult> UpdateMatchResult([FromRoute] long matchId, [FromRoute] int regionId, [FromRoute] int channelId, [FromBody] MatchResultRequest request)
-        {
-            await _matchService.UpdateMatchResults(new MatchResultModel
-            {
-                MatchId = matchId,
-                RegionId = regionId,
-                ChannelId = channelId,
-                IsLive = request.IsLive,
-                Results = request.Results.Select(f => new PrizeMatchResultModel
-                {
-                    Prize = f.Prize,
-                    Order = f.Order,
-                    EnabledProcessTicket = f.EnabledProcessTicket,
-                    Results = f.Results.Select(f1 => new PrizeMatchResultDetailModel
-                    {
-                        Position = f1.Position,
-                        Result = f1.Result
-                    }).ToList()
-                }).ToList()
-            });
-            return Ok();
-        }
-        #endregion
     }
 }
