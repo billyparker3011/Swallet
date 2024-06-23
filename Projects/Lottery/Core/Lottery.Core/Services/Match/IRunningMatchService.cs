@@ -9,5 +9,6 @@ namespace Lottery.Core.Services.Match
         Task<MatchModel> GetRunningMatch(bool inCache = true);
         List<PrizeResultModel> DeserializeResults(string results);
         string SerializeResults(List<PrizeResultModel> results);
+        decimal GetLiveOdds(int betKindId, MatchModel match, decimal defaultOddsValue);
     }
 }

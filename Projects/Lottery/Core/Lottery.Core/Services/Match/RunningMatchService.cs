@@ -1,10 +1,12 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Configs;
 using Lottery.Core.Contexts;
 using Lottery.Core.Helpers;
+using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Channel;
 using Lottery.Core.Models.Match;
 using Lottery.Core.Models.MatchResult;
@@ -120,6 +122,47 @@ namespace Lottery.Core.Services.Match
         public string SerializeResults(List<PrizeResultModel> results)
         {
             return Newtonsoft.Json.JsonConvert.SerializeObject(results);
+        }
+
+        public decimal GetLiveOdds(int betKindId, MatchModel match, decimal defaultOddsValue)
+        {
+            var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
+            var betKind = betKindInMemoryRepository.FindById(betKindId) ?? throw new NotFoundException();
+            if (!match.MatchResult.TryGetValue(betKind.RegionId, out List<ResultByRegionModel> regionResults)) throw new NotFoundException();
+
+            var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
+            var channel = channelInMemoryRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickoffTime.DayOfWeek) ?? throw new NotFoundException();
+
+            var channelResult = regionResults.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
+
+            var startOfPosition = betKind.RegionId.GetStartOfPosition();
+            var noOfNumbers = channelResult.Prize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count();
+
+            var stop = false;
+            var position = 0;
+            foreach (var itemPrize in channelResult.Prize)
+            {
+                foreach (var itemResult in itemPrize.Results)
+                {
+                    if (itemResult.Position < startOfPosition) continue;
+                    if (!itemResult.AllowProcessTicket)
+                    {
+                        position++;
+                        continue;
+                    }
+
+                    stop = true;
+                    break;
+                }
+                if (!stop) continue;
+                break;
+            }
+            return defaultOddsValue - (position * GetAmountDecrement(defaultOddsValue, noOfNumbers));
+        }
+
+        private decimal GetAmountDecrement(decimal defaultOddsValue, int noOfNumbers)
+        {
+            return 1m * defaultOddsValue / noOfNumbers;
         }
     }
 }

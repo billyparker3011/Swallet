@@ -308,6 +308,8 @@ namespace Lottery.Core.Services.Match
                 MatchResult = GetMatchResults(match),
                 State = match.MatchState
             });
+
+            await PublishUpdateMatch(match.MatchId);
         }
 
         private Dictionary<int, List<ResultByRegionModel>> GetMatchResults(Data.Entities.Match match)
@@ -371,8 +373,11 @@ namespace Lottery.Core.Services.Match
 
         public async Task StartStopLive(StartStopLiveModel model)
         {
+            var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
             var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
-            var matchResult = await matchResultRepository.FindByMatchIdAndRegionIdAndChannelId(model.MatchId, model.RegionId, model.ChannelId);
+
+            var match = await matchRepository.FindQueryBy(f => f.MatchId == model.MatchId).Include(f => f.MatchResults).FirstOrDefaultAsync() ?? throw new NotFoundException();
+            var matchResult = match.MatchResults.FirstOrDefault(f => f.RegionId == model.RegionId && f.ChannelId == model.ChannelId);
             if (matchResult != null && matchResult.IsLive && ClientContext.Agent.ParentId != 0L) throw new ForbiddenException();
             if (matchResult == null)
             {
@@ -398,11 +403,26 @@ namespace Lottery.Core.Services.Match
             }
             await LotteryUow.SaveChangesAsync();
 
-            await _publishCommonService.PublishStartLive(new StartLiveEventModel
+            await CreateOrUpdateRunningMatchInCache(new MatchModel
             {
-                MatchId = matchResult.MatchId,
-                RegionId = model.RegionId
+                MatchId = match.MatchId,
+                CreatedAt = match.CreatedAt,
+                KickoffTime = match.KickOffTime,
+                MatchCode = match.MatchCode,
+                MatchResult = GetMatchResults(match),
+                State = match.MatchState
             });
+
+            await PublishUpdateMatch(match.MatchId);
+
+            if (matchResult.IsLive)
+            {
+                await _publishCommonService.PublishStartLive(new StartLiveEventModel
+                {
+                    MatchId = matchResult.MatchId,
+                    RegionId = model.RegionId
+                });
+            }
         }
 
         public async Task UpdateResult(UpdateResultModel model)
