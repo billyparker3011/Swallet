@@ -65,6 +65,13 @@ namespace Lottery.Match.MatchService.Controllers
             return Ok(OkResponse.Create(await _matchService.ResultsByKickoff(kickOffTime)));
         }
 
+        [HttpGet("update-running-match"), LotteryAuthorize(Permission.Management.Matches)]
+        public async Task<IActionResult> UpdateRunningMatch()
+        {
+            await _matchService.UpdateRunningMatch();
+            return Ok();
+        }
+
         #region Obsever
         [HttpPut("{matchId:long}/on-off-process-ticket"), LotteryAuthorize(Permission.Management.Matches)]
         public async Task<IActionResult> OnOffProcessTicketOfChannel([FromRoute] long matchId, [FromBody] StartStopProcessTicketOfChannelRequest request)

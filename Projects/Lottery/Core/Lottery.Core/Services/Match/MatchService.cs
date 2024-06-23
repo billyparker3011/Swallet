@@ -190,6 +190,10 @@ namespace Lottery.Core.Services.Match
                 var kickoffTime = sKickoffTime.ToDateTime(CachingConfigs.RedisFormatDateTime);
                 if (kickoffTime == null) return null;
 
+                if (!dataCache.TryGetValue(nameof(MatchModel.CreatedAt), out string sCreatedAt)) return null;
+                var createdAt = sCreatedAt.ToDateTime(CachingConfigs.RedisFormatDateTime);
+                if (createdAt == null) return null;
+
                 if (!dataCache.TryGetValue(nameof(MatchModel.State), out string sState)) return null;
                 if (!int.TryParse(sState, out int state) || state < 0) return null;
 
@@ -202,6 +206,7 @@ namespace Lottery.Core.Services.Match
                     MatchCode = matchCode,
                     KickoffTime = kickoffTime.Value,
                     State = state,
+                    CreatedAt = createdAt.Value,
                     MatchResult = matchResult
                 };
             }
@@ -215,8 +220,24 @@ namespace Lottery.Core.Services.Match
                 MatchCode = runningMatch.MatchCode,
                 KickoffTime = runningMatch.KickOffTime,
                 State = runningMatch.MatchState,
+                CreatedAt = runningMatch.CreatedAt,
                 MatchResult = GetMatchResults(runningMatch)
             };
+        }
+
+        public async Task UpdateRunningMatch()
+        {
+            var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
+            var runningMatch = await matchRepository.GetRunningMatch();
+            if (runningMatch == null) return;
+            await CreateOrUpdateRunningMatchInCache(new MatchModel
+            {
+                MatchId = runningMatch.MatchId,
+                MatchCode = runningMatch.MatchCode,
+                KickoffTime = runningMatch.KickOffTime,
+                State = runningMatch.MatchState,
+                MatchResult = GetMatchResults(runningMatch)
+            });
         }
 
         private async Task CreateOrUpdateRunningMatchInCache(MatchModel matchModel)
@@ -226,6 +247,7 @@ namespace Lottery.Core.Services.Match
                 { nameof(MatchModel.MatchId), matchModel.MatchId.ToString() },
                 { nameof(MatchModel.MatchCode), matchModel.MatchCode },
                 { nameof(MatchModel.KickoffTime), matchModel.KickoffTime.ToString(CachingConfigs.RedisFormatDateTime) },
+                { nameof(MatchModel.CreatedAt), matchModel.CreatedAt.ToString(CachingConfigs.RedisFormatDateTime) },
                 { nameof(MatchModel.State), matchModel.State.ToString() },
                 { nameof(MatchModel.MatchResult), Newtonsoft.Json.JsonConvert.SerializeObject(matchModel.MatchResult ?? new Dictionary<int, List<ResultByRegionModel>>()) }
             };
