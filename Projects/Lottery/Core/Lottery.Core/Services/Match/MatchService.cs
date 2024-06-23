@@ -29,17 +29,20 @@ namespace Lottery.Core.Services.Match
     {
         private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
         private readonly IRedisCacheService _redisCacheService;
+        private readonly IRunningMatchService _runningMatchService;
         private readonly ICompletedMatchService _completedMatchService;
         private readonly IPublishCommonService _publishCommonService;
 
         public MatchService(ILogger<MatchService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
             IInMemoryUnitOfWork inMemoryUnitOfWork,
             IRedisCacheService redisCacheService,
+            IRunningMatchService runningMatchService,
             ICompletedMatchService completedMatchService,
             IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _inMemoryUnitOfWork = inMemoryUnitOfWork;
             _redisCacheService = redisCacheService;
+            _runningMatchService = runningMatchService;
             _completedMatchService = completedMatchService;
             _publishCommonService = publishCommonService;
         }
@@ -95,7 +98,7 @@ namespace Lottery.Core.Services.Match
                     ChannelId = item.Id,
                     IsLive = false,
                     EnabledProcessTicket = true,
-                    Results = SerializeResults(defaultResults),
+                    Results = _runningMatchService.SerializeResults(defaultResults),
                     CreatedAt = ClockService.GetUtcNow(),
                     CreatedBy = ClientContext.Agent.AgentId,
                     Match = match
@@ -174,49 +177,19 @@ namespace Lottery.Core.Services.Match
             });
         }
 
-        public async Task<MatchModel> GetRunningMatch(bool inCache = true)
+        public async Task UpdateRunningMatch()
         {
-            if (inCache)
-            {
-                var dataCache = await _redisCacheService.HashGetAsync(CachingConfigs.RunningMatchKey, CachingConfigs.RedisConnectionForApp);
-                if (dataCache == null || dataCache.Count == 0) return null;
-
-                if (!dataCache.TryGetValue(nameof(MatchModel.MatchId), out string sMatchId)) return null;
-                if (!long.TryParse(sMatchId, out long matchId) || matchId <= 0L) return null;
-
-                if (!dataCache.TryGetValue(nameof(MatchModel.MatchCode), out string matchCode) || string.IsNullOrEmpty(matchCode)) return null;
-
-                if (!dataCache.TryGetValue(nameof(MatchModel.KickoffTime), out string sKickoffTime)) return null;
-                var kickoffTime = sKickoffTime.ToDateTime(CachingConfigs.RedisFormatDateTime);
-                if (kickoffTime == null) return null;
-
-                if (!dataCache.TryGetValue(nameof(MatchModel.State), out string sState)) return null;
-                if (!int.TryParse(sState, out int state) || state < 0) return null;
-
-                if (!dataCache.TryGetValue(nameof(MatchModel.MatchResult), out string sMatchResults) || string.IsNullOrEmpty(sMatchResults)) return null;
-                var matchResult = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, List<ResultByRegionModel>>>(sMatchResults);
-
-                return new MatchModel
-                {
-                    MatchId = matchId,
-                    MatchCode = matchCode,
-                    KickoffTime = kickoffTime.Value,
-                    State = state,
-                    MatchResult = matchResult
-                };
-            }
-
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
             var runningMatch = await matchRepository.GetRunningMatch();
-            if (runningMatch == null) return null;
-            return new MatchModel
+            if (runningMatch == null) return;
+            await CreateOrUpdateRunningMatchInCache(new MatchModel
             {
                 MatchId = runningMatch.MatchId,
                 MatchCode = runningMatch.MatchCode,
                 KickoffTime = runningMatch.KickOffTime,
                 State = runningMatch.MatchState,
                 MatchResult = GetMatchResults(runningMatch)
-            };
+            });
         }
 
         private async Task CreateOrUpdateRunningMatchInCache(MatchModel matchModel)
@@ -226,6 +199,7 @@ namespace Lottery.Core.Services.Match
                 { nameof(MatchModel.MatchId), matchModel.MatchId.ToString() },
                 { nameof(MatchModel.MatchCode), matchModel.MatchCode },
                 { nameof(MatchModel.KickoffTime), matchModel.KickoffTime.ToString(CachingConfigs.RedisFormatDateTime) },
+                { nameof(MatchModel.CreatedAt), matchModel.CreatedAt.ToString(CachingConfigs.RedisFormatDateTime) },
                 { nameof(MatchModel.State), matchModel.State.ToString() },
                 { nameof(MatchModel.MatchResult), Newtonsoft.Json.JsonConvert.SerializeObject(matchModel.MatchResult ?? new Dictionary<int, List<ResultByRegionModel>>()) }
             };
@@ -334,6 +308,8 @@ namespace Lottery.Core.Services.Match
                 MatchResult = GetMatchResults(match),
                 State = match.MatchState
             });
+
+            await PublishUpdateMatch(match.MatchId);
         }
 
         private Dictionary<int, List<ResultByRegionModel>> GetMatchResults(Data.Entities.Match match)
@@ -352,7 +328,7 @@ namespace Lottery.Core.Services.Match
                 var itemChannel = channels.FirstOrDefault(f => f.Id == item.ChannelId);
                 if (itemChannel == null) continue;
 
-                var detailResults = DeserializeResults(item.Results);
+                var detailResults = _runningMatchService.DeserializeResults(item.Results);
                 var startOfPosition = item.RegionId.GetStartOfPosition();
                 var noOfRemainingNumbers = detailResults.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count(f => string.IsNullOrEmpty(f.Result));
 
@@ -379,7 +355,7 @@ namespace Lottery.Core.Services.Match
             var matchResult = match.MatchResults.FirstOrDefault(f => f.RegionId == model.RegionId && f.ChannelId == model.ChannelId);
             if (matchResult == null) return;
 
-            var detailResults = DeserializeResults(matchResult.Results);
+            var detailResults = _runningMatchService.DeserializeResults(matchResult.Results);
             var prize = detailResults.FirstOrDefault(f => f.Prize == model.PrizeId);
             if (prize == null) return;
 
@@ -388,7 +364,7 @@ namespace Lottery.Core.Services.Match
 
             position.AllowProcessTicket = !position.AllowProcessTicket;
 
-            matchResult.Results = SerializeResults(detailResults);
+            matchResult.Results = _runningMatchService.SerializeResults(detailResults);
             matchResult.UpdatedAt = ClockService.GetUtcNow();
             matchResult.UpdatedBy = ClientContext.Agent.AgentId;
             matchResultRepository.Update(matchResult);
@@ -397,8 +373,11 @@ namespace Lottery.Core.Services.Match
 
         public async Task StartStopLive(StartStopLiveModel model)
         {
+            var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
             var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
-            var matchResult = await matchResultRepository.FindByMatchIdAndRegionIdAndChannelId(model.MatchId, model.RegionId, model.ChannelId);
+
+            var match = await matchRepository.FindQueryBy(f => f.MatchId == model.MatchId).Include(f => f.MatchResults).FirstOrDefaultAsync() ?? throw new NotFoundException();
+            var matchResult = match.MatchResults.FirstOrDefault(f => f.RegionId == model.RegionId && f.ChannelId == model.ChannelId);
             if (matchResult != null && matchResult.IsLive && ClientContext.Agent.ParentId != 0L) throw new ForbiddenException();
             if (matchResult == null)
             {
@@ -409,7 +388,7 @@ namespace Lottery.Core.Services.Match
                     ChannelId = model.ChannelId,
                     IsLive = true,
                     EnabledProcessTicket = true,
-                    Results = SerializeResults(CreateDefaultResults(model.RegionId)),
+                    Results = _runningMatchService.SerializeResults(CreateDefaultResults(model.RegionId)),
                     CreatedAt = ClockService.GetUtcNow(),
                     CreatedBy = ClientContext.Agent.AgentId
                 };
@@ -424,11 +403,26 @@ namespace Lottery.Core.Services.Match
             }
             await LotteryUow.SaveChangesAsync();
 
-            await _publishCommonService.PublishStartLive(new StartLiveEventModel
+            await CreateOrUpdateRunningMatchInCache(new MatchModel
             {
-                MatchId = matchResult.MatchId,
-                RegionId = model.RegionId
+                MatchId = match.MatchId,
+                CreatedAt = match.CreatedAt,
+                KickoffTime = match.KickOffTime,
+                MatchCode = match.MatchCode,
+                MatchResult = GetMatchResults(match),
+                State = match.MatchState
             });
+
+            await PublishUpdateMatch(match.MatchId);
+
+            if (matchResult.IsLive)
+            {
+                await _publishCommonService.PublishStartLive(new StartLiveEventModel
+                {
+                    MatchId = matchResult.MatchId,
+                    RegionId = model.RegionId
+                });
+            }
         }
 
         public async Task UpdateResult(UpdateResultModel model)
@@ -469,7 +463,7 @@ namespace Lottery.Core.Services.Match
                     RegionId = model.RegionId,
                     ChannelId = model.ChannelId,
                     IsLive = false,
-                    Results = SerializeResults(orderedResults),
+                    Results = _runningMatchService.SerializeResults(orderedResults),
                     CreatedAt = ClockService.GetUtcNow(),
                     CreatedBy = ClientContext.Agent.AgentId,
                     EnabledProcessTicket = true
@@ -478,7 +472,7 @@ namespace Lottery.Core.Services.Match
             }
             else
             {
-                result.Results = SerializeResults(orderedResults);
+                result.Results = _runningMatchService.SerializeResults(orderedResults);
                 result.UpdatedAt = ClockService.GetUtcNow();
                 result.UpdatedBy = ClientContext.Agent.AgentId;
                 matchResultRepository.Update(result);
@@ -526,79 +520,5 @@ namespace Lottery.Core.Services.Match
             });
             return results.OrderBy(f => f.Prize).ToList();
         }
-
-        private string SerializeResults(List<PrizeResultModel> results)
-        {
-            return Newtonsoft.Json.JsonConvert.SerializeObject(results);
-        }
-
-        private List<PrizeResultModel> DeserializeResults(string results)
-        {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeResultModel>>(results);
-        }
-
-        #region Obsever
-        public async Task UpdateMatchResults(MatchResultModel model)
-        {
-            var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
-            var match = await matchRepository.FindQueryBy(f => f.MatchId == model.MatchId).Include(f => f.MatchResults).FirstOrDefaultAsync() ?? throw new NotFoundException();
-
-            var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
-            var region = regionInMemoryRepository.FindById(model.RegionId.ToEnum<Region>()) ?? throw new NotFoundException();
-
-            var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
-            var channel = channelInMemoryRepository.FindByChannelAndRegionAndDayOfWeek(model.ChannelId, model.RegionId, match.KickOffTime.DayOfWeek);
-            if (channel == null || channel.Id != model.ChannelId) throw new NotFoundException();
-
-            var orderedResults = model.Results.OrderBy(f => f.Prize).ToList();
-            var isStartLive = false;
-
-            var matchResultRepository = LotteryUow.GetRepository<IMatchResultRepository>();
-            var result = await matchResultRepository.FindByMatchIdAndRegionIdAndChannelId(model.MatchId, model.RegionId, channel.Id);
-            if (result == null)
-            {
-                result = new Data.Entities.MatchResult
-                {
-                    MatchId = model.MatchId,
-                    RegionId = model.RegionId,
-                    ChannelId = channel.Id,
-                    IsLive = model.IsLive,
-                    Results = Newtonsoft.Json.JsonConvert.SerializeObject(orderedResults),
-                    CreatedAt = ClockService.GetUtcNow(),
-                    CreatedBy = ClientContext.Agent.AgentId
-                };
-                matchResultRepository.Add(result);
-                isStartLive = model.IsLive;
-            }
-            else
-            {
-                isStartLive = !result.IsLive && model.IsLive;
-
-                result.IsLive = model.IsLive;
-                result.Results = Newtonsoft.Json.JsonConvert.SerializeObject(orderedResults);
-                result.UpdatedAt = ClockService.GetUtcNow();
-                result.UpdatedBy = ClientContext.Agent.AgentId;
-                matchResultRepository.Update(result);
-            }
-
-            await LotteryUow.SaveChangesAsync();
-
-            await CreateOrUpdateRunningMatchInCache(new MatchModel
-            {
-                MatchId = match.MatchId,
-                CreatedAt = match.CreatedAt,
-                KickoffTime = match.KickOffTime,
-                MatchCode = match.MatchCode,
-                MatchResult = GetMatchResults(match),
-                State = match.MatchState
-            });
-            if (!isStartLive) return;
-            await _publishCommonService.PublishStartLive(new StartLiveEventModel
-            {
-                MatchId = match.MatchId,
-                RegionId = model.RegionId
-            });
-        }
-        #endregion
     }
 }

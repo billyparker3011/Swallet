@@ -88,11 +88,23 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             {
                 if (itemMatch.Recalculation)
                 {
-                    tickets.AddRange(_ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId && _recalculateStates.Contains(f.State)));
+                    tickets.AddRange(
+                        _ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId &&
+                                                    _recalculateStates.Contains(f.State) &&
+                                                    (!itemMatch.RegionId.HasValue || (itemMatch.RegionId.HasValue && itemMatch.RegionId.Value == f.RegionId)) &&
+                                                    (!itemMatch.ChannelId.HasValue || (itemMatch.ChannelId.HasValue && itemMatch.ChannelId.Value == f.ChannelId))
+                        )
+                    );
                 }
                 else
                 {
-                    tickets.AddRange(_ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId && _outsStates.Contains(f.State)));
+                    tickets.AddRange(
+                        _ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId &&
+                                                    _outsStates.Contains(f.State) &&
+                                                    (!itemMatch.RegionId.HasValue || (itemMatch.RegionId.HasValue && itemMatch.RegionId.Value == f.RegionId)) &&
+                                                    (!itemMatch.ChannelId.HasValue || (itemMatch.ChannelId.HasValue && itemMatch.ChannelId.Value == f.ChannelId))
+                        )
+                    );
                 }
             }
 

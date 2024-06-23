@@ -10,8 +10,6 @@ namespace Lottery.Core.Services.Match
     {
         Task CreateMatch(CreateOrUpdateMatchModel model);
         Task ChangeState(long matchId, ChangeStateModel model);
-        Task<MatchModel> GetRunningMatch(bool inCache = true);
-        Task UpdateMatchResults(MatchResultModel model);
         Task<ResultModel> ResultsByKickoff(DateTime kickOffTime);
         Task<List<MatchModel>> GetMatches(int top = 30, bool displayResult = false);
         Task<MatchModel> GetMatchById(long matchId);
@@ -20,5 +18,6 @@ namespace Lottery.Core.Services.Match
         Task StartStopProcessTicketByPosition(StartStopProcessTicketByPositionModel model);
         Task StartStopLive(StartStopLiveModel model);
         Task UpdateResult(UpdateResultModel model);
+        Task UpdateRunningMatch();
     }
 }

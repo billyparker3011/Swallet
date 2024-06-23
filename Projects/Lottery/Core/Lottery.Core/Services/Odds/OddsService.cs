@@ -15,16 +15,16 @@ namespace Lottery.Core.Services.Odds
 {
     public class OddsService : LotteryBaseService<OddsService>, IOddsService
     {
-        private readonly IMatchService _matchService;
+        private readonly IRunningMatchService _runningMatchService;
         private readonly IProcessOddsService _processOddsService;
         private readonly IPublishCommonService _publishCommonService;
 
         public OddsService(ILogger<OddsService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
-            IMatchService matchService,
+            IRunningMatchService runningMatchService,
             IProcessOddsService processOddsService,
             IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
-            _matchService = matchService;
+            _runningMatchService = runningMatchService;
             _processOddsService = processOddsService;
             _publishCommonService = publishCommonService;
         }
@@ -163,7 +163,7 @@ namespace Lottery.Core.Services.Odds
                 Number = i,
                 OriginValue = defaultOddsValue.Buy
             });
-            var runningMatch = await _matchService.GetRunningMatch();
+            var runningMatch = await _runningMatchService.GetRunningMatch();
             if (runningMatch == null)
             {
                 return new OddsTableModel
@@ -190,7 +190,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task ChangeOddsValueOfOddsTable(ChangeOddsValueOfOddsTableModel model)
         {
-            var runningMatch = await _matchService.GetRunningMatch() ?? throw new NotFoundException();
+            var runningMatch = await _runningMatchService.GetRunningMatch() ?? throw new NotFoundException();
             if (runningMatch.MatchId != model.MatchId) throw new NotFoundException();
             await _processOddsService.ChangeOddsValueOfOddsTable(model);
         }

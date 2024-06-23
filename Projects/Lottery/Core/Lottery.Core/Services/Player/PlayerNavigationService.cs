@@ -15,15 +15,15 @@ namespace Lottery.Core.Services.Player
     public class PlayerNavigationService : LotteryBaseService<PlayerNavigationService>, IPlayerNavigationService
     {
         private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
-        private readonly IMatchService _matchService;
+        private readonly IRunningMatchService _runningMatchService;
         private readonly IBuildNavigationService _buildNavigationService;
 
         public PlayerNavigationService(ILogger<PlayerNavigationService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow, IInMemoryUnitOfWork inMemoryUnitOfWork,
-            IMatchService matchService,
+            IRunningMatchService runningMatchService,
             IBuildNavigationService buildNavigationService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _inMemoryUnitOfWork = inMemoryUnitOfWork;
-            _matchService = matchService;
+            _runningMatchService = runningMatchService;
             _buildNavigationService = buildNavigationService;
         }
 
@@ -31,7 +31,7 @@ namespace Lottery.Core.Services.Player
         {
             var data = new List<NavigationModel>();
 
-            var runningMatch = await _matchService.GetRunningMatch();
+            var runningMatch = await _runningMatchService.GetRunningMatch();
 
             var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
             var betKinds = betKindInMemoryRepository.FindBy(f => true).ToList();

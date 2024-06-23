@@ -89,24 +89,42 @@ namespace Lottery.Ticket.TicketService.Controllers
         }
 
         [HttpGet("{matchId:long}/draft-completed-tickets"), LotteryAuthorize(Permission.Management.Matches)]
-        public IActionResult DraftCompletedTicketsByMatch([FromRoute] long matchId)
+        public IActionResult DraftCompletedTicketsByMatch([FromRoute] long matchId, [FromQuery] int? regionId, [FromQuery] int? channelId)
         {
             _completedMatchService.Enqueue(new CompletedMatchInQueueModel
             {
                 MatchId = matchId,
+                RegionId = regionId,
+                ChannelId = channelId,
                 IsDraft = true
             });
             return Ok();
         }
 
-        [HttpGet("{matchId:long}/completed-tickets-onemore"), LotteryAuthorize(Permission.Management.Matches)]
-        public IActionResult CompletedTicketsOneMoreByMatch([FromRoute] long matchId)
+        [HttpGet("{matchId:long}/completed-tickets"), LotteryAuthorize(Permission.Management.Matches)]
+        public IActionResult CompletedTicketsByMatch([FromRoute] long matchId, [FromQuery] int? regionId, [FromQuery] int? channelId)
         {
             _completedMatchService.Enqueue(new CompletedMatchInQueueModel
             {
                 MatchId = matchId,
                 IsDraft = false,
-                Recalculation = true
+                Recalculation = false,
+                RegionId = regionId,
+                ChannelId = channelId
+            });
+            return Ok();
+        }
+
+        [HttpGet("{matchId:long}/completed-tickets-onemore"), LotteryAuthorize(Permission.Management.Matches)]
+        public IActionResult CompletedTicketsOneMoreByMatch([FromRoute] long matchId, [FromQuery] int? regionId, [FromQuery] int? channelId)
+        {
+            _completedMatchService.Enqueue(new CompletedMatchInQueueModel
+            {
+                MatchId = matchId,
+                IsDraft = false,
+                Recalculation = true,
+                RegionId = regionId,
+                ChannelId = channelId
             });
             return Ok();
         }

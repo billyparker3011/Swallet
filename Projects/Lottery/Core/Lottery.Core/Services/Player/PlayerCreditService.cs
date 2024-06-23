@@ -13,14 +13,14 @@ namespace Lottery.Core.Services.Player
 {
     public class PlayerCreditService : LotteryBaseService<PlayerCreditService>, IPlayerCreditService
     {
-        private readonly IMatchService _matchService;
+        private readonly IRunningMatchService _runningMatchService;
         private readonly IProcessTicketService _processTicketService;
 
         public PlayerCreditService(ILogger<PlayerCreditService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
-            IMatchService matchService,
+            IRunningMatchService runningMatchService,
             IProcessTicketService processTicketService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
-            _matchService = matchService;
+            _runningMatchService = runningMatchService;
             _processTicketService = processTicketService;
         }
 
@@ -30,7 +30,7 @@ namespace Lottery.Core.Services.Player
             var player = await playerRepository.FindByIdAsync(ClientContext.Player.PlayerId) ?? throw new NotFoundException();
 
             var outs = 0m;
-            var runningMatch = await _matchService.GetRunningMatch();
+            var runningMatch = await _runningMatchService.GetRunningMatch();
             if (runningMatch != null)
             {
                 var currentOuts = await _processTicketService.GetOuts(ClientContext.Player.PlayerId, runningMatch.MatchId);
