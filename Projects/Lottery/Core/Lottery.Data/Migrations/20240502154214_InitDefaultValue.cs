@@ -32,7 +32,7 @@ namespace Lottery.Data.Migrations
                 "   Values (" +
                 "       0, 'M8XS', '" + "QaWsEd135!#%".Md5() + "', " +
                 "       0, 0, 0, " +
-                "       0, '[AV],[AU],[AFC],[R],[BL],[VL]', 0, " +
+                "       0, '[AV],[AU],[AFC],[BF],[R],[BL],[VL],[BK],[CH],[PR],[MA],[MR],[DO],[DPT],[OTND],[OTNL],[OTNO],[OTCD],[OTCL],[OTCO],[OTSD],[OTSL],[OTSO],[SE],[AD],[AT]', 0, " +
                 "       0, GETDATE(), 0); " +
                 "   " +
                 "   Set @agentId = SCOPE_IDENTITY();" +
