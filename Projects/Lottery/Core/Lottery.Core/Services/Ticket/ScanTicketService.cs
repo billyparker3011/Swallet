@@ -2,7 +2,9 @@
 using HnMicro.Framework.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
+using Lottery.Core.InMemory.Setting;
 using Lottery.Core.InMemory.Ticket;
+using Lottery.Core.Models.Setting.ProcessTicket;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Options;
 using Lottery.Core.Repositories.Ticket;
@@ -51,12 +53,15 @@ public class ScanTicketService : HnMicroBaseService<ScanTicketService>, IScanTic
     {
         try
         {
-            //  TODO We have a config ON/OFF this service.
             _tickets.Clear();
 
             var ticketInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ITicketInMemoryRepository>();
             _tickets.AddRange(ticketInMemoryRepository.GetTopSequenceTickets(GetAvg()));
             if (_tickets.Count == 0) return;
+
+            var settingInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ISettingInMemoryRepository>();
+            var scanWaitingTicketSetting = settingInMemoryRepository.FindByKey(ScanWaitingTicketSettingModel.KeySetting);
+            //if (scanWaitingTicketSetting == null) scanWaitingTicketSetting = ScanWaitingTicketSettingModel.CreateDefault();
 
             var rootTicketIds = _tickets.Select(f => f.TicketId).ToList();
 
