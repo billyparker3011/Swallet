@@ -17,5 +17,10 @@ namespace Lottery.Core.Helpers.Converters.Settings
                 ValueSetting = setting.ValueSetting
             };
         }
+
+        public static T ToSettingValue<T>(this string valueSetting)
+        {
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(valueSetting);
+        }
     }
 }
