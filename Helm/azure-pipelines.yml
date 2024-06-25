@@ -12,13 +12,7 @@ trigger:
 
 pool:
   name: "Development Environment Agent Pool"
-
-resources:
-  pipelines:
-  - pipeline: 'Agent'
-    source: '[CI] Agent'
-    trigger: none
-    
+  
 parameters:
 - name: Environment
   type: string
@@ -29,34 +23,24 @@ parameters:
   - prod
 - name: AgentAuthenticationBuildNumber
   displayName: Agent Authentication Build Number
-  default: latest
 - name: AgentBuildNumber
   displayName: Agent Build Number
-  default: latest
 - name: LogBuildNumber
   displayName: Log Build Number
-  default: latest
 - name: MatchBuildNumber
   displayName: Match Build Number
-  default: latest
 - name: OddBuildNumber
   displayName: Odd Build Number
-  default: latest
 - name: PlayerAuthenticationBuildNumber
   displayName: Player Authentication Build Number
-  default: latest
 - name: PlayerBuildNumber
   displayName: Player Build Number
-  default: latest
 - name: TicketBuildNumber
   displayName: Ticket Build Number
-  default: latest
 - name: AgentPortalBuildNumber
   displayName: Agent Portal Build Number
-  default: $(resources.pipeline.Agent.runID)
 - name: PlayerPortalBuildNumber
   displayName: Player Portal Build Number
-  default: latest
 
 variables:
 - template: ci/variables/${{ parameters.Environment }}.yaml
