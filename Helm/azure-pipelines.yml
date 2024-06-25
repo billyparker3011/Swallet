@@ -13,6 +13,13 @@ trigger:
 pool:
   name: "Development Environment Agent Pool"
 
+resources:
+  pipelines:
+  - pipeline: 'AgentPortal'
+    source: '[CI] Agent Portal'
+    project: 'HnAgent'
+    trigger: none
+    
 parameters:
 - name: Environment
   type: string
@@ -47,7 +54,7 @@ parameters:
   default: latest
 - name: AgentPortalBuildNumber
   displayName: Agent Portal Build Number
-  default: latest
+  default: $(resources.pipeline.AgentPortal.runID)
 - name: PlayerPortalBuildNumber
   displayName: Player Portal Build Number
   default: latest
