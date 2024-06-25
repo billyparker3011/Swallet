@@ -1,14 +1,6 @@
 name: $(date:yyMMdd)$(rev:.rr)
 
-trigger:
-  branches:
-    include:
-    - main
-    - develop
-  paths:
-    include:
-    - "Helm/*"
-  batch: true
+trigger: none
 
 pool:
   name: "Development Environment Agent Pool"
