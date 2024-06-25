@@ -15,9 +15,8 @@ pool:
 
 resources:
   pipelines:
-  - pipeline: 'AgentPortal'
-    source: '[CI] Agent Portal'
-    project: 'HnAgent'
+  - pipeline: 'Agent'
+    source: '[CI] Agent'
     trigger: none
     
 parameters:
@@ -54,7 +53,7 @@ parameters:
   default: latest
 - name: AgentPortalBuildNumber
   displayName: Agent Portal Build Number
-  default: $(resources.pipeline.AgentPortal.runID)
+  default: $(resources.pipeline.Agent.runID)
 - name: PlayerPortalBuildNumber
   displayName: Player Portal Build Number
   default: latest
