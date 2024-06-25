@@ -240,5 +240,12 @@ namespace Lottery.Agent.AgentService.Controllers
             });
             return Ok();
         }
+
+        [HttpGet("search-agent")]
+        public async Task<IActionResult> SearchAgent([FromQuery] string searchTerm)
+        {
+            var result = await _agentService.SearchAgent(searchTerm);
+            return Ok(OkResponse.Create(result));
+        }
     }
 }

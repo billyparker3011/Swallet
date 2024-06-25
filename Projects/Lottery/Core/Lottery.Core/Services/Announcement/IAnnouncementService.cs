@@ -12,6 +12,6 @@ namespace Lottery.Core.Services.Announcement
         Task<GetAnnouncementByTypeResult> GetAnnouncementByType(GetAnnouncementByTypeModel query);
         Task UpdateAnnouncement(UpdateAnnouncementModel updateModel);
         Task DeleteAnnouncement(long id);
-        Task<GetUnreadAnnouncementsResult> GetUnreadAnnouncements();
+        Task<GetUnreadAnnouncementsResult> GetUnreadAnnouncements(bool isAgent);
     }
 }
