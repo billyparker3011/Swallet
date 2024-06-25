@@ -98,9 +98,14 @@ namespace Lottery.Core.Services.Player
                     if (itemBetKindModel == null) continue;
 
                     int? replacedById = null;
+                    int? noOfRemainingNumbers = null;
                     var displayLive = false;
                     var isLive = false;
-                    if (matchModel != null && matchModel.MatchResult.TryGetValue(category.Region.ToInt(), out List<ResultByRegionModel> matchResults)) isLive = matchResults.Any(f1 => f1.IsLive);
+                    if (matchModel != null && matchModel.MatchResult.TryGetValue(category.Region.ToInt(), out List<ResultByRegionModel> matchResults))
+                    {
+                        isLive = matchResults.Any(f1 => f1.IsLive);
+                        noOfRemainingNumbers = matchResults.FirstOrDefault() != null ? matchResults.FirstOrDefault().NoOfRemainingNumbers : null;
+                    }
                     if (isLive && itemBetKindModel.ReplaceByIdWhenLive.HasValue)
                     {
                         itemBetKindModel = betKinds.Find(f1 => f1.Id == itemBetKindModel.ReplaceByIdWhenLive.Value);
@@ -116,6 +121,7 @@ namespace Lottery.Core.Services.Player
                         Name = itemBetKindModel.Name,
                         Display = displayLive,
                         Enabled = itemBetKindModel.Enabled,
+                        NoOfRemainingNumbers = noOfRemainingNumbers,
                         Correlations = BuildCorrelationBetKinds(itemBetKindModel.Id.ToEnum<Enums.BetKind>(), betKinds)
                     });
                 }
