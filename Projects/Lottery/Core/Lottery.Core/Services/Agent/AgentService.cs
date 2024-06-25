@@ -1592,5 +1592,26 @@ namespace Lottery.Core.Services.Agent
                 MinMemberMaxCredit = minMemberMaxCredit
             };
         }
+
+        public async Task<List<SearchAgentDto>> SearchAgent(string searchTerm)
+        {
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
+
+            var agentQuery = await agentRepos.FindQueryBy(x => x.RoleId != Role.Company.ToInt() && x.Username.Contains(searchTerm)).Select(x => new SearchAgentDto
+            {
+                TargetId = x.AgentId,
+                Username = x.Username,
+                IsAgent = true
+            }).ToListAsync();
+            var playerQuery = await playerRepos.FindQueryBy(x => x.Username.Contains(searchTerm)).Select(x => new SearchAgentDto
+            {
+                TargetId = x.PlayerId,
+                Username = x.Username,
+                IsAgent = false
+            }).ToListAsync();
+
+            return agentQuery.Concat(playerQuery).OrderBy(x => x.Username).ToList();
+        }
     }
 }
