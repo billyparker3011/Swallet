@@ -369,6 +369,18 @@ namespace Lottery.Core.Services.Match
             matchResult.UpdatedBy = ClientContext.Agent.AgentId;
             matchResultRepository.Update(matchResult);
             await LotteryUow.SaveChangesAsync();
+
+            await CreateOrUpdateRunningMatchInCache(new MatchModel
+            {
+                MatchId = match.MatchId,
+                CreatedAt = match.CreatedAt,
+                KickoffTime = match.KickOffTime,
+                MatchCode = match.MatchCode,
+                MatchResult = GetMatchResults(match),
+                State = match.MatchState
+            });
+
+            await PublishUpdateMatch(match.MatchId);
         }
 
         public async Task StartStopLive(StartStopLiveModel model)
@@ -491,6 +503,8 @@ namespace Lottery.Core.Services.Match
                 MatchResult = GetMatchResults(match),
                 State = match.MatchState
             });
+
+            await PublishUpdateMatch(match.MatchId);
         }
 
         private List<PrizeResultModel> CreateDefaultResults(int regionId, bool includePrizeName = false)
