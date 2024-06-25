@@ -5,5 +5,6 @@ namespace Lottery.Core.InMemory.Setting
 {
     public interface ISettingInMemoryRepository : IInMemoryRepository<int, SettingModel>
     {
+        SettingModel FindByKey(string keySetting);
     }
 }

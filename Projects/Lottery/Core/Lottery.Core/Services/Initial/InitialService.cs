@@ -3,14 +3,17 @@ using Lottery.Core.Helpers.Converters.BetKinds;
 using Lottery.Core.Helpers.Converters.Channels;
 using Lottery.Core.Helpers.Converters.Odds;
 using Lottery.Core.Helpers.Converters.Prizes;
+using Lottery.Core.Helpers.Converters.Settings;
 using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Channel;
 using Lottery.Core.InMemory.Odds;
 using Lottery.Core.InMemory.Prize;
+using Lottery.Core.InMemory.Setting;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Channel;
 using Lottery.Core.Repositories.Prize;
+using Lottery.Core.Repositories.Setting;
 using Lottery.Core.Services.Subscribe;
 using Lottery.Core.Services.Ticket;
 using Lottery.Core.UnitOfWorks;
@@ -46,9 +49,19 @@ namespace Lottery.Core.Services.Initial
             await GetAllChannels(lotteryUow);
             await GetAllPrize(lotteryUow);
             await GetAllDefaultOdds(lotteryUow);
+            await GetAllSettings(lotteryUow);
 
             _subscribeCommonService.Start();
             _scanTicketService.Start();
+        }
+
+        private async Task GetAllSettings(ILotteryUow lotteryUow)
+        {
+            var settingRepository = lotteryUow.GetRepository<ISettingRepository>();
+            var allSettings = await settingRepository.FindQuery().ToListAsync();
+
+            var settingInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ISettingInMemoryRepository>();
+            settingInMemoryRepository.AddRange(allSettings.Select(f => f.ToSettingModel()).ToList());
         }
 
         private async Task GetAllDefaultOdds(ILotteryUow lotteryUow)
