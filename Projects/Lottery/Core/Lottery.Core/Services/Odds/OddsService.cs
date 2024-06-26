@@ -1,10 +1,12 @@
-﻿using HnMicro.Framework.Exceptions;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Services.Match;
+using Lottery.Core.Services.Others;
 using Lottery.Core.Services.Pubs;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
@@ -17,15 +19,18 @@ namespace Lottery.Core.Services.Odds
     {
         private readonly IRunningMatchService _runningMatchService;
         private readonly IProcessOddsService _processOddsService;
+        private readonly INormalizeValueService _normalizeValueService;
         private readonly IPublishCommonService _publishCommonService;
 
         public OddsService(ILogger<OddsService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
             IRunningMatchService runningMatchService,
             IProcessOddsService processOddsService,
+            INormalizeValueService normalizeValueService,
             IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _runningMatchService = runningMatchService;
             _processOddsService = processOddsService;
+            _normalizeValueService = normalizeValueService;
             _publishCommonService = publishCommonService;
         }
 
@@ -67,6 +72,18 @@ namespace Lottery.Core.Services.Odds
         {
             var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
             return await playerOddRepository.FindQueryBy(f => f.PlayerId == playerId && betKindIds.Contains(f.BetKindId)).Select(f => new PlayerOddsModel
+            {
+                Id = f.Id,
+                PlayerId = f.PlayerId,
+                BetKindId = f.BetKindId,
+                Buy = f.Buy
+            }).ToListAsync();
+        }
+
+        public async Task<List<PlayerOddsModel>> GetMixedOddsBy(List<long> playerIds, List<int> betKindIds)
+        {
+            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
+            return await playerOddRepository.FindQueryBy(f => playerIds.Contains(f.PlayerId) && betKindIds.Contains(f.BetKindId)).Select(f => new PlayerOddsModel
             {
                 Id = f.Id,
                 PlayerId = f.PlayerId,
@@ -193,6 +210,54 @@ namespace Lottery.Core.Services.Odds
             var runningMatch = await _runningMatchService.GetRunningMatch() ?? throw new NotFoundException();
             if (runningMatch.MatchId != model.MatchId) throw new NotFoundException();
             await _processOddsService.ChangeOddsValueOfOddsTable(model);
+        }
+
+        public async Task<List<OddsByNumberModel>> GetLiveOdds(int betKindId, long playerId)
+        {
+            if (betKindId != Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()) return new List<OddsByNumberModel>();
+            var betKindIds = new List<int> { Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), betKindId };
+
+            var runningMatch = await _runningMatchService.GetRunningMatch();
+            if (runningMatch == null) return new List<OddsByNumberModel>();
+
+            //  TODO: Need to read from cache
+            var playerOdds = await GetMixedOddsBy(playerId, betKindIds);
+            var rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds);
+
+            var oddsMessages = new List<OddsByNumberModel>();
+            for (var i = 0; i < 100; i++)
+            {
+                var playerOddsForLo = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Lo.ToInt());
+                var playerOddsForLoLive = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt());
+                if (playerOddsForLo == null || playerOddsForLoLive == null) throw new BadRequestException();
+
+                var rateValueOfLo = _normalizeValueService.GetRateValue(Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), i, rateOfOddsValue);
+                //var rateValueOfLoLive = GetRateValue(BetKind.FirstNorthern_Northern_LoLive.ToInt(), i, rateOfOddsValue);
+
+                var buyLo = _normalizeValueService.Normalize(playerOddsForLo.Buy) + _normalizeValueService.Normalize(rateValueOfLo);
+                var buyLoLive = _normalizeValueService.Normalize(playerOddsForLoLive.Buy);  // + _normalizeValueService.Normalize(rateValueOfLo);
+
+                var startBuyLoLive = buyLo;
+                if (startBuyLoLive < buyLoLive) startBuyLoLive = buyLoLive;
+
+                //  Calculate Buy by Position
+                if (runningMatch != null) startBuyLoLive = _normalizeValueService.Normalize(_runningMatchService.GetLiveOdds(betKindId, runningMatch, startBuyLoLive));
+
+                oddsMessages.Add(new OddsByNumberModel
+                {
+                    Number = i,
+                    BetKinds = new List<OddsByBetKindModel>
+                    {
+                        new OddsByBetKindModel
+                        {
+                            Id = betKindId,
+                            Buy = startBuyLoLive,
+                            TotalRate = 0m
+                        }
+                    }
+                });
+            }
+            return oddsMessages;
         }
     }
 }

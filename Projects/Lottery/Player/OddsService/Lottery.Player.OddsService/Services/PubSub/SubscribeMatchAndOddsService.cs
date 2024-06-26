@@ -20,9 +20,18 @@ namespace Lottery.Player.OddsService.Services.PubSub
 
         public void Start()
         {
+            SubscribeUpdateLiveOdds();
             SubscribeRateOfOddsValue();
             SubscribeUpdateMatch();
             SubscribeStartLive();
+        }
+
+        private void SubscribeUpdateLiveOdds()
+        {
+            _redisCacheService.SubscribeAsync(SubscribeCommonConfigs.UpdateLiveOddsChannel, (channel, message) =>
+            {
+                ProcessUpdateLiveOdds(message);
+            }, CachingConfigs.RedisConnectionForApp);
         }
 
         private void SubscribeUpdateMatch()
@@ -47,6 +56,13 @@ namespace Lottery.Player.OddsService.Services.PubSub
             {
                 ProcessRateOfOddsValueConfig(message);
             }, CachingConfigs.RedisConnectionForApp);
+        }
+
+        private void ProcessUpdateLiveOdds(string message)
+        {
+            var model = Newtonsoft.Json.JsonConvert.DeserializeObject<UpdateLiveOddsModel>(message);
+            if (model == null) return;
+            Task.Run(async () => await _oddsHubHandler.UpdateLiveOdds(model));
         }
 
         private void ProcessUpdateMatch(string message)

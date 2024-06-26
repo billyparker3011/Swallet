@@ -7,6 +7,7 @@ namespace Lottery.Core.Services.Odds
     {
         Task<PlayerOddsModel> GetPlayerOddsBy(long playerId, int betKindId);
         Task<List<PlayerOddsModel>> GetMixedOddsBy(long playerId, List<int> betKindIds);
+        Task<List<PlayerOddsModel>> GetMixedOddsBy(List<long> playerIds, List<int> betKindIds);
         Task<List<OddsModel>> GetDefaultOdds();
         Task<List<OddsModel>> GetDefaultOddsByBetKind(List<int> betKindIds);
         Task UpdateAgentOdds(List<OddsModel> model, bool updateForCompany = false);
@@ -15,5 +16,7 @@ namespace Lottery.Core.Services.Odds
 
         Task<OddsTableModel> GetOddsTableByBetKind(int betKindId);
         Task ChangeOddsValueOfOddsTable(ChangeOddsValueOfOddsTableModel model);
+
+        Task<List<OddsByNumberModel>> GetLiveOdds(int betKindId, long playerId);
     }
 }

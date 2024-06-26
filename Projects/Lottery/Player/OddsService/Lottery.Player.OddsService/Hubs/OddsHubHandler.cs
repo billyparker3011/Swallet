@@ -54,7 +54,12 @@ namespace Lottery.Player.OddsService.Hubs
             });
 
             var oddsMessages = await GetOdds(player.PlayerId, connectionInformation.BetKindId);
-            await _hubContext.Clients.Client(connectionInformation.ConnectionId).Odds(Newtonsoft.Json.JsonConvert.SerializeObject(oddsMessages));
+            await UpdateLiveOddsByConnectionId(connectionInformation.ConnectionId, oddsMessages);
+        }
+
+        private async Task UpdateLiveOddsByConnectionId(string connectionId, List<OddsByNumberMessage> oddsMessages)
+        {
+            await _hubContext.Clients.Client(connectionId).Odds(Newtonsoft.Json.JsonConvert.SerializeObject(oddsMessages));
         }
 
         private async Task<List<OddsByNumberMessage>> GetOdds(long playerId, int betKindId)
@@ -87,15 +92,15 @@ namespace Lottery.Player.OddsService.Hubs
                 {
                     var xien2 = playerOdds.FirstOrDefault(f => f.BetKindId == BetKind.FirstNorthern_Northern_Xien2.ToInt());
                     var rateValueOfXien2 = 0m;
-                    if (xien2 != null) rateValueOfXien2 = GetRateValue(xien2.BetKindId, i, rateOfOddsValue);
+                    if (xien2 != null) rateValueOfXien2 = _normalizeValueService.GetRateValue(xien2.BetKindId, i, rateOfOddsValue);
 
                     var xien3 = playerOdds.FirstOrDefault(f => f.BetKindId == BetKind.FirstNorthern_Northern_Xien3.ToInt());
                     var rateValueOfXien3 = 0m;
-                    if (xien3 != null) rateValueOfXien3 = GetRateValue(xien3.BetKindId, i, rateOfOddsValue);
+                    if (xien3 != null) rateValueOfXien3 = _normalizeValueService.GetRateValue(xien3.BetKindId, i, rateOfOddsValue);
 
                     var xien4 = playerOdds.FirstOrDefault(f => f.BetKindId == BetKind.FirstNorthern_Northern_Xien4.ToInt());
                     var rateValueOfXien4 = 0m;
-                    if (xien4 != null) rateValueOfXien4 = GetRateValue(xien4.BetKindId, i, rateOfOddsValue);
+                    if (xien4 != null) rateValueOfXien4 = _normalizeValueService.GetRateValue(xien4.BetKindId, i, rateOfOddsValue);
 
                     oddsMessages.Add(new OddsByNumberMessage
                     {
@@ -129,7 +134,7 @@ namespace Lottery.Player.OddsService.Hubs
                     var playerOddsForLoLive = playerOdds.FirstOrDefault(f => f.BetKindId == BetKind.FirstNorthern_Northern_LoLive.ToInt());
                     if (playerOddsForLo == null || playerOddsForLoLive == null) throw new BadRequestException();
 
-                    var rateValueOfLo = GetRateValue(BetKind.FirstNorthern_Northern_Lo.ToInt(), i, rateOfOddsValue);
+                    var rateValueOfLo = _normalizeValueService.GetRateValue(BetKind.FirstNorthern_Northern_Lo.ToInt(), i, rateOfOddsValue);
                     //var rateValueOfLoLive = GetRateValue(BetKind.FirstNorthern_Northern_LoLive.ToInt(), i, rateOfOddsValue);
 
                     var buyLo = _normalizeValueService.Normalize(playerOddsForLo.Buy) + _normalizeValueService.Normalize(rateValueOfLo);
@@ -139,7 +144,7 @@ namespace Lottery.Player.OddsService.Hubs
                     if (startBuyLoLive < buyLoLive) startBuyLoLive = buyLoLive;
 
                     //  Calculate Buy by Position
-                    if (runningMatch != null) startBuyLoLive = runningMatchService.GetLiveOdds(betKindId, runningMatch, startBuyLoLive);
+                    if (runningMatch != null) startBuyLoLive = _normalizeValueService.Normalize(runningMatchService.GetLiveOdds(betKindId, runningMatch, startBuyLoLive));
 
                     oddsMessages.Add(new OddsByNumberMessage
                     {
@@ -158,7 +163,7 @@ namespace Lottery.Player.OddsService.Hubs
                 else
                 {
                     var currentOdds = playerOdds.FirstOrDefault();
-                    var rateValue = GetRateValue(betKindId, i, rateOfOddsValue);
+                    var rateValue = _normalizeValueService.GetRateValue(betKindId, i, rateOfOddsValue);
                     oddsMessages.Add(new OddsByNumberMessage
                     {
                         Number = i,
@@ -175,13 +180,6 @@ namespace Lottery.Player.OddsService.Hubs
                 }
             }
             return oddsMessages;
-        }
-
-        private decimal GetRateValue(int betKindId, int number, Dictionary<int, Dictionary<int, decimal>> rateOfOddsValue)
-        {
-            if (!rateOfOddsValue.TryGetValue(betKindId, out Dictionary<int, decimal> dictRateValue)) return 0m;
-            if (!dictRateValue.TryGetValue(number, out decimal rateValue)) return 0m;
-            return rateValue;
         }
 
         public void DeleteConnection(string connectionId)
@@ -216,6 +214,49 @@ namespace Lottery.Player.OddsService.Hubs
             {
                 MatchId = model.MatchId
             }));
+        }
+
+        public async Task UpdateLiveOdds(UpdateLiveOddsModel model)
+        {
+            var userOnlineRepository = _unitOfWork.GetRepository<IUserOnlineInMemoryRepository>();
+            var players = userOnlineRepository.GetAll().ToList();
+
+            using var scope = _serviceProvider.CreateScope();
+
+            var runningMatchService = scope.ServiceProvider.GetService<IRunningMatchService>();
+            var runningMatch = await runningMatchService.GetRunningMatch();
+            if (runningMatch == null) return;
+            if (runningMatch.MatchId != model.MatchId) return;
+            if (!runningMatch.MatchResult.TryGetValue(model.RegionId, out List<ResultByRegionModel> resultsOfChannel)) return;
+            if (!resultsOfChannel.Any(f => f.ChannelId == model.ChannelId && f.IsLive)) return;
+
+            //  Get BetKindIds from RegionId
+            var betKindIds = new List<int> { BetKind.FirstNorthern_Northern_Lo.ToInt(), BetKind.FirstNorthern_Northern_LoLive.ToInt() };
+
+            var processOddsService = scope.ServiceProvider.GetService<IProcessOddsService>();
+            var rateOfOddsValue = new Dictionary<int, Dictionary<int, decimal>>();
+            rateOfOddsValue = await processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds);
+
+            var oddsService = scope.ServiceProvider.GetService<IOddsService>();
+            var playerIds = players.Select(f => f.PlayerId).ToList();
+            var allPlayerOdds = await oddsService.GetMixedOddsBy(playerIds, betKindIds);    //  TODO: Need to read from cache
+
+            foreach (var itemPlayer in players)
+            {
+                var playerOdds = allPlayerOdds.Where(f => f.PlayerId == itemPlayer.PlayerId).ToList();
+                var oddsMessages = runningMatchService.GetOddsByPlayerForNorthern(itemPlayer.PlayerId, playerOdds, rateOfOddsValue, runningMatch);
+                if (oddsMessages.Count == 0) continue;
+                await UpdateLiveOddsByConnectionId(itemPlayer.ConnectionId, oddsMessages.Select(f => new OddsByNumberMessage
+                {
+                    Number = f.Number,
+                    BetKinds = f.BetKinds.Select(f1 => new BetKindMessage
+                    {
+                        Id = f1.Id,
+                        TotalRate = f1.TotalRate,
+                        Buy = f1.Buy
+                    }).ToList()
+                }).ToList());
+            }
         }
     }
 }
