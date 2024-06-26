@@ -10,7 +10,9 @@ using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Channel;
 using Lottery.Core.Models.Match;
 using Lottery.Core.Models.MatchResult;
+using Lottery.Core.Models.Odds;
 using Lottery.Core.Repositories.Match;
+using Lottery.Core.Services.Others;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -20,13 +22,16 @@ namespace Lottery.Core.Services.Match
     public class RunningMatchService : LotteryBaseService<RunningMatchService>, IRunningMatchService
     {
         private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
+        private readonly INormalizeValueService _normalizeValueService;
         private readonly IRedisCacheService _redisCacheService;
 
         public RunningMatchService(ILogger<RunningMatchService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
             IInMemoryUnitOfWork inMemoryUnitOfWork,
+            INormalizeValueService normalizeValueService,
             IRedisCacheService redisCacheService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _inMemoryUnitOfWork = inMemoryUnitOfWork;
+            _normalizeValueService = normalizeValueService;
             _redisCacheService = redisCacheService;
         }
 
@@ -163,6 +168,45 @@ namespace Lottery.Core.Services.Match
         private decimal GetAmountDecrement(decimal defaultOddsValue, int noOfNumbers)
         {
             return 1m * defaultOddsValue / noOfNumbers;
+        }
+
+        public List<OddsByNumberModel> GetOddsByPlayerForNorthern(long playerId, List<PlayerOddsModel> playerOdds, Dictionary<int, Dictionary<int, decimal>> rateOfOddsValue, MatchModel runningMatch)
+        {
+            var oddsMessages = new List<OddsByNumberModel>();
+            var betKindId = Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt();
+            for (var i = 0; i < 100; i++)
+            {
+                var playerOddsForLo = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Lo.ToInt());
+                var playerOddsForLoLive = playerOdds.FirstOrDefault(f => f.BetKindId == betKindId);
+                if (playerOddsForLo == null || playerOddsForLoLive == null) throw new BadRequestException();
+
+                var rateValueOfLo = _normalizeValueService.GetRateValue(Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), i, rateOfOddsValue);
+                //var rateValueOfLoLive = GetRateValue(BetKind.FirstNorthern_Northern_LoLive.ToInt(), i, rateOfOddsValue);
+
+                var buyLo = _normalizeValueService.Normalize(playerOddsForLo.Buy) + _normalizeValueService.Normalize(rateValueOfLo);
+                var buyLoLive = _normalizeValueService.Normalize(playerOddsForLoLive.Buy);  // + _normalizeValueService.Normalize(rateValueOfLo);
+
+                var startBuyLoLive = buyLo;
+                if (startBuyLoLive < buyLoLive) startBuyLoLive = buyLoLive;
+
+                //  Calculate Buy by Position
+                startBuyLoLive = _normalizeValueService.Normalize(GetLiveOdds(betKindId, runningMatch, startBuyLoLive));
+
+                oddsMessages.Add(new OddsByNumberModel
+                {
+                    Number = i,
+                    BetKinds = new List<OddsByBetKindModel>
+                        {
+                            new OddsByBetKindModel
+                            {
+                                Id = betKindId,
+                                Buy = startBuyLoLive,
+                                TotalRate = 0m
+                            }
+                        }
+                });
+            }
+            return oddsMessages;
         }
     }
 }

@@ -11,5 +11,6 @@ namespace Lottery.Player.OddsService.Hubs
         Task UpdateMatch(UpdateMatchModel model);
         Task UpdateOdds(RateOfOddsValueModel rateOfOddsValue);
         Task StartLive(StartLiveEventModel model);
+        Task UpdateLiveOdds(UpdateLiveOddsModel model);
     }
 }

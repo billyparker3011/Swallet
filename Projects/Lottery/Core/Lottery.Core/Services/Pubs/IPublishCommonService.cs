@@ -17,5 +17,6 @@ namespace Lottery.Core.Services.Pubs
         Task PublishOddsValue(RateOfOddsValueModel rateOfOddsValue);
         Task PublishStartLive(StartLiveEventModel model);
         Task PublishUpdateMatch(UpdateMatchModel model);
+        Task PublishUpdateLiveOdds(UpdateLiveOddsModel model);
     }
 }

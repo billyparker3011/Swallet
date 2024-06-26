@@ -53,6 +53,11 @@ namespace Lottery.Core.Services.Pubs
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.StartLiveConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }
 
+        public async Task PublishUpdateLiveOdds(UpdateLiveOddsModel model)
+        {
+            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.UpdateLiveOddsChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
+        }
+
         public async Task PublishUpdateMatch(UpdateMatchModel model)
         {
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.UpdateMatchChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);

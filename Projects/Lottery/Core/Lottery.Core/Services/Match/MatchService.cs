@@ -14,8 +14,10 @@ using Lottery.Core.Models.Match;
 using Lottery.Core.Models.Match.ChangeState;
 using Lottery.Core.Models.Match.CreateMatch;
 using Lottery.Core.Models.MatchResult;
+using Lottery.Core.Models.Odds;
 using Lottery.Core.Repositories.Match;
 using Lottery.Core.Repositories.MatchResult;
+using Lottery.Core.Services.Odds;
 using Lottery.Core.Services.Pubs;
 using Lottery.Core.Services.Ticket;
 using Lottery.Core.UnitOfWorks;
@@ -31,6 +33,7 @@ namespace Lottery.Core.Services.Match
         private readonly IRedisCacheService _redisCacheService;
         private readonly IRunningMatchService _runningMatchService;
         private readonly ICompletedMatchService _completedMatchService;
+        private readonly IOddsService _oddsService;
         private readonly IPublishCommonService _publishCommonService;
 
         public MatchService(ILogger<MatchService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
@@ -38,12 +41,14 @@ namespace Lottery.Core.Services.Match
             IRedisCacheService redisCacheService,
             IRunningMatchService runningMatchService,
             ICompletedMatchService completedMatchService,
+            IOddsService oddsService,
             IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _inMemoryUnitOfWork = inMemoryUnitOfWork;
             _redisCacheService = redisCacheService;
             _runningMatchService = runningMatchService;
             _completedMatchService = completedMatchService;
+            _oddsService = oddsService;
             _publishCommonService = publishCommonService;
         }
 
@@ -167,6 +172,25 @@ namespace Lottery.Core.Services.Match
                 if (itemPrize.Results.Count != currentPrize.NoOfNumbers) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernResultDoesntMatchPrize);
                 if (itemPrize.Results.Any(f => string.IsNullOrEmpty(f.Result) || f.Result.Trim().Length < 2)) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernResultIsBadFormat);
             }
+        }
+
+        private async Task PublishUpdateLiveOdds(long matchId, int regionId, int channelId)
+        {
+            await _publishCommonService.PublishUpdateLiveOdds(new UpdateLiveOddsModel
+            {
+                MatchId = matchId,
+                RegionId = regionId,
+                ChannelId = channelId
+            });
+        }
+
+        private async Task PublishStartLive(long matchId, int regionId)
+        {
+            await _publishCommonService.PublishStartLive(new StartLiveEventModel
+            {
+                MatchId = matchId,
+                RegionId = regionId
+            });
         }
 
         private async Task PublishUpdateMatch(long matchId)
@@ -381,6 +405,7 @@ namespace Lottery.Core.Services.Match
             });
 
             await PublishUpdateMatch(match.MatchId);
+            await PublishUpdateLiveOdds(matchResult.MatchId, model.RegionId, model.ChannelId);
         }
 
         public async Task StartStopLive(StartStopLiveModel model)
@@ -427,14 +452,9 @@ namespace Lottery.Core.Services.Match
 
             await PublishUpdateMatch(match.MatchId);
 
-            if (matchResult.IsLive)
-            {
-                await _publishCommonService.PublishStartLive(new StartLiveEventModel
-                {
-                    MatchId = matchResult.MatchId,
-                    RegionId = model.RegionId
-                });
-            }
+            if (!matchResult.IsLive) return;
+            await PublishStartLive(matchResult.MatchId, model.RegionId);
+            await PublishUpdateLiveOdds(matchResult.MatchId, model.RegionId, model.ChannelId);
         }
 
         public async Task UpdateResult(UpdateResultModel model)
@@ -505,6 +525,7 @@ namespace Lottery.Core.Services.Match
             });
 
             await PublishUpdateMatch(match.MatchId);
+            await PublishUpdateLiveOdds(match.MatchId, model.RegionId, model.ChannelId);
         }
 
         private List<PrizeResultModel> CreateDefaultResults(int regionId, bool includePrizeName = false)
