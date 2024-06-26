@@ -54,10 +54,10 @@ namespace Lottery.Player.OddsService.Hubs
             });
 
             var oddsMessages = await GetOdds(player.PlayerId, connectionInformation.BetKindId);
-            await UpdateLiveOddsByConnectionId(connectionInformation.ConnectionId, oddsMessages);
+            await UpdateOddsByConnectionId(connectionInformation.ConnectionId, oddsMessages);
         }
 
-        private async Task UpdateLiveOddsByConnectionId(string connectionId, List<OddsByNumberMessage> oddsMessages)
+        private async Task UpdateOddsByConnectionId(string connectionId, List<OddsByNumberMessage> oddsMessages)
         {
             await _hubContext.Clients.Client(connectionId).Odds(Newtonsoft.Json.JsonConvert.SerializeObject(oddsMessages));
         }
@@ -228,7 +228,8 @@ namespace Lottery.Player.OddsService.Hubs
             if (runningMatch == null) return;
             if (runningMatch.MatchId != model.MatchId) return;
             if (!runningMatch.MatchResult.TryGetValue(model.RegionId, out List<ResultByRegionModel> resultsOfChannel)) return;
-            if (!resultsOfChannel.Any(f => f.ChannelId == model.ChannelId && f.IsLive)) return;
+            var resultsOfChannelDetail = resultsOfChannel.FirstOrDefault(f => f.ChannelId == model.ChannelId && f.IsLive);
+            if (resultsOfChannelDetail == null) return;
 
             //  Get BetKindIds from RegionId
             var betKindIds = new List<int> { BetKind.FirstNorthern_Northern_Lo.ToInt(), BetKind.FirstNorthern_Northern_LoLive.ToInt() };
@@ -246,7 +247,7 @@ namespace Lottery.Player.OddsService.Hubs
                 var playerOdds = allPlayerOdds.Where(f => f.PlayerId == itemPlayer.PlayerId).ToList();
                 var oddsMessages = runningMatchService.GetOddsByPlayerForNorthern(itemPlayer.PlayerId, playerOdds, rateOfOddsValue, runningMatch);
                 if (oddsMessages.Count == 0) continue;
-                await UpdateLiveOddsByConnectionId(itemPlayer.ConnectionId, oddsMessages.Select(f => new OddsByNumberMessage
+                await UpdateLiveOddsByConnectionId(itemPlayer.ConnectionId, resultsOfChannelDetail.NoOfRemainingNumbers, oddsMessages.Select(f => new OddsByNumberMessage
                 {
                     Number = f.Number,
                     BetKinds = f.BetKinds.Select(f1 => new BetKindMessage
@@ -257,6 +258,15 @@ namespace Lottery.Player.OddsService.Hubs
                     }).ToList()
                 }).ToList());
             }
+        }
+
+        private async Task UpdateLiveOddsByConnectionId(string connectionId, int noOfRemainingNumbers, List<OddsByNumberMessage> oddsMessages)
+        {
+            await _hubContext.Clients.Client(connectionId).LiveOdds(Newtonsoft.Json.JsonConvert.SerializeObject(new UpdateLiveOddsMessage
+            {
+                NoOfRemainingNumbers = noOfRemainingNumbers,
+                OddsValue = oddsMessages
+            }));
         }
     }
 }
