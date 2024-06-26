@@ -32,6 +32,7 @@ namespace Lottery.Data
 
         public virtual DbSet<Announcement> Announcements { get; set; }
         public virtual DbSet<AgentAnnouncement> AgentAnnouncements { get; set; }
+        public virtual DbSet<PlayerAnnouncement> PlayerAnnouncements { get; set; }
 
         public virtual DbSet<Setting> Settings { get; set; }
 

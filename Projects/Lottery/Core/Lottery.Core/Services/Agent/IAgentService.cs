@@ -35,5 +35,6 @@ namespace Lottery.Core.Services.Agent
         Task<GetAgentCreditBalanceResult> GetAgentCreditBalances(GetAgentCreditBalanceModel model);
         Task<GetCreditBalanceDetailPopupResult> GetCreditBalanceDetailPopup(long agentId);
         Task UpdateAgentCreditBalance(UpdateAgentCreditBalanceModel updateItem);
+        Task<List<SearchAgentDto>> SearchAgent(string searchTerm);
     }
 }

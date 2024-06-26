@@ -27,7 +27,7 @@ namespace Lottery.Agent.AgentService.Controllers
                 AnnouncementType = type,
                 AnnouncementLevel = request.Level,
                 AnnouncementContent = request.Content,
-                ReceivedIds = request.ReceivedIds
+                AnnouncementReceivers = request.AnnouncementReceivers
             });
             return Ok();
         }
@@ -39,7 +39,8 @@ namespace Lottery.Agent.AgentService.Controllers
             {
                 Type = request.Type,
                 PageIndex = request.PageIndex,
-                PageSize = request.PageSize
+                PageSize = request.PageSize,
+                IsAgent = true
             });
             return Ok(OkResponse.Create(result.Announcements, result.Metadata));
         }
@@ -66,7 +67,7 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpGet("/get-unread-announcements")]
         public async Task<IActionResult> GetUnreadAnnouncements()
         {
-            return Ok(OkResponse.Create(await _announcementService.GetUnreadAnnouncements()));
+            return Ok(OkResponse.Create(await _announcementService.GetUnreadAnnouncements(true)));
         }
     }
 }
