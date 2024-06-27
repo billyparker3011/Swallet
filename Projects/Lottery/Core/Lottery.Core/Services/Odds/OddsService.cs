@@ -2,6 +2,8 @@
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
+using Lottery.Core.Enums;
+using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.Player;
@@ -90,18 +92,6 @@ namespace Lottery.Core.Services.Odds
                 BetKindId = f.BetKindId,
                 Buy = f.Buy
             }).ToListAsync();
-        }
-
-        public async Task<PlayerOddsModel> GetPlayerOddsBy(long playerId, int betKindId)
-        {
-            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
-            return await playerOddRepository.FindQueryBy(f => f.PlayerId == playerId && f.BetKindId == betKindId).Select(f => new PlayerOddsModel
-            {
-                Id = f.Id,
-                PlayerId = f.PlayerId,
-                BetKindId = f.BetKindId,
-                Buy = f.Buy
-            }).FirstOrDefaultAsync();
         }
 
         public async Task<List<OddsModel>> GetAgentOddsBy(int betKindId, List<long> agentIds)
@@ -212,50 +202,149 @@ namespace Lottery.Core.Services.Odds
             await _processOddsService.ChangeOddsValueOfOddsTable(model);
         }
 
-        public async Task<List<OddsByNumberModel>> GetLiveOdds(int betKindId, long playerId)
+        public async Task<Dictionary<long, LiveOddsModel>> GetLiveOdds(List<long> playerIds, int betKindId, long matchId, int regionId, int channelId)
         {
-            if (betKindId != Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()) return new List<OddsByNumberModel>();
+            if (betKindId != Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()) return new Dictionary<long, LiveOddsModel>();
             var betKindIds = new List<int> { Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), betKindId };
 
             var runningMatch = await _runningMatchService.GetRunningMatch();
-            if (runningMatch == null) return new List<OddsByNumberModel>();
+            if (runningMatch == null || runningMatch.MatchId != matchId || runningMatch.State != MatchState.Running.ToInt()) return new Dictionary<long, LiveOddsModel>();
+            if (!runningMatch.MatchResult.TryGetValue(regionId, out List<ResultByRegionModel> resultsOfChannel)) return new Dictionary<long, LiveOddsModel>();
+            var resultsOfChannelDetail = resultsOfChannel.FirstOrDefault(f => f.ChannelId == channelId && f.IsLive);
+            if (resultsOfChannelDetail == null) return new Dictionary<long, LiveOddsModel>();
 
-            //  TODO: Need to read from cache
-            var playerOdds = await GetMixedOddsBy(playerId, betKindIds);
             var rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds);
+            var allPlayerOdds = await GetMixedOddsBy(playerIds, betKindIds);   //  TODO: Need to read from cache
+
+            var dictPlayerOdds = new Dictionary<long, LiveOddsModel>();
+            foreach (var playerId in playerIds)
+            {
+                var playerOdds = allPlayerOdds.Where(f => f.PlayerId == playerId).ToList();
+                var odds = _runningMatchService.GetOddsByPlayerForNorthern(playerId, playerOdds, rateOfOddsValue, runningMatch);
+                if (odds.Count == 0) continue;
+                if (!dictPlayerOdds.TryGetValue(playerId, out LiveOddsModel liveOdds))
+                {
+                    liveOdds = new LiveOddsModel
+                    {
+                        NoOfRemainingNumbers = resultsOfChannelDetail.NoOfRemainingNumbers
+                    };
+                    dictPlayerOdds[playerId] = liveOdds;
+                }
+                liveOdds.Odds.AddRange(odds);
+            }
+            return dictPlayerOdds;
+        }
+
+        public async Task<List<OddsByNumberModel>> GetInitialOdds(long playerId, int betKindId)
+        {
+            var betKindIds = betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt()
+                                ? new List<int> { Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt(), Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt(), Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt() }
+                                : betKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()
+                                    ? new List<int> { Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), betKindId }
+                                    : new List<int> { betKindId };
+
+            var runningMatch = await _runningMatchService.GetRunningMatch();
+            var playerOdds = await GetMixedOddsBy(playerId, betKindIds);    //  TODO: Need to read from cache
+
+            var rateOfOddsValue = new Dictionary<int, Dictionary<int, decimal>>();
+            if (runningMatch != null)
+            {
+                rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds);
+            }
 
             var oddsMessages = new List<OddsByNumberModel>();
             for (var i = 0; i < 100; i++)
             {
-                var playerOddsForLo = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Lo.ToInt());
-                var playerOddsForLoLive = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt());
-                if (playerOddsForLo == null || playerOddsForLoLive == null) throw new BadRequestException();
-
-                var rateValueOfLo = _normalizeValueService.GetRateValue(Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), i, rateOfOddsValue);
-                //var rateValueOfLoLive = GetRateValue(BetKind.FirstNorthern_Northern_LoLive.ToInt(), i, rateOfOddsValue);
-
-                var buyLo = _normalizeValueService.Normalize(playerOddsForLo.Buy) + _normalizeValueService.Normalize(rateValueOfLo);
-                var buyLoLive = _normalizeValueService.Normalize(playerOddsForLoLive.Buy);  // + _normalizeValueService.Normalize(rateValueOfLo);
-
-                var startBuyLoLive = buyLo;
-                if (startBuyLoLive < buyLoLive) startBuyLoLive = buyLoLive;
-
-                //  Calculate Buy by Position
-                if (runningMatch != null) startBuyLoLive = _normalizeValueService.Normalize(_runningMatchService.GetLiveOdds(betKindId, runningMatch, startBuyLoLive));
-
-                oddsMessages.Add(new OddsByNumberModel
+                if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt())
                 {
-                    Number = i,
-                    BetKinds = new List<OddsByBetKindModel>
+                    var xien2 = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt());
+                    var rateValueOfXien2 = 0m;
+                    if (xien2 != null) rateValueOfXien2 = _normalizeValueService.GetRateValue(xien2.BetKindId, i, rateOfOddsValue);
+
+                    var xien3 = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt());
+                    var rateValueOfXien3 = 0m;
+                    if (xien3 != null) rateValueOfXien3 = _normalizeValueService.GetRateValue(xien3.BetKindId, i, rateOfOddsValue);
+
+                    var xien4 = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt());
+                    var rateValueOfXien4 = 0m;
+                    if (xien4 != null) rateValueOfXien4 = _normalizeValueService.GetRateValue(xien4.BetKindId, i, rateOfOddsValue);
+
+                    oddsMessages.Add(new OddsByNumberModel
                     {
-                        new OddsByBetKindModel
+                        Number = i,
+                        BetKinds = new List<OddsByBetKindModel>
                         {
-                            Id = betKindId,
-                            Buy = startBuyLoLive,
-                            TotalRate = 0m
+                            new OddsByBetKindModel
+                            {
+                                Id = Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt(),
+                                Buy = xien2 == null ? 0m : _normalizeValueService.Normalize(xien2.Buy),
+                                TotalRate = xien2 == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien2)
+                            },
+                            new OddsByBetKindModel
+                            {
+                                Id = Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt(),
+                                Buy = xien3 == null ? 0m : _normalizeValueService.Normalize(xien3.Buy),
+                                TotalRate = xien3 == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien3)
+                            },
+                            new OddsByBetKindModel
+                            {
+                                Id = Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt(),
+                                Buy = xien4 == null ? 0m : _normalizeValueService.Normalize(xien4.Buy),
+                                TotalRate = xien4 == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien4)
+                            }
                         }
-                    }
-                });
+                    });
+                }
+                else if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt())
+                {
+                    var playerOddsForLo = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Lo.ToInt());
+                    var playerOddsForLoLive = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt());
+                    if (playerOddsForLo == null || playerOddsForLoLive == null) throw new BadRequestException();
+
+                    var rateValueOfLo = _normalizeValueService.GetRateValue(Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), i, rateOfOddsValue);
+                    //var rateValueOfLoLive = GetRateValue(BetKind.FirstNorthern_Northern_LoLive.ToInt(), i, rateOfOddsValue);
+
+                    var buyLo = _normalizeValueService.Normalize(playerOddsForLo.Buy) + _normalizeValueService.Normalize(rateValueOfLo);
+                    var buyLoLive = _normalizeValueService.Normalize(playerOddsForLoLive.Buy);  // + _normalizeValueService.Normalize(rateValueOfLo);
+
+                    var startBuyLoLive = buyLo;
+                    if (startBuyLoLive < buyLoLive) startBuyLoLive = buyLoLive;
+
+                    //  Calculate Buy by Position
+                    if (runningMatch != null) startBuyLoLive = _normalizeValueService.Normalize(_runningMatchService.GetLiveOdds(betKindId, runningMatch, startBuyLoLive));
+
+                    oddsMessages.Add(new OddsByNumberModel
+                    {
+                        Number = i,
+                        BetKinds = new List<OddsByBetKindModel>
+                        {
+                            new OddsByBetKindModel
+                            {
+                                Id = betKindId,
+                                Buy = startBuyLoLive,
+                                TotalRate = 0m
+                            }
+                        }
+                    });
+                }
+                else
+                {
+                    var currentOdds = playerOdds.FirstOrDefault();
+                    var rateValue = _normalizeValueService.GetRateValue(betKindId, i, rateOfOddsValue);
+                    oddsMessages.Add(new OddsByNumberModel
+                    {
+                        Number = i,
+                        BetKinds = new List<OddsByBetKindModel>
+                        {
+                            new OddsByBetKindModel
+                            {
+                                Id = betKindId,
+                                Buy = currentOdds == null ? 0m : _normalizeValueService.Normalize(currentOdds.Buy),
+                                TotalRate = currentOdds == null ? 0m : _normalizeValueService.Normalize(rateValue)
+                            }
+                        }
+                    });
+                }
             }
             return oddsMessages;
         }
