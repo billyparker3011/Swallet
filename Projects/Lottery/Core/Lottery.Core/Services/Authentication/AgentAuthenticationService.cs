@@ -44,21 +44,20 @@ namespace Lottery.Core.Services.Authentication
         public async Task<JwtToken> Auth(AuthModel model)
         {
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
-            var matchingUsername = await agentRepository.FindByUsername(model.Username.ToUpper()) ?? throw new BadRequestException(ErrorCodeHelper.Auth.UserPasswordIsWrong);
-            var user = await agentRepository.FindByUsernamePassword(model.Username.ToUpper(), model.Password.DecodePassword().Md5());
-            if (user == null)
+            var user = await agentRepository.FindByUsername(model.Username.ToUpper()) ?? throw new BadRequestException(ErrorCodeHelper.Auth.UserPasswordIsWrong);
+            if (!user.Password.Equals(model.Password.DecodePassword().Md5()))
             {
                 await _auditService.SaveAuditData(new AuditParams
                 {
                     Type = (int)AuditType.Login,
                     Action = AuditDataHelper.Login.Action.Login,
                     DetailMessage = AuditDataHelper.Login.DetailMessage.FailByWrongUserPassword,
-                    AgentUserName = matchingUsername.Username,
-                    AgentFirstName = matchingUsername.FirstName,
-                    AgentLastName = matchingUsername.LastName,
-                    SupermasterId = GetSupermasterId(matchingUsername),
-                    MasterId = GetMasterId(matchingUsername),
-                    AgentId = GetAgentId(matchingUsername)
+                    AgentUserName = user.Username,
+                    AgentFirstName = user.FirstName,
+                    AgentLastName = user.LastName,
+                    SupermasterId = GetSupermasterId(user),
+                    MasterId = GetMasterId(user),
+                    AgentId = GetAgentId(user)
                 });
                 throw new BadRequestException(ErrorCodeHelper.Auth.UserPasswordIsWrong);
             }

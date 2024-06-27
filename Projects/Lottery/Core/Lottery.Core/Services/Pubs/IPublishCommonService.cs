@@ -5,6 +5,7 @@ using Lottery.Core.Models.Match;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Models.Prize;
+using Lottery.Core.Models.Setting;
 
 namespace Lottery.Core.Services.Pubs
 {
@@ -18,5 +19,6 @@ namespace Lottery.Core.Services.Pubs
         Task PublishStartLive(StartLiveEventModel model);
         Task PublishUpdateMatch(UpdateMatchModel model);
         Task PublishUpdateLiveOdds(UpdateLiveOddsModel model);
+        Task PublishSetting(SettingModel model);
     }
 }
