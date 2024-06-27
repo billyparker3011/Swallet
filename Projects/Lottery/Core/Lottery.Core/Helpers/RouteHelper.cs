@@ -33,6 +33,11 @@
             {
                 public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/match-result";
             }
+
+            public static class Setting
+            {
+                public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/settings";
+            }
         }
     }
 }

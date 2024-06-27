@@ -55,7 +55,7 @@ public class ScanTicketService : HnMicroBaseService<ScanTicketService>, IScanTic
         try
         {
             var settingInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ISettingInMemoryRepository>();
-            var scanWaitingTicketSetting = settingInMemoryRepository.FindByKey(ScanWaitingTicketSettingModel.KeySetting);
+            var scanWaitingTicketSetting = settingInMemoryRepository.FindByKey(nameof(ScanWaitingTicketSettingModel));
             var setting = scanWaitingTicketSetting == null
                         ? ScanWaitingTicketSettingModel.CreateDefault()
                         : scanWaitingTicketSetting.ValueSetting.ToSettingValue<ScanWaitingTicketSettingModel>();

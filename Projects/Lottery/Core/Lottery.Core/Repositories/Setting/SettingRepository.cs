@@ -1,5 +1,6 @@
 ﻿using HnMicro.Modules.EntityFrameworkCore.Repositories;
 using Lottery.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lottery.Core.Repositories.Setting
 {
@@ -7,6 +8,11 @@ namespace Lottery.Core.Repositories.Setting
     {
         public SettingRepository(LotteryContext context) : base(context)
         {
+        }
+
+        public async Task<Data.Entities.Setting> FindByKey(string key)
+        {
+            return await DbSet.FirstOrDefaultAsync(f => f.KeySetting == key);
         }
     }
 }
