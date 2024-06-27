@@ -2,7 +2,7 @@
 {
     public class ScanWaitingTicketSettingDetailModel
     {
-        public bool AllowAccepted { get; internal set; }
-        public int IntervalAcceptedInSeconds { get; internal set; }
+        public bool AllowAccepted { get; set; }
+        public int IntervalAcceptedInSeconds { get; set; }
     }
 }
