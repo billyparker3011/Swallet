@@ -2,6 +2,7 @@
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
+using Lottery.Core.Dtos.Agent;
 using Lottery.Core.Dtos.Announcement;
 using Lottery.Core.Enums;
 using Lottery.Core.Models.Announcement.CreateAnnouncement;
@@ -127,7 +128,7 @@ namespace Lottery.Core.Services.Announcement
             var announcementMetadata = new HnMicro.Framework.Responses.ApiResponseMetadata();
             if (query.IsAgent)
             {
-                (announcements, announcementMetadata) = await GetAgentAnnouncementByType(agentRepos, agentAnnouncementRepos, announcementRepos, query);
+                (announcements, announcementMetadata) = await GetAgentAnnouncementByType(agentRepos,  agentAnnouncementRepos, announcementRepos, query, playerRepos, playerAnnouncementRepos);
             }
             else
             {
@@ -193,11 +194,11 @@ namespace Lottery.Core.Services.Announcement
             });
         }
 
-        private async Task<(List<AnnouncementDto>, HnMicro.Framework.Responses.ApiResponseMetadata)> GetAgentAnnouncementByType(IAgentRepository agentRepos, IAgentAnnouncementRepository agentAnnouncementRepos, IAnnouncementRepository announcementRepos, GetAnnouncementByTypeModel query)
+        private async Task<(List<AnnouncementDto>, HnMicro.Framework.Responses.ApiResponseMetadata)> GetAgentAnnouncementByType(IAgentRepository agentRepos, IAgentAnnouncementRepository agentAnnouncementRepos, IAnnouncementRepository announcementRepos, GetAnnouncementByTypeModel query, IPlayerRepository playerRepos, IPlayerAnnouncementRepository playerAnnouncementRepos)
         {
             var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
             IQueryable<Data.Entities.Announcement> announcementQuery = announcementRepos.FindQueryBy(x => x.Type == query.Type).OrderByDescending(x => x.CreatedAt).AsQueryable();
-            if (query.Type == AnnouncementType.Private.ToInt())
+            if (query.Type == AnnouncementType.Private.ToInt() && ClientContext.Agent.RoleId != Role.Company.ToInt())
             {
                 var announcementIds = await agentAnnouncementRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId && x.AnnouncementType == query.Type).Select(x => x.AnnouncementId).ToListAsync();
                 announcementQuery = announcementRepos.FindQueryBy(x => announcementIds.Contains(x.Id)).OrderByDescending(x => x.CreatedAt).AsQueryable();
@@ -212,6 +213,50 @@ namespace Lottery.Core.Services.Announcement
                 Content = x.Content,
                 CreatedAt = x.CreatedAt
             }).ToList();
+
+            if (query.Type == AnnouncementType.Private.ToInt() && ClientContext.Agent.RoleId == Role.Company.ToInt())
+            {
+                var selectedAgentAnnouncements = await agentAnnouncementRepos.FindQueryBy(x => announcements.Select(f => f.Id).Contains(x.AnnouncementId))
+                                            .Join(agentRepos.FindQuery(), x => x.AgentId, y => y.AgentId, (agentAnnouncement, agentInfo) => new
+                                            {
+                                                agentAnnouncement,
+                                                agentInfo
+                                            })
+                                            .Select(res => new
+                                            {
+                                                TargetId = res.agentAnnouncement.AgentId,
+                                                res.agentAnnouncement.AnnouncementId,
+                                                res.agentInfo.Username,
+                                                IsAgent = true
+                                            })
+                                            .ToListAsync();
+                var selectedPlayerAnnouncements = await playerAnnouncementRepos.FindQueryBy(x => announcements.Select(f => f.Id).Contains(x.AnnouncementId))
+                                            .Join(playerRepos.FindQuery(), x => x.PlayerId, y => y.PlayerId, (playerAnnouncement, playerInfo) => new
+                                            {
+                                                playerAnnouncement,
+                                                playerInfo
+                                            })
+                                            .Select(res => new
+                                            {
+                                                TargetId = res.playerAnnouncement.PlayerId,
+                                                res.playerAnnouncement.AnnouncementId,
+                                                res.playerInfo.Username,
+                                                IsAgent = false
+                                            })
+                                            .ToListAsync();
+
+                var unionSelections = selectedAgentAnnouncements.Concat(selectedPlayerAnnouncements).ToList();
+
+                foreach (var announcement in announcements)
+                {
+                    announcement.ReceivedAgents = unionSelections.Where(x => x.AnnouncementId == announcement.Id).OrderBy(x => x.Username).Select(x => new SearchAgentDto
+                    {
+                        TargetId = x.TargetId,
+                        Username = x.Username,
+                        IsAgent = x.IsAgent
+                    }).ToList();
+                }
+            }
 
             //Save lastest announcement being read of client agent
             if (announcements != null && announcements.Any() && query.Type != AnnouncementType.Private.ToInt())
@@ -320,6 +365,26 @@ namespace Lottery.Core.Services.Announcement
             var targetAnnouncement = await announcementRepos.FindByIdAsync(updateModel.AnnouncementId) ?? throw new NotFoundException();
             targetAnnouncement.Level = updateModel.Level;
             targetAnnouncement.Content = updateModel.Content;
+
+            await LotteryUow.SaveChangesAsync();
+        }
+
+        public async Task DeleteMultipleAnnouncement(List<long> selectedIds)
+        {
+            //Init repos
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var announcementRepos = LotteryUow.GetRepository<IAnnouncementRepository>();
+            var agentAnnouncementRepos = LotteryUow.GetRepository<IAgentAnnouncementRepository>();
+            var playerAnnouncementRepos = LotteryUow.GetRepository<IPlayerAnnouncementRepository>();
+            var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            if (clientAgent.RoleId != Role.Company.ToInt()) return;
+
+            var privateAgentAnnouncementIds = await agentAnnouncementRepos.FindQueryBy(x => selectedIds.Contains(x.AnnouncementId) && x.AnnouncementType == AnnouncementType.Private.ToInt()).Select(x => x.Id).ToListAsync();
+            agentAnnouncementRepos.DeleteByIds(privateAgentAnnouncementIds);
+            var privatePlayerAnnouncementIds = await playerAnnouncementRepos.FindQueryBy(x => selectedIds.Contains(x.AnnouncementId) && x.AnnouncementType == AnnouncementType.Private.ToInt()).Select(x => x.Id).ToListAsync();
+            playerAnnouncementRepos.DeleteByIds(privatePlayerAnnouncementIds);
+            
+            announcementRepos.DeleteByIds(selectedIds);
 
             await LotteryUow.SaveChangesAsync();
         }
