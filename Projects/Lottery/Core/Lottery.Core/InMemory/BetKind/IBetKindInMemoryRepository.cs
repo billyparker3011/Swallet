@@ -5,4 +5,5 @@ namespace Lottery.Core.InMemory.BetKind;
 
 public interface IBetKindInMemoryRepository : IInMemoryRepository<int, BetKindModel>
 {
+    int GetLiveBetKindByRegion(int regionId);
 }

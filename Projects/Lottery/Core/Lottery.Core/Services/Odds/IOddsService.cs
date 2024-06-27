@@ -5,7 +5,6 @@ namespace Lottery.Core.Services.Odds
 {
     public interface IOddsService : IScopedDependency
     {
-        Task<PlayerOddsModel> GetPlayerOddsBy(long playerId, int betKindId);
         Task<List<PlayerOddsModel>> GetMixedOddsBy(long playerId, List<int> betKindIds);
         Task<List<PlayerOddsModel>> GetMixedOddsBy(List<long> playerIds, List<int> betKindIds);
         Task<List<OddsModel>> GetDefaultOdds();
@@ -17,6 +16,7 @@ namespace Lottery.Core.Services.Odds
         Task<OddsTableModel> GetOddsTableByBetKind(int betKindId);
         Task ChangeOddsValueOfOddsTable(ChangeOddsValueOfOddsTableModel model);
 
-        Task<List<OddsByNumberModel>> GetLiveOdds(int betKindId, long playerId);
+        Task<List<OddsByNumberModel>> GetInitialOdds(long playerId, int betKindId);
+        Task<Dictionary<long, LiveOddsModel>> GetLiveOdds(List<long> playerIds, int betKindId, long matchId, int regionId, int channelId);
     }
 }
