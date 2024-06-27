@@ -13,5 +13,6 @@ namespace Lottery.Core.Services.Announcement
         Task UpdateAnnouncement(UpdateAnnouncementModel updateModel);
         Task DeleteAnnouncement(long id);
         Task<GetUnreadAnnouncementsResult> GetUnreadAnnouncements(bool isAgent);
+        Task DeleteMultipleAnnouncement(List<long> selectedIds);
     }
 }
