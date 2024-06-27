@@ -5,10 +5,12 @@ using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Channel;
 using Lottery.Core.InMemory.Odds;
 using Lottery.Core.InMemory.Prize;
+using Lottery.Core.InMemory.Setting;
 using Lottery.Core.Models.BetKind;
 using Lottery.Core.Models.Channel;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Models.Prize;
+using Lottery.Core.Models.Setting;
 
 namespace Lottery.Core.Services.Subscribe
 {
@@ -28,7 +30,16 @@ namespace Lottery.Core.Services.Subscribe
             SubscribeBetKinds();
             SubscribeChannels();
             SubscribePrizes();
+            SubscribeSettings();
             SubscribeDefaultOddsValue();
+        }
+
+        private void SubscribeSettings()
+        {
+            _redisCacheService.Subscribe(SubscribeCommonConfigs.PublishSettingChannel, (channel, message) =>
+            {
+                ProcessSetting(message);
+            }, CachingConfigs.RedisConnectionForApp);
         }
 
         private void SubscribePrizes()
@@ -89,6 +100,14 @@ namespace Lottery.Core.Services.Subscribe
             var listPrize = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeModel>>(message);
             var inmemoryPrizeRepository = _inMemoryUnitOfWork.GetRepository<IPrizeInMemoryRepository>();
             inmemoryPrizeRepository.AddRange(listPrize);
+        }
+
+        private void ProcessSetting(string message)
+        {
+            var setting = Newtonsoft.Json.JsonConvert.DeserializeObject<SettingModel>(message);
+            if (setting == null || setting.Id == 0) return;
+            var inmemorySettingRepository = _inMemoryUnitOfWork.GetRepository<ISettingInMemoryRepository>();
+            inmemorySettingRepository.Update(setting);
         }
     }
 }

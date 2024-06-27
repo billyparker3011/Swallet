@@ -13,4 +13,8 @@
     <ProjectReference Include="..\Lottery.Data\Lottery.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Setting\BetKind\" />
+  </ItemGroup>
+
 </Project>
