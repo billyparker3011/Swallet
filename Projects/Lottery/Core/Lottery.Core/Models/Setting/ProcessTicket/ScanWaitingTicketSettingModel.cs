@@ -2,8 +2,6 @@
 {
     public class ScanWaitingTicketSettingModel
     {
-        public const string KeySetting = nameof(ScanWaitingTicketSettingModel);
-
         public ScanWaitingTicketSettingDetailModel NoneLive { get; set; } = new ScanWaitingTicketSettingDetailModel();
         public ScanWaitingTicketSettingDetailModel Live { get; set; } = new ScanWaitingTicketSettingDetailModel();
 
