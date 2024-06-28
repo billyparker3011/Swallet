@@ -22,6 +22,14 @@ namespace Lottery.Core.Services.Setting
             _publishCommonService = publishCommonService;
         }
 
+        public async Task<ScanWaitingTicketSettingModel> GetScanWaitingTicketSetting()
+        {
+            var settingRepository = LotteryUow.GetRepository<ISettingRepository>();
+            var setting = await settingRepository.FindByKey(nameof(ScanWaitingTicketSettingModel));
+            if (setting == null || string.IsNullOrEmpty(setting.ValueSetting)) return ScanWaitingTicketSettingModel.CreateDefault();
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<ScanWaitingTicketSettingModel>(setting.ValueSetting);
+        }
+
         public async Task UpdateScanWaitingTicketSetting(ScanWaitingTicketSettingModel model)
         {
             var settingRepository = LotteryUow.GetRepository<ISettingRepository>();
@@ -54,6 +62,15 @@ namespace Lottery.Core.Services.Setting
                 KeySetting = setting.KeySetting,
                 ValueSetting = setting.ValueSetting
             });
+        }
+
+        public async Task<ValidationPrizeSettingModel> GetValidationPrizeSetting(int betKindId)
+        {
+            var key = $"{nameof(ValidationPrizeSettingModel)}|{betKindId}";
+            var settingRepository = LotteryUow.GetRepository<ISettingRepository>();
+            var setting = await settingRepository.FindByKey(key);
+            if (setting == null || string.IsNullOrEmpty(setting.ValueSetting)) return new ValidationPrizeSettingModel { BetKindId = betKindId };
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<ValidationPrizeSettingModel>(setting.ValueSetting);
         }
 
         public async Task UpdateValidationPrizeSetting(ValidationPrizeSettingModel model)
