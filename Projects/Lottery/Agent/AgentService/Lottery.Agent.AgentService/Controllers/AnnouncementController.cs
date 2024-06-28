@@ -69,5 +69,12 @@ namespace Lottery.Agent.AgentService.Controllers
         {
             return Ok(OkResponse.Create(await _announcementService.GetUnreadAnnouncements(true)));
         }
+
+        [HttpPost("/delete-multi-announcements")]
+        public async Task<IActionResult> DeleteMultipleAnnouncements([FromBody] List<long> selectedIds)
+        {
+            await _announcementService.DeleteMultipleAnnouncement(selectedIds);
+            return Ok();
+        }
     }
 }
