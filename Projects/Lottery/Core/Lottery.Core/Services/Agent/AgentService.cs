@@ -933,7 +933,8 @@ namespace Lottery.Core.Services.Agent
                                        ticket.Stake,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
-                                       ticket.DraftPlayerWinLoss
+                                       ticket.DraftPlayerWinLoss,
+                                       ticket.MasterWinLoss
                                    })
                                    .GroupBy(x => new
                                    {
@@ -952,7 +953,7 @@ namespace Lottery.Core.Services.Agent
                                        Payout = x.Sum(s => s.PlayerPayout),
                                        WinLose = x.Sum(s => s.PlayerWinLoss),
                                        DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
-                                       Company = null,
+                                       Company = x.Sum(s => s.MasterWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
                                    }).ToListAsync();
@@ -971,7 +972,8 @@ namespace Lottery.Core.Services.Agent
                         TotalCommission = 0m,
                         RoleId = Role.Agent.ToInt()
                     }
-                }
+                },
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
             };
         }
 
@@ -1001,7 +1003,8 @@ namespace Lottery.Core.Services.Agent
                                        ticket.Stake,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
-                                       ticket.DraftPlayerWinLoss
+                                       ticket.DraftPlayerWinLoss,
+                                       ticket.SupermasterWinLoss
                                    })
                                    .GroupBy(x => new
                                    {
@@ -1021,7 +1024,7 @@ namespace Lottery.Core.Services.Agent
                                        Payout = x.Sum(s => s.PlayerPayout),
                                        WinLose = x.Sum(s => s.PlayerWinLoss),
                                        DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
-                                       Company = null,
+                                       Company = x.Sum(s => s.SupermasterWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
                                    }).ToListAsync();
@@ -1045,7 +1048,8 @@ namespace Lottery.Core.Services.Agent
                         TotalCommission = 0m,
                         RoleId = Role.Master.ToInt()
                     }
-                }
+                },
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
             };
         }
 
@@ -1078,7 +1082,8 @@ namespace Lottery.Core.Services.Agent
                                        agent.AgentSession.IpAddress,
                                        agent.AgentSession.Platform,
                                        ticket.PlayerPayout,
-                                       ticket.PlayerWinLoss
+                                       ticket.PlayerWinLoss,
+                                       ticket.CompanyWinLoss
                                    })
                                    .GroupBy(x => new
                                    {
@@ -1098,7 +1103,7 @@ namespace Lottery.Core.Services.Agent
                                        Payout = x.Sum(s => s.PlayerPayout),
                                        WinLose = x.Sum(s => s.PlayerWinLoss),
                                        //WinLoseInfos = winLossInfos,
-                                       Company = null,
+                                       Company = x.Sum(s => s.CompanyWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
                                    }).ToListAsync();
@@ -1126,7 +1131,8 @@ namespace Lottery.Core.Services.Agent
                         TotalCommission = 0m,
                         RoleId = Role.Supermaster.ToInt()
                     }
-                }
+                },
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
             };
         }
 
@@ -1245,7 +1251,7 @@ namespace Lottery.Core.Services.Agent
                         RoleId = Role.Supermaster.ToInt()
                     }
                 },
-                TotalCompany = 0m
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
             };
         }
 
