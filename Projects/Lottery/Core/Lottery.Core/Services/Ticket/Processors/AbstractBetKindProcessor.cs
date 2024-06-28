@@ -9,6 +9,13 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public abstract class AbstractBetKindProcessor : IBetKindProcessor
 {
+    protected IServiceProvider ServiceProvider;
+
+    protected AbstractBetKindProcessor(IServiceProvider serviceProvider)
+    {
+        ServiceProvider = serviceProvider;
+    }
+
     protected List<string> SplitChooseNumbers(string chooseNumbers)
     {
         chooseNumbers = string.IsNullOrEmpty(chooseNumbers) ? string.Empty : chooseNumbers.Trim();

@@ -11,6 +11,10 @@ public class FirstNorthern_Northern_DeDauGiai1_Processor : AbstractBetKindProces
 {
     private const int _prize = 2;
 
+    public FirstNorthern_Northern_DeDauGiai1_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
+
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_DeDauGiai1.ToInt();
 
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
