@@ -36,6 +36,12 @@ namespace Lottery.Agent.AgentService.Controllers
             return Ok();
         }
 
+        [HttpGet("process-ticket/scan-waiting-ticket")]
+        public async Task<IActionResult> GetScanWaitingTicketSetting()
+        {
+            return Ok(await _processTicketSettingService.GetScanWaitingTicketSetting());
+        }
+
         [HttpPost("process-ticket/validation-prize")]
         public async Task<IActionResult> UpdateValidationPrizeSetting([FromBody] ValidationPrizeSettingRequest request)
         {
@@ -45,6 +51,12 @@ namespace Lottery.Agent.AgentService.Controllers
                 Prize = request.Prize
             });
             return Ok();
+        }
+
+        [HttpGet("process-ticket/validation-prize/bet-kinds/{betKindId:int}")]
+        public async Task<IActionResult> GetValidationPrizeSetting([FromRoute] int betKindId)
+        {
+            return Ok(await _processTicketSettingService.GetValidationPrizeSetting(betKindId));
         }
         #endregion
     }
