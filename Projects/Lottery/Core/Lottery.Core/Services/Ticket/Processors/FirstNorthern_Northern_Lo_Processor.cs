@@ -12,6 +12,10 @@ public class FirstNorthern_Northern_Lo_Processor : AbstractBetKindProcessor
     private const int _startedPrize = 2;    //  Exclude Than Tai
     private const int _endPrize = 9;
 
+    public FirstNorthern_Northern_Lo_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
+
     public override bool EnableStats()
     {
         return true;

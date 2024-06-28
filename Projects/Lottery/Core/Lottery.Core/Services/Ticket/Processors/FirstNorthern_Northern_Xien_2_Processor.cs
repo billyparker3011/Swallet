@@ -12,6 +12,10 @@ public class FirstNorthern_Northern_Xien_2_Processor : AbstractBetKindProcessor
     private const int _startedPrize = 2;    //  Exclude Than Tai
     private const int _endPrize = 9;
 
+    public FirstNorthern_Northern_Xien_2_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
+
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt();
 
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)

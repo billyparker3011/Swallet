@@ -1,23 +1,35 @@
 ﻿using HnMicro.Core.Helpers;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.InMemory.Setting;
 using Lottery.Core.Models.MatchResult;
+using Lottery.Core.Models.Setting.ProcessTicket;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lottery.Core.Services.Ticket.Processors;
 
 public class FirstNorthern_Northern_DeDau_Processor : AbstractBetKindProcessor
 {
     private const int _prize = 9;
-    private const int _acceptedPrize = 6;
+
+    public FirstNorthern_Northern_DeDau_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
 
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_DeDau.ToInt();
 
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
     {
         if (!metadata.IsLive) return 0;
-        return metadata.IsLive && metadata.Prize.HasValue && metadata.Prize.Value > _acceptedPrize ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
+
+        using var scope = ServiceProvider.CreateScope();
+        var settingInMemoryRepository = scope.ServiceProvider.GetService<ISettingInMemoryRepository>();
+        var key = $"{nameof(ValidationPrizeSettingModel)}|{BetKindId}";
+        var setting = settingInMemoryRepository.FindByKey(key);
+        var valSetting = setting == null || string.IsNullOrEmpty(setting.ValueSetting) ? ValidationPrizeSettingModel.CreateForBetKindEquals10() : Newtonsoft.Json.JsonConvert.DeserializeObject<ValidationPrizeSettingModel>(setting.ValueSetting);
+        return metadata.Prize.HasValue && metadata.Prize.Value > valSetting.Prize ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)

@@ -12,6 +12,10 @@ public class FirstNorthern_Northern_LoDau_Processor : AbstractBetKindProcessor
     private const int _startedPrize = 2;
     private const int _endPrize = 9;
 
+    public FirstNorthern_Northern_LoDau_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
+
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_LoDau.ToInt();
 
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)

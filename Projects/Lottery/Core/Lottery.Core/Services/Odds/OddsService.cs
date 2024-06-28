@@ -252,7 +252,7 @@ namespace Lottery.Core.Services.Odds
                 rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds);
             }
 
-            var oddsMessages = new List<OddsByNumberModel>();
+            var odds = new List<OddsByNumberModel>();
             for (var i = 0; i < 100; i++)
             {
                 if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt())
@@ -269,7 +269,7 @@ namespace Lottery.Core.Services.Odds
                     var rateValueOfXien4 = 0m;
                     if (xien4 != null) rateValueOfXien4 = _normalizeValueService.GetRateValue(xien4.BetKindId, i, rateOfOddsValue);
 
-                    oddsMessages.Add(new OddsByNumberModel
+                    odds.Add(new OddsByNumberModel
                     {
                         Number = i,
                         BetKinds = new List<OddsByBetKindModel>
@@ -313,7 +313,7 @@ namespace Lottery.Core.Services.Odds
                     //  Calculate Buy by Position
                     if (runningMatch != null) startBuyLoLive = _normalizeValueService.Normalize(_runningMatchService.GetLiveOdds(betKindId, runningMatch, startBuyLoLive));
 
-                    oddsMessages.Add(new OddsByNumberModel
+                    odds.Add(new OddsByNumberModel
                     {
                         Number = i,
                         BetKinds = new List<OddsByBetKindModel>
@@ -331,7 +331,7 @@ namespace Lottery.Core.Services.Odds
                 {
                     var currentOdds = playerOdds.FirstOrDefault();
                     var rateValue = _normalizeValueService.GetRateValue(betKindId, i, rateOfOddsValue);
-                    oddsMessages.Add(new OddsByNumberModel
+                    odds.Add(new OddsByNumberModel
                     {
                         Number = i,
                         BetKinds = new List<OddsByBetKindModel>
@@ -346,7 +346,7 @@ namespace Lottery.Core.Services.Odds
                     });
                 }
             }
-            return oddsMessages;
+            return odds;
         }
     }
 }

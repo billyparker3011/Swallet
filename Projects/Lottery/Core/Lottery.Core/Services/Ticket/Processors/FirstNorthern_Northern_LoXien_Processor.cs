@@ -14,6 +14,10 @@ public class FirstNorthern_Northern_LoXien_Processor : AbstractBetKindProcessor
         { Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt(), 4 }
     };
 
+    public FirstNorthern_Northern_LoXien_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    {
+    }
+
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt();
 
     public override Dictionary<int, int> GetSubBetKindIds()
