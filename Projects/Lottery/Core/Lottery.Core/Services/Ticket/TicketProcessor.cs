@@ -10,9 +10,12 @@ namespace Lottery.Core.Services.Ticket;
 public class TicketProcessor : ITicketProcessor
 {
     private readonly List<IBetKindProcessor> _handlers = new();
+    private readonly IServiceProvider _serviceProvider;
 
-    public TicketProcessor()
+    public TicketProcessor(IServiceProvider serviceProvider)
     {
+        _serviceProvider = serviceProvider;
+
         LoadBetKindProcessors();
     }
 
@@ -80,6 +83,6 @@ public class TicketProcessor : ITicketProcessor
     private void LoadBetKindProcessors()
     {
         var types = typeof(IBetKindProcessor).GetDerivedClass().ToList();
-        foreach (var item in types) _handlers.Add(Activator.CreateInstance(item) as IBetKindProcessor);
+        foreach (var item in types) _handlers.Add(Activator.CreateInstance(item, _serviceProvider) as IBetKindProcessor);
     }
 }
