@@ -29,7 +29,7 @@ namespace Lottery.Core.Services.Agent
         Task<List<AgentSumarryInfo>> GetTopPlayersOfTheMonth();
         Task<List<AgentBreadCrumbsDto>> GetBreadCrumbs(long? agentId, int? roleId);
         Task<GetSubAgentsResult> GetSubAgents();
-        Task<GetAgentWinLossSummaryResult> GetAgentWinLossSummary(long? agentId, DateTime from, DateTime to);
+        Task<GetAgentWinLossSummaryResult> GetAgentWinLossSummary(long? agentId, DateTime from, DateTime to, bool selectedDraft);
         Task UpdateAgentBetSetting(long agentId, List<AgentBetSettingDto> updateItems);
         Task UpdateAgentPositionTaking(long agentId, List<AgentPositionTakingDto> updateItems);
         Task<GetAgentCreditBalanceResult> GetAgentCreditBalances(GetAgentCreditBalanceModel model);

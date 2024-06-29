@@ -25,7 +25,8 @@ namespace Lottery.Ticket.TicketService.Controllers
             {
                 PlayerId = playerId,
                 FromDate = request.FromDate,
-                ToDate = request.ToDate
+                ToDate = request.ToDate,
+                SelectedDraft = request.SelectedDraft
             })));
         }
 
