@@ -69,7 +69,7 @@ public class PlayerTicketService : LotteryBaseService<PlayerTicketService>, IPla
     public async Task<List<TicketDetailModel>> GetPlayerWinloseDetail(WinloseDetailQueryModel model)
     {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
-        var completedState = CommonHelper.CompletedTicketState();
+        var completedState = model.SelectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketState();
         var data = await ticketRepository.FindQueryBy(f => f.PlayerId == model.PlayerId && !f.ParentId.HasValue && f.KickOffTime.Date >= model.FromDate.Date && f.KickOffTime.Date <= model.ToDate.Date && completedState.Contains(f.State))
             .OrderByDescending(f => f.TicketId)
             .Select(f => f.ToTicketDetailModel()).ToListAsync();
