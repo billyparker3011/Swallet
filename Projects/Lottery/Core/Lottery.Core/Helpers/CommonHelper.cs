@@ -20,15 +20,9 @@ namespace Lottery.Core.Helpers
             return 10 * prize + position;
         }
 
-        public static int GetDefaultPositionOfPrize()
-        {
-            return 1.GetPositionOfPrize(0);
-        }
-
         public static int GetStartOfPosition(this int regionId)
         {
-            var defaultPositionOfPrize = GetDefaultPositionOfPrize();
-            return regionId == Region.Northern.ToInt() ? defaultPositionOfPrize + 1 : defaultPositionOfPrize;
+            return regionId == Region.Northern.ToInt() ? 2.GetPositionOfPrize(0) : 1.GetPositionOfPrize(0);
         }
 
         public static List<int> OutsTicketState()

@@ -20,7 +20,7 @@ public class FirstNorthern_Northern_DeDauThanTai_Processor : AbstractBetKindProc
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
     {
         if (!metadata.IsLive) return 0;
-        if (metadata.Prize > _prize) return ErrorCodeHelper.ProcessTicket.NotAccepted;
+        if ((metadata.Prize - 1) != _prize) return ErrorCodeHelper.ProcessTicket.NotAccepted;
         return !metadata.AllowProcessTicket ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
     }
 
