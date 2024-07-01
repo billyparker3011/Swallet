@@ -157,11 +157,8 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
             ticket.ChoosenNumbers = thisNumber.Number.NormalizeNumber();
             ticket.ShowMore = false;
 
-            var oddsByNumber = playerOdds.FirstOrDefault(f => f.Number == thisNumber.Number);
-            if (oddsByNumber == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
-
-            var oddsByNumberDetail = oddsByNumber.BetKinds.FirstOrDefault(f => f.Id == originBetKindId);
-            if (oddsByNumberDetail == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            var oddsByNumber = playerOdds.FirstOrDefault(f => f.Number == thisNumber.Number) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            var oddsByNumberDetail = oddsByNumber.BetKinds.FirstOrDefault(f => f.Id == originBetKindId) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
 
             ticket.PlayerOdds = oddsByNumberDetail.Buy;
             ticket.PlayerPayout = _ticketProcessor.GetPayoutByNumber(processValidation.BetKind, thisNumber.Point, ticket.PlayerOdds.Value);
@@ -208,12 +205,8 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
             {
                 if (item.Point < setting.MinBet || item.Point > setting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
 
-                var oddsByNumber = playerOdds.FirstOrDefault(f => f.Number == item.Number);
-                if (oddsByNumber == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
-
-                var oddsByNumberDetail = oddsByNumber.BetKinds.FirstOrDefault(f => f.Id == originBetKindId);
-                if (oddsByNumberDetail == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
-
+                var oddsByNumber = playerOdds.FirstOrDefault(f => f.Number == item.Number) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+                var oddsByNumberDetail = oddsByNumber.BetKinds.FirstOrDefault(f => f.Id == originBetKindId) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
                 var normalizeNumber = item.Number.NormalizeNumber();
 
                 var playerPayout = _ticketProcessor.GetPayoutByNumber(processValidation.BetKind, item.Point, oddsByNumberDetail.Buy);

@@ -220,7 +220,9 @@ namespace Lottery.Core.Services.Match
         public int CountNoOfRemainingNumbers(int regionId, List<PrizeResultModel> listPrize)
         {
             var startOfPosition = regionId.GetStartOfPosition();
-            return listPrize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count(f => f.AllowProcessTicket);
+            var count = listPrize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count();
+            var countResult = listPrize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition && !f.AllowProcessTicket && !string.IsNullOrEmpty(f.Result)).Count();
+            return count - countResult;
         }
 
         public int TotalNumbers(int regionId, List<PrizeResultModel> listPrize)

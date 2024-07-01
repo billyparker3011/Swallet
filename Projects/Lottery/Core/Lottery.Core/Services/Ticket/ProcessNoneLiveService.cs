@@ -152,6 +152,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
         var pointByNumbers = new Dictionary<int, decimal>();
         var payoutByNumbers = new Dictionary<int, decimal>();
         var oddsValueByNumbers = new Dictionary<int, decimal>();
+        var realPayoutByNumbers = new Dictionary<int, decimal>();
         if (model.Numbers.Count == 1)
         {
             var thisNumber = model.Numbers.First();
@@ -198,6 +199,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
             pointByNumbers[thisNumber.Number] = ticket.Stake;
             payoutByNumbers[thisNumber.Number] = ticket.PlayerPayout;
             oddsValueByNumbers[thisNumber.Number] = ticket.PlayerOdds.Value;
+            realPayoutByNumbers[thisNumber.Number] = _ticketProcessor.GetRealPayoutForCompany(ticket.PlayerPayout, ticket.SupermasterPt);
 
             if (thisNumber.Point < setting.MinBet || thisNumber.Point > setting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
             if (!outs.PointsByMatchAndNumbers.TryGetValue(thisNumber.Number, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
@@ -235,6 +237,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
                 pointByNumbers[item.Number] = item.Point;
                 payoutByNumbers[item.Number] = playerPayout;
                 oddsValueByNumbers[item.Number] = playerOddsValue + rateValue;
+                realPayoutByNumbers[item.Number] = _ticketProcessor.GetRealPayoutForCompany(playerPayout, ticket.SupermasterPt);
 
                 totalStake += item.Point;
                 totalPlayerPayout += playerPayout;

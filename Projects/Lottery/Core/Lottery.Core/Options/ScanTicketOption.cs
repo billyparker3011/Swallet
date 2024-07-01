@@ -5,6 +5,5 @@
         public const string AppSettingName = "ScanTicket";
 
         public int IntervalInMilliseconds { get; set; }
-        public int TimeToAcceptOrRejectTicketInSeconds { get; set; }
     }
 }

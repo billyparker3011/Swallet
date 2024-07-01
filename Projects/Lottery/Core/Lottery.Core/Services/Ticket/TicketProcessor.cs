@@ -85,4 +85,9 @@ public class TicketProcessor : ITicketProcessor
         var types = typeof(IBetKindProcessor).GetDerivedClass().ToList();
         foreach (var item in types) _handlers.Add(Activator.CreateInstance(item, _serviceProvider) as IBetKindProcessor);
     }
+
+    public decimal GetRealPayoutForCompany(decimal playerPayout, decimal supermasterPt)
+    {
+        return (1 - supermasterPt) * playerPayout;
+    }
 }

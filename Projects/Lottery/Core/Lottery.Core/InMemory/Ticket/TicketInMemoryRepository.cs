@@ -5,9 +5,9 @@ namespace Lottery.Core.InMemory.Ticket
 {
     public class TicketInMemoryRepository : InMemoryRepository<long, TicketModel>, ITicketInMemoryRepository
     {
-        public List<TicketModel> GetTopSequenceTickets(double timeToAcceptOrRejectTicketInSeconds = 5d, int top = 100)
+        public List<TicketModel> GetTopSequenceTickets(bool isLive, double timeToAcceptOrRejectTicketInSeconds = 5d, int top = 100)
         {
-            return Items.Values.Where(f => f.CreatedAt.AddSeconds(timeToAcceptOrRejectTicketInSeconds) <= DateTime.UtcNow).OrderBy(f => f.CreatedAt).Take(top).ToList();
+            return Items.Values.Where(f => f.IsLive == isLive && f.CreatedAt.AddSeconds(timeToAcceptOrRejectTicketInSeconds) <= DateTime.UtcNow).OrderBy(f => f.CreatedAt).Take(top).ToList();
         }
 
         protected override void InternalTryAddOrUpdate(TicketModel item)

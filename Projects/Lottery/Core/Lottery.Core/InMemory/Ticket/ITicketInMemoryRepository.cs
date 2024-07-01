@@ -5,6 +5,6 @@ namespace Lottery.Core.InMemory.Ticket
 {
     public interface ITicketInMemoryRepository : IInMemoryRepository<long, TicketModel>
     {
-        List<TicketModel> GetTopSequenceTickets(double timeToAcceptOrRejectTicketInSeconds = 5d, int top = 100);
+        List<TicketModel> GetTopSequenceTickets(bool isLive, double timeToAcceptOrRejectTicketInSeconds = 5d, int top = 100);
     }
 }

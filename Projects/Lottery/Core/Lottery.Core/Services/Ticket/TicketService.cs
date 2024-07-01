@@ -90,6 +90,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         ticketInMemoryRepository.Add(new TicketModel
         {
             TicketId = ticket.TicketId,
+            IsLive = ticket.IsLive,
             CreatedAt = ticket.CreatedAt,
             Children = childTickets.Select(f => f.TicketId).ToList()
         });
@@ -234,6 +235,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         ticketInMemoryRepository.AddRange(tickets.Where(f => !f.ParentId.HasValue).Select(f => new TicketModel
         {
             TicketId = f.TicketId,
+            IsLive = f.IsLive,
             CreatedAt = f.CreatedAt,
             Children = tickets.Where(f1 => f1.ParentId == f.TicketId).Select(f => f.TicketId).ToList()
         }).ToList());
@@ -480,6 +482,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             ticketInMemoryRepository.Add(new TicketModel
             {
                 TicketId = ticket.TicketId,
+                IsLive = ticket.IsLive,
                 CreatedAt = ticket.CreatedAt,
                 Children = children.Where(f => f.ParentId.HasValue && f.ParentId.Value == ticket.TicketId).Select(f => f.TicketId).ToList()
             });

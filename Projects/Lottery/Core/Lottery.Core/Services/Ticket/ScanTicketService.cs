@@ -45,9 +45,9 @@ public class ScanTicketService : HnMicroBaseService<ScanTicketService>, IScanTic
         _timer.Change(_scanTicketOption.IntervalInMilliseconds, Timeout.Infinite);
     }
 
-    private double GetAvg()
+    private double GetAvg(int timeToAcceptOrRejectTicketInSeconds)
     {
-        return Math.Ceiling(1d * (_scanTicketOption.TimeToAcceptOrRejectTicketInSeconds + _scanTicketOption.IntervalInMilliseconds / 1000) / 2);
+        return Math.Ceiling(1d * (timeToAcceptOrRejectTicketInSeconds + _scanTicketOption.IntervalInMilliseconds / 1000) / 2);
     }
 
     private void InternalScanTickets()
@@ -64,7 +64,8 @@ public class ScanTicketService : HnMicroBaseService<ScanTicketService>, IScanTic
             _tickets.Clear();
 
             var ticketInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ITicketInMemoryRepository>();
-            _tickets.AddRange(ticketInMemoryRepository.GetTopSequenceTickets(GetAvg()));
+            _tickets.AddRange(ticketInMemoryRepository.GetTopSequenceTickets(false, GetAvg(setting.NoneLive.IntervalAcceptedInSeconds)));
+            _tickets.AddRange(ticketInMemoryRepository.GetTopSequenceTickets(true, GetAvg(setting.Live.IntervalAcceptedInSeconds)));
             if (_tickets.Count == 0) return;
 
             var rootTicketIds = _tickets.Select(f => f.TicketId).ToList();
