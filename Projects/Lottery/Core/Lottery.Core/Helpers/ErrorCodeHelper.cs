@@ -41,6 +41,7 @@
             public const int PlayerIsSuspended = -12;
             public const int PlayerIsClosed = -13;
             public const int ChannelIsClosed = -14;
+            public const int PrizeOrPostionIsInvalid = -15;
         }
 
         public static class Match

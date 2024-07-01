@@ -12,5 +12,8 @@ namespace Lottery.Core.Services.Match
         string SerializeResults(List<PrizeResultModel> results);
         decimal GetLiveOdds(int betKindId, MatchModel match, decimal defaultOddsValue);
         List<OddsByNumberModel> GetOddsByPlayerForNorthern(long playerId, List<PlayerOddsModel> playerOdds, Dictionary<int, Dictionary<int, decimal>> rateOfOddsValue, MatchModel runningMatch);
+        (PrizeResultModel, PrizeResultDetailModel) GetCurrentPrize(int regionId, List<PrizeResultModel> listPrize);
+        int TotalNumbers(int regionId, List<PrizeResultModel> listPrize);
+        int CountNoOfRemainingNumbers(int regionId, List<PrizeResultModel> listPrize);
     }
 }

@@ -17,4 +17,5 @@ public interface ITicketProcessor : ISingletonDependency
     decimal? GetPlayerOdds(int betKindId, Dictionary<int, decimal> oddsValueByNumbers);
     RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(int betKindId, RefundRejectTicketByNumbersModel model);
     RefundRejectTicketResultModel RefundRejectTicket(int betKindId, RefundRejectTicketModel model);
+    decimal GetRealPayoutForCompany(decimal playerPayout, decimal supermasterPt);
 }

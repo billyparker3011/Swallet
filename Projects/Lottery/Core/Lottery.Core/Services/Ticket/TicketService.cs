@@ -90,6 +90,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         ticketInMemoryRepository.Add(new TicketModel
         {
             TicketId = ticket.TicketId,
+            IsLive = ticket.IsLive,
             CreatedAt = ticket.CreatedAt,
             Children = childTickets.Select(f => f.TicketId).ToList()
         });
@@ -234,6 +235,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         ticketInMemoryRepository.AddRange(tickets.Where(f => !f.ParentId.HasValue).Select(f => new TicketModel
         {
             TicketId = f.TicketId,
+            IsLive = f.IsLive,
             CreatedAt = f.CreatedAt,
             Children = tickets.Where(f1 => f1.ParentId == f.TicketId).Select(f => f.TicketId).ToList()
         }).ToList());
@@ -440,23 +442,13 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         };
         if (ticketMetadata.IsLive)
         {
-            var stop = false;
-            var prizes = resultByChannel.Prize.OrderBy(f => f.Prize).ToList();
-            foreach (var itemPrize in prizes)
-            {
-                foreach (var itemResult in itemPrize.Results)
-                {
-                    if (!string.IsNullOrEmpty(itemResult.Result)) continue;
+            var results = resultByChannel.Prize.SelectMany(f => f.Results).OrderBy(f => f.Position).ToList();
+            (var currentPrize, var currentPosition) = _runningMatchService.GetCurrentPrize(betKind.RegionId, resultByChannel.Prize);
+            if (currentPrize == null || currentPosition == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PrizeOrPostionIsInvalid);
 
-                    ticketMetadata.Prize = itemPrize.Prize;
-                    ticketMetadata.Position = itemResult.Position;
-                    ticketMetadata.AllowProcessTicket = itemResult.AllowProcessTicket;
-                    stop = true;
-                    break;
-                }
-                if (!stop) continue;
-                break;
-            }
+            ticketMetadata.Prize = currentPrize.Prize;
+            ticketMetadata.Position = currentPosition.Position;
+            ticketMetadata.AllowProcessTicket = currentPosition.AllowProcessTicket;
         }
 
         return new ProcessValidationTicketModel
@@ -490,6 +482,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             ticketInMemoryRepository.Add(new TicketModel
             {
                 TicketId = ticket.TicketId,
+                IsLive = ticket.IsLive,
                 CreatedAt = ticket.CreatedAt,
                 Children = children.Where(f => f.ParentId.HasValue && f.ParentId.Value == ticket.TicketId).Select(f => f.TicketId).ToList()
             });

@@ -17,7 +17,6 @@ using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Repositories.Match;
 using Lottery.Core.Repositories.MatchResult;
-using Lottery.Core.Services.Odds;
 using Lottery.Core.Services.Pubs;
 using Lottery.Core.Services.Ticket;
 using Lottery.Core.UnitOfWorks;
@@ -33,7 +32,6 @@ namespace Lottery.Core.Services.Match
         private readonly IRedisCacheService _redisCacheService;
         private readonly IRunningMatchService _runningMatchService;
         private readonly ICompletedMatchService _completedMatchService;
-        private readonly IOddsService _oddsService;
         private readonly IPublishCommonService _publishCommonService;
 
         public MatchService(ILogger<MatchService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
@@ -41,14 +39,12 @@ namespace Lottery.Core.Services.Match
             IRedisCacheService redisCacheService,
             IRunningMatchService runningMatchService,
             ICompletedMatchService completedMatchService,
-            IOddsService oddsService,
             IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _inMemoryUnitOfWork = inMemoryUnitOfWork;
             _redisCacheService = redisCacheService;
             _runningMatchService = runningMatchService;
             _completedMatchService = completedMatchService;
-            _oddsService = oddsService;
             _publishCommonService = publishCommonService;
         }
 
@@ -353,8 +349,7 @@ namespace Lottery.Core.Services.Match
                 if (itemChannel == null) continue;
 
                 var detailResults = _runningMatchService.DeserializeResults(item.Results);
-                var startOfPosition = item.RegionId.GetStartOfPosition();
-                var noOfRemainingNumbers = detailResults.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count(f => string.IsNullOrEmpty(f.Result));
+                var noOfRemainingNumbers = _runningMatchService.CountNoOfRemainingNumbers(item.RegionId, detailResults);
 
                 resultsByRegionDetail.Add(new ResultByRegionModel
                 {

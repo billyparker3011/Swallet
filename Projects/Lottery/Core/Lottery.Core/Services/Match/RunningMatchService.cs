@@ -103,8 +103,7 @@ namespace Lottery.Core.Services.Match
                 if (itemChannel == null) continue;
 
                 var detailResults = DeserializeResults(item.Results);
-                var startOfPosition = item.RegionId.GetStartOfPosition();
-                var noOfRemainingNumbers = detailResults.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count(f => string.IsNullOrEmpty(f.Result));
+                var noOfRemainingNumbers = CountNoOfRemainingNumbers(item.RegionId, detailResults);
 
                 resultsByRegionDetail.Add(new ResultByRegionModel
                 {
@@ -141,7 +140,7 @@ namespace Lottery.Core.Services.Match
             var channelResult = regionResults.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
 
             var startOfPosition = betKind.RegionId.GetStartOfPosition();
-            var noOfNumbers = channelResult.Prize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count();
+            var totalNumber = TotalNumbers(betKind.RegionId, channelResult.Prize);
 
             var stop = false;
             var position = 0;
@@ -162,7 +161,7 @@ namespace Lottery.Core.Services.Match
                 if (!stop) continue;
                 break;
             }
-            return defaultOddsValue - (position * GetAmountDecrement(defaultOddsValue, noOfNumbers));
+            return defaultOddsValue - (position * GetAmountDecrement(defaultOddsValue, totalNumber));
         }
 
         private decimal GetAmountDecrement(decimal defaultOddsValue, int noOfNumbers)
@@ -207,6 +206,29 @@ namespace Lottery.Core.Services.Match
                 });
             }
             return oddsMessages;
+        }
+
+        public (PrizeResultModel, PrizeResultDetailModel) GetCurrentPrize(int regionId, List<PrizeResultModel> listPrize)
+        {
+            var startOfPosition = regionId.GetStartOfPosition();
+            var results = listPrize.SelectMany(f => f.Results).OrderBy(f => f.Position).ToList();
+            var currentPosition = results.FirstOrDefault(f => f.Position >= startOfPosition && f.AllowProcessTicket);
+            if (currentPosition == null) return (null, null);
+            return (listPrize.FirstOrDefault(f => f.Results.Any(f1 => f1.Position == currentPosition.Position)), currentPosition);
+        }
+
+        public int CountNoOfRemainingNumbers(int regionId, List<PrizeResultModel> listPrize)
+        {
+            var startOfPosition = regionId.GetStartOfPosition();
+            var count = listPrize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count();
+            var countResult = listPrize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition && !f.AllowProcessTicket && !string.IsNullOrEmpty(f.Result)).Count();
+            return count - countResult;
+        }
+
+        public int TotalNumbers(int regionId, List<PrizeResultModel> listPrize)
+        {
+            var startOfPosition = regionId.GetStartOfPosition();
+            return listPrize.SelectMany(f => f.Results).Where(f => f.Position >= startOfPosition).Count();
         }
     }
 }
