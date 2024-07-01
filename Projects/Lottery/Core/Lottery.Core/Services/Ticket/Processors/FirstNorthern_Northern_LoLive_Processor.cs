@@ -9,9 +9,6 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public class FirstNorthern_Northern_LoLive_Processor : AbstractBetKindProcessor
 {
-    private const int _startedPrize = 2;    //  Exclude Than Tai
-    private const int _endPrize = 9;
-
     public FirstNorthern_Northern_LoLive_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
     }
@@ -30,8 +27,8 @@ public class FirstNorthern_Northern_LoLive_Processor : AbstractBetKindProcessor
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
-        var startedPrize = ticket != null && ticket.Prize.HasValue ? ticket.Prize.Value : _startedPrize;
-        var rs = result.Where(f => f.Prize >= startedPrize && f.Prize <= _endPrize).SelectMany(f => f.Results).Select(f => f.Result).ToList();
+        if (ticket.Position == null) return null;
+        var rs = result.SelectMany(f => f.Results).Where(f => f.Position >= ticket.Position.Value).Select(f => f.Result).ToList();
         var endOfResults = new List<string>();
         rs.ForEach(f =>
         {
