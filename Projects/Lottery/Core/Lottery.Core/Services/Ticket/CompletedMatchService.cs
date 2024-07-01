@@ -285,6 +285,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             if (i >= 1000)
             {
                 lotteryUow.SaveChanges();
+                i = 0;
             }
         }
 
