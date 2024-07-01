@@ -32,7 +32,7 @@ namespace Lottery.Core.Helpers
 
         public static List<int> RecalculateTicketState()
         {
-            return new List<int> { TicketState.Completed.ToInt(), TicketState.Won.ToInt(), TicketState.Draw.ToInt(), TicketState.Lose.ToInt() };
+            return new List<int> { TicketState.Completed.ToInt(), TicketState.Won.ToInt(), TicketState.Draw.ToInt(), TicketState.Lose.ToInt(), TicketState.Running.ToInt(), TicketState.Waiting.ToInt() };
         }
 
         public static List<int> CompletedTicketState()
@@ -44,6 +44,7 @@ namespace Lottery.Core.Helpers
         {
             return new List<int> { TicketState.Refund.ToInt(), TicketState.Reject.ToInt() };
         }
+
         public static List<int> AllTicketState()
         {
             return new List<int> { TicketState.Completed.ToInt(), TicketState.Refund.ToInt(), TicketState.Reject.ToInt(), TicketState.Won.ToInt(), TicketState.Draw.ToInt(), TicketState.Lose.ToInt(), TicketState.Running.ToInt(), TicketState.Waiting.ToInt() };
