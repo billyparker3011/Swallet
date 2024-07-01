@@ -11,34 +11,44 @@ metadata:
     appgw.ingress.kubernetes.io/health-probe-path: "/health-checks"
 spec:
   rules:
-  - host: {{ template "host" . }}
+  {{- $application := index .Values.applications .Values.applicationName }}
+  {{- range $domain := $application.domains }}
+  - host: {{ include "host" (dict "Release" $.Release "domain" $domain) }}
     http:
       paths:
         - path: /
           backend:
             service:
-              name: {{ .Release.Name }}
+              name: {{ $.Release.Name }}
               port:
-                number: {{ .Values.Port }}
-          pathType: Prefix
-  {{- if eq .Values.customdomainEnabled true }}
-  - host: {{ .Values.customdomain }}
-    http:
-      paths:
-        - path: /
-          backend:
-            service:
-              name: {{ .Release.Name }}
-              port:
-                number: {{ .Values.Port }}
+                number: {{ $.Values.Port }}
           pathType: Prefix
   {{- end }}
+  {{- if eq .Values.environment "prod" }}
+  {{- $application := index .Values.applications .Values.applicationName }}
+  {{- range $custom_domain := $application.custom_domains }}
+  - host: {{ $custom_domain }}
+    http:
+      paths:
+        - path: /
+          backend:
+            service:
+              name: {{ $.Release.Name }}
+              port:
+                number: {{ $.Values.Port }}
+          pathType: Prefix
+  {{- end }}
+  {{- end }}
   tls:
+  {{- range $domain := $application.domains }}
   - hosts:
-    - {{ template "host" . }}
-    secretName: {{ .Release.Name }}-tls
-  {{- if eq .Values.customdomainEnabled true }}
+    - {{ include "host" (dict "Release" $.Release "domain" $domain) }}
+    secretName: {{ include "host" (dict "Release" $.Release "domain" $domain) }}-tls
+  {{- end }}
+  {{- if eq .Values.environment "prod" }}
+  {{- range $custom_domain := $application.custom_domains }}
   - hosts:
-    - {{ .Values.customdomain }}
-    secretName: {{ .Values.customdomain }}-tls
+    - {{ $custom_domain }}
+    secretName: {{ $custom_domain }}-tls
+  {{- end }}
   {{- end }}

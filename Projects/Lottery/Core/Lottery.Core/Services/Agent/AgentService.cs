@@ -886,7 +886,7 @@ namespace Lottery.Core.Services.Agent
             };
         }
 
-        public async Task<GetAgentWinLossSummaryResult> GetAgentWinLossSummary(long? agentId, DateTime from, DateTime to)
+        public async Task<GetAgentWinLossSummaryResult> GetAgentWinLossSummary(long? agentId, DateTime from, DateTime to, bool selectedDraft)
         {
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
@@ -896,7 +896,7 @@ namespace Lottery.Core.Services.Agent
                                                     ? ClientContext.Agent.AgentId
                                                     : ClientContext.Agent.ParentId;
             var loginAgent = await agentRepos.FindByIdAsync(targetAgentId) ?? throw new NotFoundException();
-            var ticketStates = CommonHelper.CompletedTicketState();
+            var ticketStates = selectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketState();
             switch (loginAgent.RoleId)
             {
                 case (int)Role.Company:
