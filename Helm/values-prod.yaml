@@ -2,12 +2,17 @@ location: #{location}#
 Port: 80
 protocol: TCP
 replicas: 1
+environment: prod
 averageUtilization:
   cpu: 75
   memory: 90
 applications:
   agent-authentication:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-authentication"
@@ -22,7 +27,11 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent"
@@ -37,7 +46,11 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   log:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/log"
@@ -52,7 +65,11 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   match:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/match"
@@ -67,7 +84,11 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   odd:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/odd"
@@ -82,7 +103,11 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-authentication:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player-authentication"
@@ -97,7 +122,11 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player"
@@ -112,7 +141,11 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   ticket:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/ticket"
@@ -127,7 +160,16 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   agent-portal:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
+    custom_domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
@@ -141,7 +183,16 @@ applications:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
   player-portal:
-    domain: m8xs.co
+    domains:
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
+      - m8xs.com
+    custom_domains:
+      - agent.m8xs.io
+      - agent.m8xs.co
+      - agent.m8xs.net
+      - agent.m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player-portal"
