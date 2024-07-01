@@ -28,7 +28,10 @@ public class FirstNorthern_Northern_LoLive_Processor : AbstractBetKindProcessor
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
         if (ticket.Position == null) return null;
-        var rs = result.SelectMany(f => f.Results).Where(f => f.Position >= ticket.Position.Value).Select(f => f.Result).ToList();
+        var position = ticket.Position.Value;
+        var startOfPosition = Region.Northern.ToInt().GetStartOfPosition();
+        if (position < startOfPosition) position = startOfPosition;
+        var rs = result.SelectMany(f => f.Results).Where(f => f.Position >= position).Select(f => f.Result).ToList();
         var endOfResults = new List<string>();
         rs.ForEach(f =>
         {
