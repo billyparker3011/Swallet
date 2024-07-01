@@ -12,7 +12,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-authentication"
@@ -31,7 +30,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent"
@@ -50,7 +48,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/log"
@@ -69,7 +66,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/match"
@@ -88,7 +84,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/odd"
@@ -107,7 +102,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player-authentication"
@@ -126,7 +120,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player"
@@ -145,7 +138,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/ticket"
@@ -164,12 +156,10 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     custom_domains:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
@@ -187,7 +177,6 @@ applications:
       - m8xs.io
       - m8xs.co
       - m8xs.net
-      - m8xs.com
     custom_domains:
       - agent.m8xs.io
       - agent.m8xs.co
