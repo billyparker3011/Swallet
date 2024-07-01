@@ -2,6 +2,7 @@ location: #{location}#
 Port: 80
 protocol: TCP
 replicas: 1
+environment: test
 averageUtilization:
   cpu: 75
   memory: 90
