@@ -59,7 +59,7 @@ namespace Lottery.Core.Services.Match
             var haveRunning = await matchRepository.HaveRunningOrSuspendedMatch();
             if (haveRunning) throw new BadRequestException(ErrorCodeHelper.Match.RunningMatchIsAlreadyExisted);
 
-            var kickOffTime = model.IncludeTime ? model.KickOff.AddHours(vnCurrentTime.Hour).AddMinutes(vnCurrentTime.Minute).AddSeconds(vnCurrentTime.Second) : model.KickOff;
+            var kickOffTime = model.IncludeTime ? model.KickOff.Date.AddHours(vnCurrentTime.Hour).AddMinutes(vnCurrentTime.Minute).AddSeconds(vnCurrentTime.Second) : model.KickOff;
             var matchCode = model.IncludeTime ? $"{kickOffTime:yyyyMMddHHmmss}" : model.KickOff.ToString("yyyyMMdd");
             var match = await matchRepository.FindByMatchCode(matchCode);
             if (match != null) throw new BadRequestException(ErrorCodeHelper.Match.MatchCodeIsAlreadyExisted);
