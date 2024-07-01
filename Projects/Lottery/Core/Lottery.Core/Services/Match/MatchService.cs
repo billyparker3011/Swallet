@@ -140,14 +140,16 @@ namespace Lottery.Core.Services.Match
             await LotteryUow.SaveChangesAsync();
 
             await PublishUpdateMatch(matchId);
-            if (match.MatchState != MatchState.Completed.ToInt()) return;
 
+            if (match.MatchState == MatchState.Refund.ToInt() || match.MatchState == MatchState.Completed.ToInt())
+                await _redisCacheService.RemoveAsync(CachingConfigs.RunningMatchKey, CachingConfigs.RedisConnectionForApp);
+
+            if (match.MatchState != MatchState.Completed.ToInt()) return;
             _completedMatchService.Enqueue(new Models.Ticket.CompletedMatchInQueueModel
             {
                 MatchId = matchId,
                 IsDraft = false
             });
-            await _redisCacheService.RemoveAsync(CachingConfigs.RunningMatchKey, CachingConfigs.RedisConnectionForApp);
         }
 
         private void InternalValidationNorthernRegion(Data.Entities.Match match, List<Models.Prize.PrizeModel> prizes, Region region)
