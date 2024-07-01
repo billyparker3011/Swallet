@@ -157,9 +157,9 @@ applications:
       - m8xs.co
       - m8xs.net
     custom_domains:
-      - m8xs.io
-      - m8xs.co
-      - m8xs.net
+      - agent.m8xs.io
+      - agent.m8xs.co
+      - agent.m8xs.net
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/agent-portal"
@@ -178,10 +178,9 @@ applications:
       - m8xs.co
       - m8xs.net
     custom_domains:
-      - agent.m8xs.io
-      - agent.m8xs.co
-      - agent.m8xs.net
-      - agent.m8xs.com
+      - m8xs.io
+      - m8xs.co
+      - m8xs.net
     minReplicas: 1
     maxReplicas: 3
     image: "crhnxprodsoutheastasia.azurecr.io/player-portal"
