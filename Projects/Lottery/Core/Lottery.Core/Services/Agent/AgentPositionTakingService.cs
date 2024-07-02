@@ -137,7 +137,8 @@ namespace Lottery.Core.Services.Agent
                                                             CategoryId = x.BetKind.CategoryId,
                                                             BetKindName = x.BetKind.Name,
                                                             DefaultPositionTaking = x.PositionTaking,
-                                                            ActualPositionTaking = x.PositionTaking
+                                                            ActualPositionTaking = x.PositionTaking,
+                                                            IsDisabled = x.BetKindId == 9
                                                         })
                                                         .ToListAsync();
             foreach (var item in agentPositionTakings)

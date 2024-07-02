@@ -123,6 +123,7 @@ namespace Lottery.Core.Services.Agent
                                                             ActualMaxBet = x.MaxBet,
                                                             DefaultMaxPerNumber = x.MaxPerNumber,
                                                             ActualMaxPerNumber = x.MaxPerNumber,
+                                                            IsDisabled = x.BetKindId == 9
                                                         })
                                                         .ToListAsync();
             foreach(var item in agentBetSettings)

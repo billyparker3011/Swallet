@@ -17,5 +17,6 @@
         public decimal ActualMaxBet { get; set; }
         public decimal DefaultMaxPerNumber { get; set; }
         public decimal ActualMaxPerNumber { get; set; }
+        public bool IsDisabled { get; set; }
     }
 }
