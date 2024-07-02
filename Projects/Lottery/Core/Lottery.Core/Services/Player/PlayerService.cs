@@ -376,6 +376,7 @@ namespace Lottery.Core.Services.Player
 
             var targetPlayer = await playerRepos.FindByIdAsync(playerId) ?? throw new NotFoundException();
 
+            var companyOdds = await agentOddRepos.FindQuery().Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L).ToListAsync();
             var defaultBetSettings = await agentOddRepos.FindQuery().Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Agent.ToInt() && x.AgentId == targetPlayer.AgentId).ToListAsync();
 
             var playerBetSettings = await playerOddRepos.FindQuery()
@@ -400,14 +401,18 @@ namespace Lottery.Core.Services.Player
                                                             ActualMaxBet = x.MaxBet,
                                                             DefaultMaxPerNumber = x.MaxPerNumber,
                                                             ActualMaxPerNumber = x.MaxPerNumber,
+                                                            IsDisabled = x.BetKindId == 9
                                                         })
                                                         .ToListAsync();
             foreach (var item in playerBetSettings)
             {
+                var maxBuy = companyOdds.FirstOrDefault(x => x.BetKindId == item.BetKindId)?.MaxBuy;
                 var defaultBetKindItem = defaultBetSettings.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 item.DefaultMinBet = defaultBetKindItem != null ? defaultBetKindItem.MinBet : item.DefaultMinBet;
                 item.DefaultMaxBet = defaultBetKindItem != null ? defaultBetKindItem.MaxBet : item.DefaultMaxBet;
                 item.DefaultMaxPerNumber = defaultBetKindItem != null ? defaultBetKindItem.MaxPerNumber : item.DefaultMaxPerNumber;
+                item.MinBuy = defaultBetKindItem.Buy;
+                item.MaxBuy = maxBuy ?? decimal.Zero;
                 item.RegionName = EnumCategoryHelper.GetEnumRegionInformation((Region)item.RegionId)?.Name;
                 item.CategoryName = EnumCategoryHelper.GetEnumCategoryInformation((Category)item.CategoryId)?.Name;
             }

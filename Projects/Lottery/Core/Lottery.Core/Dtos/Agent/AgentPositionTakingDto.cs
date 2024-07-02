@@ -10,5 +10,6 @@
         public string BetKindName { get; set; }
         public decimal DefaultPositionTaking { get; set; }
         public decimal ActualPositionTaking { get; set; }
+        public bool IsDisabled { get; set; }
     }
 }
