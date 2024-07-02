@@ -59,7 +59,7 @@ namespace Lottery.Core.Services.Match
             var haveRunning = await matchRepository.HaveRunningOrSuspendedMatch();
             if (haveRunning) throw new BadRequestException(ErrorCodeHelper.Match.RunningMatchIsAlreadyExisted);
 
-            var kickOffTime = model.IncludeTime ? model.KickOff.AddHours(vnCurrentTime.Hour).AddMinutes(vnCurrentTime.Minute).AddSeconds(vnCurrentTime.Second) : model.KickOff;
+            var kickOffTime = model.IncludeTime ? model.KickOff.Date.AddHours(vnCurrentTime.Hour).AddMinutes(vnCurrentTime.Minute).AddSeconds(vnCurrentTime.Second) : model.KickOff;
             var matchCode = model.IncludeTime ? $"{kickOffTime:yyyyMMddHHmmss}" : model.KickOff.ToString("yyyyMMdd");
             var match = await matchRepository.FindByMatchCode(matchCode);
             if (match != null) throw new BadRequestException(ErrorCodeHelper.Match.MatchCodeIsAlreadyExisted);
@@ -140,14 +140,16 @@ namespace Lottery.Core.Services.Match
             await LotteryUow.SaveChangesAsync();
 
             await PublishUpdateMatch(matchId);
-            if (match.MatchState != MatchState.Completed.ToInt()) return;
 
+            if (match.MatchState == MatchState.Refund.ToInt() || match.MatchState == MatchState.Completed.ToInt())
+                await _redisCacheService.RemoveAsync(CachingConfigs.RunningMatchKey, CachingConfigs.RedisConnectionForApp);
+
+            if (match.MatchState != MatchState.Completed.ToInt()) return;
             _completedMatchService.Enqueue(new Models.Ticket.CompletedMatchInQueueModel
             {
                 MatchId = matchId,
                 IsDraft = false
             });
-            await _redisCacheService.RemoveAsync(CachingConfigs.RunningMatchKey, CachingConfigs.RedisConnectionForApp);
         }
 
         private void InternalValidationNorthernRegion(Data.Entities.Match match, List<Models.Prize.PrizeModel> prizes, Region region)

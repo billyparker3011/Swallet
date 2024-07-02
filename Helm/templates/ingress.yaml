@@ -24,7 +24,7 @@ spec:
                 number: {{ $.Values.Port }}
           pathType: Prefix
   {{- end }}
-  {{- if eq .Values.environment "prod" }}
+  {{- if ne .Values.environment "dev" }}
   {{- $application := index .Values.applications .Values.applicationName }}
   {{- range $custom_domain := $application.custom_domains }}
   - host: {{ $custom_domain }}
@@ -45,7 +45,7 @@ spec:
     - {{ include "host" (dict "Release" $.Release "domain" $domain) }}
     secretName: {{ include "host" (dict "Release" $.Release "domain" $domain) }}-tls
   {{- end }}
-  {{- if eq .Values.environment "prod" }}
+  {{- if ne .Values.environment "dev" }}
   {{- range $custom_domain := $application.custom_domains }}
   - hosts:
     - {{ $custom_domain }}
