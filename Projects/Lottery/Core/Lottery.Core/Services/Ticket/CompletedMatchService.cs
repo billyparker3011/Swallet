@@ -282,13 +282,11 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                 i++;
             }
 
-            if (i >= 1000)
-            {
-                lotteryUow.SaveChanges();
-                i = 0;
-            }
-        }
+            if (i < _completedMatchOption.HowManyTicketsWillSaveChange) continue;
 
+            lotteryUow.SaveChanges();
+            i = 0;
+        }
         lotteryUow.SaveChanges();
     }
 

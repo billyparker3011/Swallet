@@ -6,5 +6,6 @@
 
         public int IntervalInMilliseconds { get; set; }
         public int TopTickets { get; set; }
+        public int HowManyTicketsWillSaveChange { get; set; }
     }
 }
