@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Core\HnMicro.Core\HnMicro.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\Core\HnMicro.Framework.Data\HnMicro.Framework.Data.csproj" />
+    <ProjectReference Include="..\..\..\..\Core\HnMicro.Framework\HnMicro.Framework.csproj" />
+    <ProjectReference Include="..\..\..\..\Modules\Caching\HnMicro.Module.Caching.ByRedis\HnMicro.Module.Caching.ByRedis.csproj" />
+    <ProjectReference Include="..\..\Core\Lottery.Core\Lottery.Core.csproj" />
+    <ProjectReference Include="..\..\Core\Lottery.Data\Lottery.Data.csproj" />
+  </ItemGroup>
+
+</Project>
