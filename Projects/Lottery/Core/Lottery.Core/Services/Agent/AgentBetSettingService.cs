@@ -9,6 +9,7 @@ using Lottery.Core.Helpers;
 using Lottery.Core.Models.Agent.GetAgentBetSettings;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BetKind;
+using Lottery.Core.Repositories.Player;
 using Lottery.Core.Services.Audit;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities;
@@ -83,6 +84,7 @@ namespace Lottery.Core.Services.Agent
             var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
 
             var targetAgent = await agentRepos.FindByIdAsync(agentId) ?? throw new NotFoundException();
+            var companyOdds = await agentOddRepos.FindQuery().Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L).ToListAsync();
 
             var defaultBetSettings = new List<AgentOdd>();
             switch (targetAgent.RoleId)
@@ -114,7 +116,6 @@ namespace Lottery.Core.Services.Agent
                                                             CategoryId = x.BetKind.CategoryId,
                                                             BetKindName = x.BetKind.Name,
                                                             MinBuy = x.MinBuy,
-                                                            MaxBuy = x.MaxBuy,
                                                             ActualBuy = x.Buy,
                                                             DefaultMinBet = x.MinBet,
                                                             ActualMinBet = x.MinBet,
@@ -122,14 +123,17 @@ namespace Lottery.Core.Services.Agent
                                                             ActualMaxBet = x.MaxBet,
                                                             DefaultMaxPerNumber = x.MaxPerNumber,
                                                             ActualMaxPerNumber = x.MaxPerNumber,
+                                                            IsDisabled = x.BetKindId == 9
                                                         })
                                                         .ToListAsync();
             foreach(var item in agentBetSettings)
             {
+                var maxBuy = companyOdds.FirstOrDefault(x => x.BetKindId == item.BetKindId)?.MaxBuy;
                 var defaultBetKindItem = defaultBetSettings.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 item.DefaultMinBet = defaultBetKindItem != null ? defaultBetKindItem.MinBet : item.DefaultMinBet;
                 item.DefaultMaxBet = defaultBetKindItem != null ? defaultBetKindItem.MaxBet : item.DefaultMaxBet;
                 item.DefaultMaxPerNumber = defaultBetKindItem != null ? defaultBetKindItem.MaxPerNumber : item.DefaultMaxPerNumber;
+                item.MaxBuy = maxBuy ?? decimal.Zero;
                 item.RegionName = EnumCategoryHelper.GetEnumRegionInformation((Region)item.RegionId)?.Name;
                 item.CategoryName = EnumCategoryHelper.GetEnumCategoryInformation((Category)item.CategoryId)?.Name;
             }
@@ -143,7 +147,9 @@ namespace Lottery.Core.Services.Agent
         {
             //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
+            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
             var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
 
             var targetAgentId = ClientContext.Agent.ParentId != 0L ? ClientContext.Agent.ParentId : ClientContext.Agent.AgentId;
@@ -154,8 +160,14 @@ namespace Lottery.Core.Services.Agent
             var updateBetKindIds = updateItems.Select(x => x.BetKindId).ToList();
             var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentBetSettings = await agentOddRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var childAgentIds = clientAgent.RoleId != Role.Agent.ToInt() ? await agentRepos.FindQueryBy(x => x.RoleId > clientAgent.RoleId).Select(x => x.AgentId).ToListAsync() : new List<long> { clientAgent.AgentId };
+            var childPlayerIds = await playerRepos.FindQueryBy(x => childAgentIds.Contains(x.SupermasterId) || childAgentIds.Contains(x.MasterId) || childAgentIds.Contains(x.AgentId)).Select(x => x.PlayerId).ToListAsync();
+            var existedChildAgentBetSettings = await agentOddRepos.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var existedChildPlayerBetSettings = await playerOddRepository.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentBetSettings.ForEach(item =>
             {
+                var updatedChildAgentItems = existedChildAgentBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
+                var updatedChildPlayerItems = existedChildPlayerBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if(updateItem != null)
                 {
@@ -168,6 +180,30 @@ namespace Lottery.Core.Services.Agent
                     item.MaxBet = updateItem.ActualMaxBet;
                     item.MaxPerNumber = updateItem.ActualMaxPerNumber;
 
+                    // Update all children of target agent if new value of agent is lower than the oldest one
+                    updatedChildAgentItems.ForEach(childAgentItem =>
+                    {
+                        childAgentItem.Buy = item.Buy < childAgentItem.Buy ? item.Buy : childAgentItem.Buy;
+                        childAgentItem.MaxBet = item.MaxBet < childAgentItem.MaxBet ? item.MaxBet : childAgentItem.MaxBet;
+                        childAgentItem.MaxPerNumber = item.MaxPerNumber < childAgentItem.MaxPerNumber ? item.MaxPerNumber : childAgentItem.MaxPerNumber;
+                        if (childAgentItem.MaxBet > childAgentItem.MaxPerNumber)
+                        {
+                            childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
+                        }
+                    });
+
+                    updatedChildPlayerItems.ForEach(childPlayerItem =>
+                    {
+                        childPlayerItem.Buy = item.Buy < childPlayerItem.Buy ? item.Buy : childPlayerItem.Buy;
+                        childPlayerItem.MaxBet = item.MaxBet < childPlayerItem.MaxBet ? item.MaxBet : childPlayerItem.MaxBet;
+                        childPlayerItem.MaxPerNumber = item.MaxPerNumber < childPlayerItem.MaxPerNumber ? item.MaxPerNumber : childPlayerItem.MaxPerNumber;
+                        if (childPlayerItem.MaxBet > childPlayerItem.MaxPerNumber)
+                        {
+                            childPlayerItem.MaxBet = childPlayerItem.MaxPerNumber;
+                        }
+                    });
+
+                    if (oldMinBetValue == item.MinBet && oldMaxBetValue == item.MaxBet && oldMaxPerNumber == item.MaxPerNumber) return;
                     auditBetSettings.AddRange(new List<AuditSettingData>
                     {
                         new AuditSettingData

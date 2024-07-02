@@ -1403,7 +1403,9 @@ namespace Lottery.Core.Services.Agent
         public async Task UpdateAgentBetSetting(long agentId, List<AgentBetSettingDto> updateItems)
         {
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
+            var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
             var agentOddRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
+            var playerOddRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
             var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
 
             var agent = await agentRepository.FindByIdAsync(agentId) ?? throw new NotFoundException();
@@ -1412,8 +1414,14 @@ namespace Lottery.Core.Services.Agent
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
             var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentBetSettings = await agentOddRepository.FindQueryBy(x => x.AgentId == agent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var childAgentIds = agent.RoleId != Role.Agent.ToInt() ? await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId).Select(x => x.AgentId).ToListAsync() : new List<long> { agent.AgentId };
+            var childPlayerIds = await playerRepository.FindQueryBy(x => childAgentIds.Contains(x.SupermasterId) || childAgentIds.Contains(x.MasterId) || childAgentIds.Contains(x.AgentId)).Select(x => x.PlayerId).ToListAsync();
+            var existedChildAgentBetSettings = await agentOddRepository.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var existedChildPlayerBetSettings = await playerOddRepository.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentBetSettings.ForEach(item =>
             {
+                var updatedChildAgentItems = existedChildAgentBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
+                var updatedChildPlayerItems = existedChildPlayerBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
                 {
@@ -1421,10 +1429,35 @@ namespace Lottery.Core.Services.Agent
                     var oldMinBetValue = item.MinBet;
                     var oldMaxBetValue = item.MaxBet;
                     var oldMaxPerNumber = item.MaxPerNumber;
+                    item.Buy = updateItem.ActualBuy;
                     item.MinBet = updateItem.ActualMinBet;
                     item.MaxBet = updateItem.ActualMaxBet;
                     item.MaxPerNumber = updateItem.ActualMaxPerNumber;
 
+                    // Update all children of target agent if new value of agent is lower than the oldest one
+                    updatedChildAgentItems.ForEach(childAgentItem =>
+                    {
+                        childAgentItem.Buy = item.Buy < childAgentItem.Buy ? item.Buy : childAgentItem.Buy;
+                        childAgentItem.MaxBet = item.MaxBet < childAgentItem.MaxBet ? item.MaxBet : childAgentItem.MaxBet;
+                        childAgentItem.MaxPerNumber = item.MaxPerNumber < childAgentItem.MaxPerNumber ? item.MaxPerNumber : childAgentItem.MaxPerNumber;
+                        if(childAgentItem.MaxBet > childAgentItem.MaxPerNumber)
+                        {
+                            childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
+                        }
+                    });
+
+                    updatedChildPlayerItems.ForEach(childPlayerItem =>
+                    {
+                        childPlayerItem.Buy = item.Buy < childPlayerItem.Buy ? item.Buy : childPlayerItem.Buy;
+                        childPlayerItem.MaxBet = item.MaxBet < childPlayerItem.MaxBet ? item.MaxBet : childPlayerItem.MaxBet;
+                        childPlayerItem.MaxPerNumber = item.MaxPerNumber < childPlayerItem.MaxPerNumber ? item.MaxPerNumber : childPlayerItem.MaxPerNumber;
+                        if (childPlayerItem.MaxBet > childPlayerItem.MaxPerNumber)
+                        {
+                            childPlayerItem.MaxBet = childPlayerItem.MaxPerNumber;
+                        }
+                    });
+
+                    if (oldMinBetValue == item.MinBet && oldMaxBetValue == item.MaxBet && oldMaxPerNumber == item.MaxPerNumber) return;
                     auditBetSettings.AddRange(new List<AuditSettingData>
                     {
                         new AuditSettingData
@@ -1480,13 +1513,22 @@ namespace Lottery.Core.Services.Agent
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
             var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentPositionTakings = await agentPositionTakingRepository.FindQueryBy(x => x.AgentId == agent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var childAgentIds = await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId).Select(x => x.AgentId).ToListAsync();
+            var existedChildAgentPositionTakings = await agentPositionTakingRepository.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentPositionTakings.ForEach(item =>
             {
+                var updatedChildAgentItems = existedChildAgentPositionTakings.Where(x => x.BetKindId == item.BetKindId).ToList();
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
                 {
                     var oldPTValue = item.PositionTaking;
                     item.PositionTaking = updateItem.ActualPositionTaking;
+
+                    // Update all children of target agent if new value of agent is lower than the oldest one
+                    updatedChildAgentItems.ForEach(childItem =>
+                    {
+                        childItem.PositionTaking = item.PositionTaking < childItem.PositionTaking ? item.PositionTaking : childItem.PositionTaking;
+                    });
 
                     auditPositionTakings.AddRange(new List<AuditSettingData>
                     {
