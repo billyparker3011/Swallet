@@ -168,13 +168,22 @@ namespace Lottery.Core.Services.Agent
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
             var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentPositionTakings = await agentPtRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var childAgentIds = await agentRepos.FindQueryBy(x => x.RoleId > clientAgent.RoleId).Select(x => x.AgentId).ToListAsync();
+            var existedChildAgentPositionTakings = await agentPtRepos.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentPositionTakings.ForEach(item =>
             {
+                var updatedChildAgentItems = existedChildAgentPositionTakings.Where(x => x.BetKindId == item.BetKindId).ToList();
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
                 {
                     var oldPTValue = item.PositionTaking;
                     item.PositionTaking = updateItem.ActualPositionTaking;
+
+                    // Update all children of target agent if new value of agent is lower than the oldest one
+                    updatedChildAgentItems.ForEach(childItem =>
+                    {
+                        childItem.PositionTaking = item.PositionTaking < childItem.PositionTaking ? item.PositionTaking : childItem.PositionTaking;
+                    });
 
                     auditPositionTakings.AddRange(new List<AuditSettingData>
                     {
