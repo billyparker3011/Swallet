@@ -19,7 +19,7 @@ namespace Lottery.Core.Services.Agent
         Task CreateAgent(CreateAgentModel model);
         Task<GetAgentsResult> GetAgents(GetAgentsModel model);
         Task UpdateAgent(UpdateAgentModel updateModel);
-        Task<bool> CheckExistAgent(string username);
+        Task<bool> CheckExistAgent(string username, bool isSubAgent);
         Task<GetAgentCreditInfoResult> GetAgentCreditInfo(long? agentId);
         Task CreateSubAgent(CreateSubAgentModel model);
         Task<string> GetSuggestionAgentIdentifier(bool isSubAgent);

@@ -109,9 +109,9 @@ namespace Lottery.Agent.AgentService.Controllers
         }
 
         [HttpGet("agent/exists")]
-        public async Task<IActionResult> CheckExistAgent([FromQuery] string username)
+        public async Task<IActionResult> CheckExistAgent([FromQuery] string username, [FromQuery] bool isSubAgent)
         {
-            return Ok(OkResponse.Create(await _agentService.CheckExistAgent(username)));
+            return Ok(OkResponse.Create(await _agentService.CheckExistAgent(username, isSubAgent)));
         }
 
         [HttpGet("agent/credit-info")]
