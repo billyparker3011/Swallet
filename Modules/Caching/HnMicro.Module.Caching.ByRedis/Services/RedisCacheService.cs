@@ -300,7 +300,7 @@ namespace HnMicro.Module.Caching.ByRedis.Services
             return GetDatabase(to, database).SetMembers(key).ToListObject<T>().ToList();
         }
 
-        public async Task<List<T>> SetMembersAsync<T>(string key, string to = "", int database = -1) where T : class
+        public async Task<List<T>> SetMembersAsync<T>(string key, string to = "", int database = -1)
         {
             return (await GetDatabase(to, database).SetMembersAsync(key)).ToListObject<T>().ToList();
         }

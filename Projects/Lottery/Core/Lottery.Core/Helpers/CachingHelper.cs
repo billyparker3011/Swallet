@@ -139,5 +139,14 @@ namespace Lottery.Core.Helpers
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }
+
+        public static KeyOfRedisHash GetSuspendedNumbersByMatchAndBetKind(this long matchId, int betKindId)
+        {
+            return new KeyOfRedisHash
+            {
+                MainKey = string.Format(CachingConfigs.SuspendedNumbersByMatchBetKindKey, matchId, betKindId),
+                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
+            };
+        }
     }
 }

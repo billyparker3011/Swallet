@@ -36,7 +36,7 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
             return JsonConvert.DeserializeObject<T>(value.ToString());
         }
 
-        public static IEnumerable<T> ToListObject<T>(this IEnumerable<RedisValue> values) where T : class
+        public static IEnumerable<T> ToListObject<T>(this IEnumerable<RedisValue> values)
         {
             var redisValues = values as RedisValue[] ?? values.ToArray();
             return !redisValues.Any() ? null : redisValues.Select(v => v.ToObject<T>());

@@ -45,11 +45,17 @@ namespace Lottery.Core.Services.Odds
                 if (!rateStats.TryGetValue(rateStatsKey.SubKey, out string sRateStatsValue) || !decimal.TryParse(sRateStatsValue, out decimal rateStatsValue))
                     rateStatsValue = 0m;
 
+                var companyPayoutStatsKey = matchId.GetCompanyPayoutStatsKeyByMatchBetKindNumber(betKindId, i);
+                var companyPayoutStats = await _redisCacheService.HashGetFieldsAsync(companyPayoutStatsKey.MainKey, new List<string> { payoutStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!companyPayoutStats.TryGetValue(companyPayoutStatsKey.SubKey, out string sCompanyPayoutStatsValue) || !decimal.TryParse(sCompanyPayoutStatsValue, out decimal companyPayoutStatsValue))
+                    companyPayoutStatsValue = 0m;
+
                 data[i] = new OddsStatsModel
                 {
                     Payout = payoutStatsValue,
                     Point = pointStatsValue,
-                    Rate = rateStatsValue
+                    Rate = rateStatsValue,
+                    CompanyPayout = companyPayoutStatsValue
                 };
             }
             return data;

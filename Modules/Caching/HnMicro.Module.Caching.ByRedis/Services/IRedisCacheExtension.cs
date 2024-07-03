@@ -23,7 +23,7 @@ namespace HnMicro.Module.Caching.ByRedis.Services
         Task<long> SetRemoveAsync<T>(string key, List<T> values, string to = "", int database = -1);
 
         List<T> SetMembers<T>(string key, string to = "", int database = -1) where T : class;
-        Task<List<T>> SetMembersAsync<T>(string key, string to = "", int database = -1) where T : class;
+        Task<List<T>> SetMembersAsync<T>(string key, string to = "", int database = -1);
 
         bool SetContains<T>(string key, T value, string to = "", int database = -1);
         Task<bool> SetContainsAsync<T>(string key, T value, string to = "", int database = -1);
