@@ -151,6 +151,7 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
         var pointByNumbers = new Dictionary<int, decimal>();
         var payoutByNumbers = new Dictionary<int, decimal>();
         var oddsValueByNumbers = new Dictionary<int, decimal>();
+        var realPayoutByNumbers = new Dictionary<int, decimal>();
         if (model.Numbers.Count == 1)
         {
             var thisNumber = model.Numbers.First();
@@ -191,6 +192,7 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
             pointByNumbers[thisNumber.Number] = ticket.Stake;
             payoutByNumbers[thisNumber.Number] = ticket.PlayerPayout;
             oddsValueByNumbers[thisNumber.Number] = ticket.PlayerOdds.Value;
+            realPayoutByNumbers[thisNumber.Number] = _ticketProcessor.GetRealPayoutForCompany(ticket.PlayerPayout, ticket.SupermasterPt);
 
             if (thisNumber.Point < setting.MinBet || thisNumber.Point > setting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
             if (!outs.PointsByMatchAndNumbers.TryGetValue(thisNumber.Number, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
@@ -215,6 +217,7 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
                 pointByNumbers[item.Number] = item.Point;
                 payoutByNumbers[item.Number] = playerPayout;
                 oddsValueByNumbers[item.Number] = oddsByNumberDetail.Buy;
+                realPayoutByNumbers[item.Number] = _ticketProcessor.GetRealPayoutForCompany(playerPayout, ticket.SupermasterPt);
 
                 totalStake += item.Point;
                 totalPlayerPayout += playerPayout;
@@ -299,7 +302,7 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
 
         await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPlayerPayout);
         await _processTicketService.BuildPointsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
-        if (enableStats) await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers);
+        if (enableStats) await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers, realPayoutByNumbers);
 
         return (ticket, childTickets);
     }

@@ -33,29 +33,29 @@ namespace Lottery.Core.Services.Odds
                 var pointStatsKey = matchId.GetPointStatsKeyByMatchBetKindNumber(betKindId, i);
                 var pointStats = await _redisCacheService.HashGetFieldsAsync(pointStatsKey.MainKey, new List<string> { pointStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
                 if (!pointStats.TryGetValue(pointStatsKey.SubKey, out string sPointStatsValue) || !decimal.TryParse(sPointStatsValue, out decimal pointStatsValue))
-                {
                     pointStatsValue = 0m;
-                }
 
                 var payoutStatsKey = matchId.GetPayoutStatsKeyByMatchBetKindNumber(betKindId, i);
                 var payoutStats = await _redisCacheService.HashGetFieldsAsync(payoutStatsKey.MainKey, new List<string> { payoutStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
                 if (!payoutStats.TryGetValue(payoutStatsKey.SubKey, out string sPayoutStatsValue) || !decimal.TryParse(sPayoutStatsValue, out decimal payoutStatsValue))
-                {
                     payoutStatsValue = 0m;
-                }
 
                 var rateStatsKey = matchId.GetRateStatsKeyByMatchBetKindNumber(betKindId, i);
                 var rateStats = await _redisCacheService.HashGetFieldsAsync(rateStatsKey.MainKey, new List<string> { rateStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
                 if (!rateStats.TryGetValue(rateStatsKey.SubKey, out string sRateStatsValue) || !decimal.TryParse(sRateStatsValue, out decimal rateStatsValue))
-                {
                     rateStatsValue = 0m;
-                }
+
+                var companyPayoutStatsKey = matchId.GetCompanyPayoutStatsKeyByMatchBetKindNumber(betKindId, i);
+                var companyPayoutStats = await _redisCacheService.HashGetFieldsAsync(companyPayoutStatsKey.MainKey, new List<string> { payoutStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!companyPayoutStats.TryGetValue(companyPayoutStatsKey.SubKey, out string sCompanyPayoutStatsValue) || !decimal.TryParse(sCompanyPayoutStatsValue, out decimal companyPayoutStatsValue))
+                    companyPayoutStatsValue = 0m;
 
                 data[i] = new OddsStatsModel
                 {
                     Payout = payoutStatsValue,
                     Point = pointStatsValue,
-                    Rate = rateStatsValue
+                    Rate = rateStatsValue,
+                    CompanyPayout = companyPayoutStatsValue
                 };
             }
             return data;

@@ -325,8 +325,8 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
 
         await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPlayerPayout);
         await _processTicketService.BuildPointsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
-        if (enableStats) await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers);
-
+        if (enableStats)
+            await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers, realPayoutByNumbers);
         return (ticket, childTickets);
     }
 }

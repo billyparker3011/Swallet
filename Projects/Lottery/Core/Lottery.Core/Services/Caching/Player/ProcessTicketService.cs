@@ -107,9 +107,10 @@ namespace Lottery.Core.Services.Caching.Player
             }
         }
 
-        public async Task BuildStatsByMatchBetKindAndNumbers(long matchId, int betKindId, Dictionary<int, decimal> pointByNumbers, Dictionary<int, decimal> payoutByNumbers)
+        public async Task BuildStatsByMatchBetKindAndNumbers(long matchId, int betKindId, Dictionary<int, decimal> pointByNumbers, Dictionary<int, decimal> payoutByNumbers, Dictionary<int, decimal> companyPayoutByNumbers)
         {
-            //  Point
+            //  Super
+            //      Point
             foreach (var item in pointByNumbers)
             {
                 var pointStatsByMatchAndNumbersKey = matchId.GetPointStatsKeyByMatchBetKindNumber(betKindId, item.Key);
@@ -123,18 +124,32 @@ namespace Lottery.Core.Services.Caching.Player
                 }, pointStatsByMatchAndNumbersKey.TimeSpan == TimeSpan.Zero ? null : pointStatsByMatchAndNumbersKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
             }
 
-            //  Payout
+            //      Payout
             foreach (var item in payoutByNumbers)
             {
                 var payoutStatsByMatchAndNumbersKey = matchId.GetPayoutStatsKeyByMatchBetKindNumber(betKindId, item.Key);
                 var vals = await _cacheService.HashGetFieldsAsync(payoutStatsByMatchAndNumbersKey.MainKey, new List<string> { payoutStatsByMatchAndNumbersKey.SubKey }, CachingConfigs.RedisConnectionForApp);
-                if (!vals.TryGetValue(payoutStatsByMatchAndNumbersKey.SubKey, out string currentPoint) || string.IsNullOrEmpty(currentPoint) || !decimal.TryParse(currentPoint, out decimal oldPayout)) oldPayout = 0m;
+                if (!vals.TryGetValue(payoutStatsByMatchAndNumbersKey.SubKey, out string currentPayout) || string.IsNullOrEmpty(currentPayout) || !decimal.TryParse(currentPayout, out decimal oldPayout)) oldPayout = 0m;
 
                 var newPayout = oldPayout + item.Value;
                 await _cacheService.HashSetFieldsAsync(payoutStatsByMatchAndNumbersKey.MainKey, new Dictionary<string, string>
                 {
                     { payoutStatsByMatchAndNumbersKey.SubKey, newPayout.ToString() }
                 }, payoutStatsByMatchAndNumbersKey.TimeSpan == TimeSpan.Zero ? null : payoutStatsByMatchAndNumbersKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+            }
+
+            //  Company
+            foreach (var item in companyPayoutByNumbers)
+            {
+                var companyPayoutStatsByMatchAndNumbersKey = matchId.GetCompanyPayoutStatsKeyByMatchBetKindNumber(betKindId, item.Key);
+                var vals = await _cacheService.HashGetFieldsAsync(companyPayoutStatsByMatchAndNumbersKey.MainKey, new List<string> { companyPayoutStatsByMatchAndNumbersKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!vals.TryGetValue(companyPayoutStatsByMatchAndNumbersKey.SubKey, out string currentCompanyPayout) || string.IsNullOrEmpty(currentCompanyPayout) || !decimal.TryParse(currentCompanyPayout, out decimal oldPayout)) oldPayout = 0m;
+
+                var newPayout = oldPayout + item.Value;
+                await _cacheService.HashSetFieldsAsync(companyPayoutStatsByMatchAndNumbersKey.MainKey, new Dictionary<string, string>
+                {
+                    { companyPayoutStatsByMatchAndNumbersKey.SubKey, newPayout.ToString() }
+                }, companyPayoutStatsByMatchAndNumbersKey.TimeSpan == TimeSpan.Zero ? null : companyPayoutStatsByMatchAndNumbersKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
             }
         }
 

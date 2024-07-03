@@ -61,8 +61,15 @@
         public const string PayoutStatsKeyByMatchBetKindNumberMainKey = "table-payout.{0}.{1}.{2}"; //  <MatchId / 1000>.<BetKindId>.<Number>
         public const string PayoutStatsKeyByMatchBetKindNumberSubKey = "payout.{0}"; //  <MatchId % 1000>
 
+        public const string CompanyPayoutStatsKeyByMatchBetKindNumberMainKey = "table-company-payout.{0}.{1}.{2}"; //  <MatchId / 1000>.<BetKindId>.<Number>
+        public const string CompanyPayoutStatsKeyByMatchBetKindNumberSubKey = "company-payout.{0}"; //  <MatchId % 1000>
+
         public const string RateStatsKeyByMatchBetKindNumberMainKey = "table-rate.{0}.{1}.{2}"; //  <MatchId / 1000>.<BetKindId>.<Number>
         public const string RateStatsKeyByMatchBetKindNumberSubKey = "rate.{0}"; //  <MatchId % 1000>
         //  End: Stats by Match
+
+        //  Begin: Suspend Numbers
+        public const string SuspendedNumbersByMatchBetKindKey = "suspended-numbers.{0}.{1}"; //  <MatchId>.<BetKindId>
+        //  End: Suspend Numbers
     }
 }
