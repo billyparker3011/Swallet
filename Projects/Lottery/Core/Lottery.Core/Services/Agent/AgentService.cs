@@ -449,13 +449,13 @@ namespace Lottery.Core.Services.Agent
             }
         }
 
-        public async Task<bool> CheckExistAgent(string username)
+        public async Task<bool> CheckExistAgent(string username, bool isSubAgent)
         {
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
 
             var loginAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
-            if (loginAgent.RoleId == Role.Agent.ToInt())
+            if (loginAgent.RoleId == Role.Agent.ToInt() && !isSubAgent)
             {
                 return await playerRepos.CheckExistPlayer(username);
             }

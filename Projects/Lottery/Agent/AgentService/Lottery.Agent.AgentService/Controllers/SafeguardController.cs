@@ -31,7 +31,7 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpPut("reset-login-user-password")]
         public async Task<IActionResult> ResetLoginUserPassword([FromBody] ResetPasswordRequest request)
         {
-            await _securityService.ResetLoginUserPassword(request.Password, request.ConfirmPassword);
+            await _securityService.ResetLoginUserPassword(request.Password, request.ConfirmPassword, request.OldPassword);
             return Ok();
         }
 

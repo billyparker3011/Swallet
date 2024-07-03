@@ -7,6 +7,7 @@ using Lottery.Core.Helpers;
 using Lottery.Core.Models.Auth;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.UnitOfWorks;
+using Lottery.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -18,12 +19,13 @@ namespace Lottery.Core.Services.Agent
         {
         }
 
-        public async Task ResetLoginUserPassword(string password, string confirmPassword)
+        public async Task ResetLoginUserPassword(string password, string confirmPassword, string oldPassword)
         {
             var loginAgentId = ClientContext.Agent.AgentId;
             await ResetPassword(new ResetPasswordModel
             {
                 TargetId = loginAgentId,
+                OldPassword = oldPassword,
                 Password = password,
                 ConfirmPassword = confirmPassword,
                 IsSelfChange = true
@@ -51,6 +53,11 @@ namespace Lottery.Core.Services.Agent
             if (!password.Equals(confirmPassword, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewPasswordDoesnotMatch);
 
             var agent = await agentRepository.FindByIdAsync(model.TargetId) ?? throw new NotFoundException();
+            if (!string.IsNullOrEmpty(model.OldPassword))
+            {
+                var oldPassword = model.OldPassword.DecodePassword();
+                if (!agent.Password.Equals(oldPassword.Md5(), StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.OldPasswordWrong);
+            }
             if (ClientContext.Agent.RoleId != Role.Company.ToInt() && !model.IsSelfChange)
             {
                 if(agent.ParentId != 0L)

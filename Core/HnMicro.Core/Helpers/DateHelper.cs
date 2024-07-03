@@ -8,7 +8,7 @@ namespace HnMicro.Core.Helpers
         {
             var currentDate = DateTime.UtcNow;
             var expiredDate = validateDate.AddDays(30);
-            return currentDate < expiredDate;
+            return currentDate > expiredDate;
         }
 
         public static DateTime? ToDateTime(this string sDateTime, string format)

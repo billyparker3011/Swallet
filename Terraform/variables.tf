@@ -45,21 +45,25 @@ variable "zones" {
 variable "kubernetes_version" {
   type        = string
   description = "(Optional) Version of Kubernetes specified when creating the AKS managed cluster. If not specified, the latest recommended version will be used at provisioning time (but won't auto-upgrade). AKS does not require an exact patch version to be specified, minor version aliases such as 1.22 are also supported. - The minor version's latest GA patch is automatically chosen in that case. More details can be found in the documentation."
+  default     = "1.29.4"
 }
 
 variable "aks_default_node_pool_vm_size" {
   type        = string
   description = "(Required) The size of the Virtual Machine, such as Standard_DS2_v2."
+  default     = "Standard_D4s_v3"
 }
 
 variable "aks_default_node_pool_min_count" {
   type        = number
   description = "(Optional) The minimum number of nodes which should exist in this Node Pool. If specified this must be between 1 and 1000."
+  default     = 1
 }
 
 variable "aks_default_node_pool_max_count" {
   type        = number
   description = "(Optional) The maximum number of nodes which should exist in this Node Pool. If specified this must be between 1 and 1000."
+  default     = 10
 }
 
 ######################################################
