@@ -129,5 +129,15 @@ namespace Lottery.Core.Helpers
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }
+
+        public static KeyOfRedisHash GetCompanyPayoutStatsKeyByMatchBetKindNumber(this long matchId, int betKindId, int number)
+        {
+            return new KeyOfRedisHash
+            {
+                MainKey = string.Format(CachingConfigs.CompanyPayoutStatsKeyByMatchBetKindNumberMainKey, matchId / CachingConfigs.HashStructureMaxLength, betKindId, number),
+                SubKey = string.Format(CachingConfigs.CompanyPayoutStatsKeyByMatchBetKindNumberSubKey, matchId % CachingConfigs.HashStructureMaxLength),
+                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
+            };
+        }
     }
 }

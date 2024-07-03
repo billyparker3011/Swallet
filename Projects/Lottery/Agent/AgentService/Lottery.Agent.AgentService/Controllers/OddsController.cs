@@ -60,5 +60,17 @@ namespace Lottery.Agent.AgentService.Controllers
             });
             return Ok();
         }
+
+        [HttpGet("odds-table/{matchId:long}/{betKindId:int}/suspended-numbers")]
+        public async Task<IActionResult> GetSuspendedNumbers([FromRoute] long matchId, [FromRoute] int betKindId)
+        {
+            return Ok();
+        }
+
+        [HttpPost("odds-table/{matchId:long}/{betKindId:int}/suspended-numbers")]
+        public async Task<IActionResult> SuspendedNumbers([FromRoute] long matchId, [FromRoute] int betKindId, [FromBody] SuspendedNumbersRequest request)
+        {
+            return Ok();
+        }
     }
 }

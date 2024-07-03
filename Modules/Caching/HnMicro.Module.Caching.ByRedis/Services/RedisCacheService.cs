@@ -269,14 +269,20 @@ namespace HnMicro.Module.Caching.ByRedis.Services
         #endregion
 
         #region Set
-        public bool SetAdd<T>(string key, T value, string to = "", int database = -1)
+        public bool SetAdd<T>(string key, T value, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1)
         {
-            return GetDatabase(to, database).SetAdd(key, value.ToRedisValue());
+            var participantDatabase = GetDatabase(to, database);
+            var notExistedValue = participantDatabase.SetAdd(key, value.ToRedisValue());
+            if (expiredTimeInSeconds != null) participantDatabase.KeyExpire(key, expiredTimeInSeconds);
+            return notExistedValue;
         }
 
-        public async Task<bool> SetAddAsync<T>(string key, T value, string to = "", int database = -1)
+        public async Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1)
         {
-            return await GetDatabase(to, database).SetAddAsync(key, value.ToRedisValue());
+            var participantDatabase = GetDatabase(to, database);
+            var notExistedValue = await participantDatabase.SetAddAsync(key, value.ToRedisValue());
+            if (expiredTimeInSeconds != null) await participantDatabase.KeyExpireAsync(key, expiredTimeInSeconds);
+            return notExistedValue;
         }
 
         public long SetRemove<T>(string key, List<T> values, string to = "", int database = -1)
@@ -311,14 +317,20 @@ namespace HnMicro.Module.Caching.ByRedis.Services
         #endregion
 
         #region SortedSet
-        public bool SortedSetAdd(string key, string member, double score, string to = "", int database = -1)
+        public bool SortedSetAdd(string key, string member, double score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1)
         {
-            return GetDatabase(to, database).SortedSetAdd(key, member, score);
+            var participantDatabase = GetDatabase(to, database);
+            var wasAdded = participantDatabase.SortedSetAdd(key, member, score);
+            if (expiredTimeInSeconds != null) participantDatabase.KeyExpire(key, expiredTimeInSeconds);
+            return wasAdded;
         }
 
-        public async Task<bool> SortedSetAddAsync(string key, string member, double score, string to = "", int database = -1)
+        public async Task<bool> SortedSetAddAsync(string key, string member, double score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1)
         {
-            return await GetDatabase(to, database).SortedSetAddAsync(key, member, score);
+            var participantDatabase = GetDatabase(to, database);
+            var wasAdded = await GetDatabase(to, database).SortedSetAddAsync(key, member, score);
+            if (expiredTimeInSeconds != null) await participantDatabase.KeyExpireAsync(key, expiredTimeInSeconds);
+            return wasAdded;
         }
 
         public long SortedSetRemove(string key, List<string> members, string to = "", int database = -1)

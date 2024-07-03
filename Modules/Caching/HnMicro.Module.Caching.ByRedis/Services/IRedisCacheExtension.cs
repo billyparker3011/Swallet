@@ -16,8 +16,8 @@ namespace HnMicro.Module.Caching.ByRedis.Services
         #endregion
 
         #region Set
-        bool SetAdd<T>(string key, T value, string to = "", int database = -1);
-        Task<bool> SetAddAsync<T>(string key, T value, string to = "", int database = -1);
+        bool SetAdd<T>(string key, T value, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
+        Task<bool> SetAddAsync<T>(string key, T value, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
 
         long SetRemove<T>(string key, List<T> values, string to = "", int database = -1);
         Task<long> SetRemoveAsync<T>(string key, List<T> values, string to = "", int database = -1);
@@ -30,8 +30,8 @@ namespace HnMicro.Module.Caching.ByRedis.Services
         #endregion
 
         #region Sortedset
-        bool SortedSetAdd(string key, string member, double score, string to = "", int database = -1);
-        Task<bool> SortedSetAddAsync(string key, string member, double score, string to = "", int database = -1);
+        bool SortedSetAdd(string key, string member, double score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
+        Task<bool> SortedSetAddAsync(string key, string member, double score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
 
         long SortedSetRemove(string key, List<string> members, string to = "", int database = -1);
         Task<long> SortedSetRemoveAsync(string key, List<string> members, string to = "", int database = -1);
