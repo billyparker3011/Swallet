@@ -13,8 +13,8 @@ jobs:
         WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
         application: "AdjustOdd"
         repository: "adjust-odd"
-        Dockerfile: "Projects/Lottery/Tools/AdjustOddsService/Lottery.Tools.AdjustOddsService/Dockerfile"
-        AppSettings: "Projects/Lottery/Tools/AdjustOddsService/Lottery.Tools.AdjustOddsService"
+        Dockerfile: "Projects/Lottery/Tools/Lottery.Tools.AdjustOddsService/Dockerfile"
+        AppSettings: "Projects/Lottery/Tools/Lottery.Tools.AdjustOddsService"
   steps:
   - template: ../steps/Replace_AppSettings_Files.yaml
   - template: ../steps/Publish_Docker_Artifacts.yaml
