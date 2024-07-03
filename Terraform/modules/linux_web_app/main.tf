@@ -34,7 +34,8 @@ resource "azurerm_linux_web_app" "development_linux_web_app" {
   lifecycle {
     ignore_changes = [
       site_config[0].application_stack[0].docker_image_name,
-      app_settings
+      app_settings,
+      site_config
     ]
   }
 }
