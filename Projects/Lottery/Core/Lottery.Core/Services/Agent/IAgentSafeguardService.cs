@@ -7,7 +7,7 @@ namespace Lottery.Core.Services.Agent
     {
         Task ResetSercurityCode(ResetSecurityCodeModel model);
         Task ResetPassword(ResetPasswordModel model);
-        Task ResetLoginUserPassword(string password, string confirmPassword);
+        Task ResetLoginUserPassword(string password, string confirmPassword, string oldPassword);
         Task ResetLoginUserSercurityCode(string securityCode, string confirmSecurityCode);
     }
 }
