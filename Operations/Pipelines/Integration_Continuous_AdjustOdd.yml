@@ -1,0 +1,37 @@
+trigger:
+  tags:
+    include:
+    - '*'
+  branches:
+    include:
+    - main
+    - develop
+    - feature/*
+  paths:
+    exclude:
+    - "Operations/*"
+    - "Terraform/*"
+    - "Helm/*"
+  batch: true
+
+name: $(date:yyMMdd)$(rev:.rr)
+
+parameters:
+- name: Environment
+  type: string
+  default: Development
+  values:
+  - Development
+  - Testing
+  - Production
+
+pool:
+  name: Development Environment Agent Pool
+
+variables:
+- template: templates/variables/${{ parameters.Environment }}.yaml
+
+stages:
+- template: templates/stages/Publish_Artifacts_AdjustOdd.yaml
+  parameters:
+    Environment: ${{ parameters.Environment }}
