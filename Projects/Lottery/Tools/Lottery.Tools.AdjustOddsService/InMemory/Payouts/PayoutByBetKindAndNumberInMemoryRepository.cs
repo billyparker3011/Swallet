@@ -5,6 +5,11 @@ namespace Lottery.Tools.AdjustOddsService.InMemory.Payouts
 {
     public class PayoutByBetKindAndNumberInMemoryRepository : InMemoryRepository<string, PayoutByBetKindAndNumberModel>, IPayoutByBetKindAndNumberInMemoryRepository
     {
+        public PayoutByBetKindAndNumberModel FindByBetKindNumber(long matchId, int betKindId, int number)
+        {
+            return Items.Values.FirstOrDefault(f => f.MatchId == matchId && f.BetKindId == betKindId && f.Number == number);
+        }
+
         public void RemoveByMatchId(long matchId)
         {
             var items = Items.Values.Where(f => f.MatchId == matchId).ToList();

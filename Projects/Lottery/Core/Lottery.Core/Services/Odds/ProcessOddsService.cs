@@ -109,5 +109,21 @@ namespace Lottery.Core.Services.Odds
                 TotalRate = rateStatsVal
             });
         }
+
+        public void UpdateRateOfOddsValue(long matchId, int betKindId, Dictionary<int, decimal> rate)
+        {
+            foreach (var item in rate)
+            {
+                var rateStatsKey = matchId.GetRateStatsKeyByMatchBetKindNumber(betKindId, item.Key);
+                var rateStats = _redisCacheService.HashGetFields(rateStatsKey.MainKey, new List<string> { rateStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!rateStats.TryGetValue(rateStatsKey.SubKey, out string sRateStatsValue) || !decimal.TryParse(sRateStatsValue, out decimal rateStatsValue)) rateStatsValue = 0m;
+                rateStatsValue += item.Value;
+
+                _redisCacheService.HashSet(rateStatsKey.MainKey, new Dictionary<string, string>
+                {
+                    { rateStatsKey.SubKey, rateStatsValue.ToString() }
+                }, rateStatsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+            }
+        }
     }
 }

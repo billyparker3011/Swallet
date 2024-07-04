@@ -13,6 +13,6 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
 
         public abstract string Command { get; set; }
 
-        public abstract void Handler<T>(T command) where T : AdjustOddsCommand;
+        public abstract void Handler(AdjustOddsCommand command);
     }
 }
