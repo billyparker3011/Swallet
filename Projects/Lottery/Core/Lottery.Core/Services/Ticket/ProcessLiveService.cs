@@ -25,22 +25,19 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
     private readonly IPlayerSettingService _playerSettingService;
     private readonly IProcessTicketService _processTicketService;
     private readonly IOddsService _oddsService;
-    private readonly IProcessOddsService _processOddsService;
 
     public ProcessLiveService(ILogger<ProcessLiveService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         ITicketProcessor ticketProcessor,
         IAgentPositionTakingService agentPositionTakingService,
         IPlayerSettingService playerSettingService,
         IProcessTicketService processTicketService,
-        IOddsService oddsService,
-        IProcessOddsService processOddsService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+        IOddsService oddsService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _ticketProcessor = ticketProcessor;
         _agentPositionTakingService = agentPositionTakingService;
         _playerSettingService = playerSettingService;
         _processTicketService = processTicketService;
         _oddsService = oddsService;
-        _processOddsService = processOddsService;
     }
 
     public async Task<(Data.Entities.Ticket, List<Data.Entities.Ticket>)> Process(ProcessTicketModel model, ProcessValidationTicketModel processValidation)
