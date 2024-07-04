@@ -5,6 +5,7 @@ using Lottery.Core.Models.Channel;
 using Lottery.Core.Models.Match;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
+using Lottery.Core.Models.Payouts;
 using Lottery.Core.Models.Prize;
 using Lottery.Core.Models.Setting;
 
@@ -29,6 +30,18 @@ namespace Lottery.Core.Services.Pubs
         {
             if (updatedChannels.Count == 0) return;
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.ChannelConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(updatedChannels), CachingConfigs.RedisConnectionForApp);
+        }
+
+        public async Task PublishCompanyPayouts(CompanyPayoutModel model)
+        {
+            if (model == null) return;
+            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.CompanyPayoutChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
+        }
+
+        public async Task PublishCompletedMatch(CompletedMatchModel model)
+        {
+            if (model == null) return;
+            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.CompletedMatchChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }
 
         public async Task PublishDefaultOdds(List<OddsModel> defaultOdds)

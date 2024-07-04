@@ -12,6 +12,7 @@ using Lottery.Core.Services.Agent;
 using Lottery.Core.Services.Caching.Player;
 using Lottery.Core.Services.Odds;
 using Lottery.Core.Services.Player;
+using Lottery.Core.Services.Pubs;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -25,19 +26,22 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
     private readonly IPlayerSettingService _playerSettingService;
     private readonly IProcessTicketService _processTicketService;
     private readonly IProcessOddsService _processOddsService;
+    private readonly IPublishCommonService _publishCommonService;
 
     public ProcessNoneLiveService(ILogger<ProcessNoneLiveService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         ITicketProcessor ticketProcessor,
         IAgentPositionTakingService agentPositionTakingService,
         IPlayerSettingService playerSettingService,
         IProcessTicketService processTicketService,
-        IProcessOddsService processOddsService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+        IProcessOddsService processOddsService,
+        IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _ticketProcessor = ticketProcessor;
         _agentPositionTakingService = agentPositionTakingService;
         _playerSettingService = playerSettingService;
         _processTicketService = processTicketService;
         _processOddsService = processOddsService;
+        _publishCommonService = publishCommonService;
     }
 
     public async Task<(Data.Entities.Ticket, List<Data.Entities.Ticket>)> Process(ProcessTicketModel model, ProcessValidationTicketModel processValidation)
@@ -326,7 +330,15 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
         await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPlayerPayout);
         await _processTicketService.BuildPointsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
         if (enableStats)
+        {
             await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers, realPayoutByNumbers);
+            await _publishCommonService.PublishCompanyPayouts(new Models.Payouts.CompanyPayoutModel
+            {
+                MatchId = processValidation.Match.MatchId,
+                BetKindId = processValidation.BetKind.Id,
+                Payouts = realPayoutByNumbers
+            });
+        }
         return (ticket, childTickets);
     }
 }

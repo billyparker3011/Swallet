@@ -11,5 +11,7 @@
         public const string UpdateMatchChannel = "update-match-channel";
         public const string UpdateLiveOddsChannel = "update-live-odds-channel";
         public const string PublishSettingChannel = "setting-channel";
+        public const string CompanyPayoutChannel = "company-payout-channel";
+        public const string CompletedMatchChannel = "completed-match-channel";
     }
 }

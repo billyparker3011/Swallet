@@ -142,7 +142,13 @@ namespace Lottery.Core.Services.Match
             await PublishUpdateMatch(matchId);
 
             if (match.MatchState == MatchState.Refund.ToInt() || match.MatchState == MatchState.Completed.ToInt())
+            {
                 await _redisCacheService.RemoveAsync(CachingConfigs.RunningMatchKey, CachingConfigs.RedisConnectionForApp);
+                await _publishCommonService.PublishCompletedMatch(new CompletedMatchModel
+                {
+                    MatchId = match.MatchId
+                });
+            }
 
             if (match.MatchState != MatchState.Completed.ToInt()) return;
             _completedMatchService.Enqueue(new Models.Ticket.CompletedMatchInQueueModel
