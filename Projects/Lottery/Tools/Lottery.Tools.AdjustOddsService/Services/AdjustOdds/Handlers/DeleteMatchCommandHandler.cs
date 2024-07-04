@@ -12,7 +12,7 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
 
         public override string Command { get; set; } = nameof(DeleteMatchCommand);
 
-        public override void Handler<DeleteMatchCommand>(DeleteMatchCommand command)
+        public override void Handler(AdjustOddsCommand command)
         {
             using var scope = ServiceProvider.CreateScope();
             var inMemoryUow = scope.ServiceProvider.GetService<IInMemoryUnitOfWork>();
