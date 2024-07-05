@@ -2,6 +2,7 @@
 {
     public enum CategoryOfSetting
     {
-        ProcessTicket = 1
+        ProcessTicket = 1,
+        BalanceTable = 2
     }
 }
