@@ -3,6 +3,7 @@ using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Enums;
+using Lottery.Core.Helpers;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Repositories.Agent;
@@ -243,17 +244,19 @@ namespace Lottery.Core.Services.Odds
                                     ? new List<int> { Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), betKindId }
                                     : new List<int> { betKindId };
 
+            var noOfNumbers = betKindId.GetNoOfNumbers();
+
             var runningMatch = await _runningMatchService.GetRunningMatch();
             var playerOdds = await GetMixedOddsBy(playerId, betKindIds);    //  TODO: Need to read from cache
 
             var rateOfOddsValue = new Dictionary<int, Dictionary<int, decimal>>();
             if (runningMatch != null)
             {
-                rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds);
+                rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds, noOfNumbers);
             }
 
             var odds = new List<OddsByNumberModel>();
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < noOfNumbers; i++)
             {
                 if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt())
                 {

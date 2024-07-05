@@ -8,7 +8,7 @@ namespace Lottery.Core.Services.Player
 {
     public interface IBuildNavigationService : IScopedDependency
     {
-        List<Category> GetDiplayCategory();
+        List<Category> GetDisplayCategory();
         List<SubNavigationModel> GetChildrenHandler(Category category, List<BetKindModel> betKinds, MatchModel runningMatch);
     }
 }

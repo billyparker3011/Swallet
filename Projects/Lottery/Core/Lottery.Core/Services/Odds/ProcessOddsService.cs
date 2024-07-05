@@ -61,7 +61,7 @@ namespace Lottery.Core.Services.Odds
             return data;
         }
 
-        public async Task<Dictionary<int, Dictionary<int, decimal>>> GetRateOfOddsValue(long matchId, List<int> betKindIds)
+        public async Task<Dictionary<int, Dictionary<int, decimal>>> GetRateOfOddsValue(long matchId, List<int> betKindIds, int noOfNumbers = 100)
         {
             var data = new Dictionary<int, Dictionary<int, decimal>>();
             foreach (var betKindId in betKindIds)
@@ -71,10 +71,10 @@ namespace Lottery.Core.Services.Odds
             return data;
         }
 
-        private async Task<Dictionary<int, decimal>> GetRateOfOddsValueBetKind(long matchId, int betKindId)
+        private async Task<Dictionary<int, decimal>> GetRateOfOddsValueBetKind(long matchId, int betKindId, int noOfNumbers = 100)
         {
             var data = new Dictionary<int, decimal>();
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < noOfNumbers; i++)
             {
                 var rateStatsKey = matchId.GetRateStatsKeyByMatchBetKindNumber(betKindId, i);
                 var rateStats = await _redisCacheService.HashGetFieldsAsync(rateStatsKey.MainKey, new List<string> { rateStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
