@@ -33,6 +33,8 @@ parameters:
   displayName: Agent Portal Build Number
 - name: PlayerPortalBuildNumber
   displayName: Player Portal Build Number
+- name: AdjustOddBuildNumber
+  displayName: Adjust Odd Build Number
 
 variables:
 - template: ci/variables/${{ parameters.Environment }}.yaml
@@ -54,3 +56,4 @@ stages:
     TicketBuildNumber: ${{ parameters.TicketBuildNumber }}
     AgentPortalBuildNumber: ${{ parameters.AgentPortalBuildNumber }}
     PlayerPortalBuildNumber: ${{ parameters.PlayerPortalBuildNumber }}
+    AdjustOddBuildNumber: ${{ parameters.AdjustOddBuildNumber}}

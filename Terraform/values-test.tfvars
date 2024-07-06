@@ -81,6 +81,13 @@ linux_web_apps = [
     app_settings = {
       ASPNETCORE_ENVIRONMENT = "Development"
     }
+  },
+  {
+    name              = "app-hnx-adjust-odd-test-southeastasia"
+    docker_image_name = "adjust-odd"
+    app_settings = {
+      ASPNETCORE_ENVIRONMENT = "Development"
+    }
   }
 ]
 

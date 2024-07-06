@@ -21,6 +21,8 @@ parameters:
   type: string
 - name: PlayerPortalBuildNumber
   type: string
+- name: AdjustOddBuildNumber
+  displayName: Adjust Odd Build Number
 
 jobs:
 - job: HelmUpgrade
@@ -56,6 +58,9 @@ jobs:
       PlayerPortal:
         applicationName: "player-portal"
         applicationBuildNo: ${{ parameters.PlayerPortalBuildNumber }}
+      AdjustOdd:
+        applicationName: "adjust-odd"
+        applicationBuildNo: ${{ parameters.AdjustOddBuildNumber }}
   steps:
   - template: ../steps/KubectlInstaller.yaml
   - template: ../steps/HelmInstaller.yaml

@@ -169,3 +169,18 @@ applications:
     config:
       RedisConnections: "#{RedisConnections}#"
       DatabaseConnectionString: "#{DatabaseConnectionString}#"
+  adjust-odd:
+    domains:
+      - svgo247.cc
+    minReplicas: 1
+    maxReplicas: 3
+    image: "crhnxtestsoutheastasia.azurecr.io/adjust-odd"
+    resources:
+      limits:
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    config:
+      RedisConnections: "#{RedisConnections}#"
+      DatabaseConnectionString: "#{DatabaseConnectionString}#"
