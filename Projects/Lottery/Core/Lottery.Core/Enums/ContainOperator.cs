@@ -1,6 +1,6 @@
 ﻿namespace Lottery.Core.Enums
 {
-    public enum ContainNumberOperator
+    public enum ContainOperator
     {
         And = 0,
         Or = 1
