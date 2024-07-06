@@ -496,11 +496,24 @@ namespace Lottery.Core.Services.Agent
         {
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
-            if (clientAgent.RoleId == Role.Company.ToInt()) return string.Empty;
+            if (clientAgent.RoleId == Role.Company.ToInt() && !isSubAgent) return string.Empty;
             var allSubAgents = isSubAgent ? await agentRepos.FindByAsync(x => x.ParentId == clientAgent.AgentId && x.RoleId == clientAgent.RoleId)
-                                          : await agentRepos.FindByAsync(x => x.ParentId == 0 && x.RoleId == clientAgent.RoleId + 1);
+                                          : await GetAllAdjacentChildAgent(agentRepos, clientAgent);
             var usernameIdentifies = allSubAgents.Select(x => x.Username.Substring(x.Username.Length - 2, 2)).ToList();
             return isSubAgent ? usernameIdentifies.GetNextDoubleNumerics() : usernameIdentifies.GetNextDoubleCharacters();
+        }
+
+        private async Task<IEnumerable<Data.Entities.Agent>> GetAllAdjacentChildAgent(IAgentRepository agentRepos, Data.Entities.Agent clientAgent)
+        {
+            switch (clientAgent.RoleId)
+            {
+                case (int)Role.Supermaster:
+                    return await agentRepos.FindByAsync(x => x.ParentId == 0 && x.RoleId == clientAgent.RoleId + 1 && x.SupermasterId == clientAgent.AgentId);
+                case (int)Role.Master:
+                    return await agentRepos.FindByAsync(x => x.ParentId == 0 && x.RoleId == clientAgent.RoleId + 1 && x.MasterId == clientAgent.AgentId);
+                default:
+                    return new List<Data.Entities.Agent>();
+            }
         }
 
         public async Task<GetAgentDashBoardResult> GetAgentDashBoard()
