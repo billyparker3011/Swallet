@@ -9,6 +9,7 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public abstract class AbstractBetKindProcessor : IBetKindProcessor
 {
+    protected const int NoOfSelectedNumbersExceed = 512;
     protected IServiceProvider ServiceProvider;
 
     protected AbstractBetKindProcessor(IServiceProvider serviceProvider)

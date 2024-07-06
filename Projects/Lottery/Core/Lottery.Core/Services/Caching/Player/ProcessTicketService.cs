@@ -213,10 +213,10 @@ namespace Lottery.Core.Services.Caching.Player
             return player != null ? player.Credit : 0m;
         }
 
-        public async Task<Dictionary<int, decimal>> GetMatchPlayerOddsByBetKindAndNumbers(long playerId, decimal defaultOddsValue, long matchId, int betKindId, List<int> numbers)
+        public async Task<Dictionary<int, decimal>> GetMatchPlayerOddsByBetKindAndNumbers(long playerId, decimal defaultOddsValue, long matchId, int betKindId, List<int> numbers, int noOfNumbers = 100)
         {
             var odds = new Dictionary<int, decimal>();
-            for (var i = 0; i < 100; i++) odds[i] = defaultOddsValue;
+            for (var i = 0; i < noOfNumbers; i++) odds[i] = defaultOddsValue;
 
             foreach (var number in numbers)
             {
@@ -276,15 +276,15 @@ namespace Lottery.Core.Services.Caching.Player
             return dataOdds;
         }
 
-        public async Task<AgentOddsForProcessModel> GetAgentOdds(int betKindId, long supermasterId, long masterId, long agentId)
+        public async Task<AgentOddsForProcessModel> GetAgentOdds(int betKindId, long supermasterId, long masterId, long agentId, int noOfNumbers = 100)
         {
             var agentOdds = await _oddService.GetAgentOddsBy(betKindId, new List<long> { supermasterId, masterId, agentId });
-            var dictAgentOdds = CalculateAgentOdds(agentId, agentOdds);
-            var dictMasterOdds = CalculateAgentOdds(masterId, agentOdds);
-            var dictSupermasterOdds = CalculateAgentOdds(supermasterId, agentOdds);
+            var dictAgentOdds = CalculateAgentOdds(agentId, agentOdds, noOfNumbers);
+            var dictMasterOdds = CalculateAgentOdds(masterId, agentOdds, noOfNumbers);
+            var dictSupermasterOdds = CalculateAgentOdds(supermasterId, agentOdds, noOfNumbers);
             return new AgentOddsForProcessModel
             {
-                CompanyOdds = await GetCompanyOdds(betKindId),
+                CompanyOdds = await GetCompanyOdds(betKindId, noOfNumbers),
                 SupermasterOdds = dictSupermasterOdds,
                 MasterOdds = dictMasterOdds,
                 AgentOdds = dictAgentOdds
@@ -306,22 +306,22 @@ namespace Lottery.Core.Services.Caching.Player
             return companyOdds;
         }
 
-        private async Task<Dictionary<int, decimal>> GetCompanyOdds(int betKindId)
+        private async Task<Dictionary<int, decimal>> GetCompanyOdds(int betKindId, int noOfNumbers = 100)
         {
             var defaultOddsRepository = _inMemoryUnitOfWork.GetRepository<IDefaultOddsInMemoryRepository>();
             var defaultOddsOfBetKind = defaultOddsRepository.FindBy(f => f.BetKindId == betKindId).FirstOrDefault();
             if (defaultOddsOfBetKind == null) defaultOddsOfBetKind = (await _oddService.GetDefaultOddsByBetKind(new List<int> { betKindId })).FirstOrDefault();
             if (defaultOddsOfBetKind == null) return new Dictionary<int, decimal>();
             var companyOdds = new Dictionary<int, decimal>();
-            for (var i = 0; i < 100; i++) companyOdds[i] = defaultOddsOfBetKind.Buy;
+            for (var i = 0; i < noOfNumbers; i++) companyOdds[i] = defaultOddsOfBetKind.Buy;
             return companyOdds;
         }
 
-        private Dictionary<int, decimal> CalculateAgentOdds(long agentId, List<OddsModel> agentOdds)
+        private Dictionary<int, decimal> CalculateAgentOdds(long agentId, List<OddsModel> agentOdds, int noOfNumbers = 100)
         {
             var dataOdds = new Dictionary<int, decimal>();
             var oddValue = agentOdds.FirstOrDefault(f => f.AgentId == agentId);
-            for (var i = 0; i < 100; i++) dataOdds[i] = oddValue.Buy;
+            for (var i = 0; i < noOfNumbers; i++) dataOdds[i] = oddValue.Buy;
             return dataOdds;
         }
 
