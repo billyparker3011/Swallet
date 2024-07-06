@@ -148,7 +148,7 @@ namespace Lottery.Core.Services.Player
             return handler(betKinds, runningMatch);
         }
 
-        public List<Category> GetDiplayCategory()
+        public List<Category> GetDisplayCategory()
         {
             return new() { Category.FirstNorthern, Category.SecondNorthern, Category.Southern18A, Category.Southern18A18B };
         }

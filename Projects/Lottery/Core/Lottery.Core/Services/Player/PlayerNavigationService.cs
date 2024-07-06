@@ -36,7 +36,7 @@ namespace Lottery.Core.Services.Player
             var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
             var betKinds = betKindInMemoryRepository.FindBy(f => true).ToList();
 
-            var displayCategory = _buildNavigationService.GetDiplayCategory();
+            var displayCategory = _buildNavigationService.GetDisplayCategory();
 
             var categoryInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ICategoryInMemoryRepository>();
             var categories = categoryInMemoryRepository.FindBy(f => displayCategory.Contains(f.Id)).OrderBy(f => f.OrderBy).ToList();

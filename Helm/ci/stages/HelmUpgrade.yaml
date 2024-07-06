@@ -21,6 +21,8 @@ parameters:
   type: string
 - name: PlayerPortalBuildNumber
   type: string
+- name: AdjustOddBuildNumber
+  displayName: Adjust Odd Build Number
 
 stages:
 - stage: HelmUpgrade
@@ -43,3 +45,4 @@ stages:
       TicketBuildNumber: ${{ parameters.TicketBuildNumber }}
       AgentPortalBuildNumber: ${{ parameters.AgentPortalBuildNumber }}
       PlayerPortalBuildNumber: ${{ parameters.PlayerPortalBuildNumber }}
+      AdjustOddBuildNumber: ${{ parameters.AdjustOddBuildNumber}}

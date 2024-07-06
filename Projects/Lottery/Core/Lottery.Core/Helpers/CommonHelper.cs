@@ -15,6 +15,27 @@ namespace Lottery.Core.Helpers
             return state == UserState.Closed;
         }
 
+        public static int GetNoOfNumbers(this int betKindId)
+        {
+            if (betKindId == BetKind.SecondNorthern_Northern_3DDau.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Northern_3DDuoi.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Northern_3D23Lo.ToInt() ||
+
+                betKindId == BetKind.SecondNorthern_Southern_3DDau.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Southern_3DDuoi.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Southern_3D17Lo.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Southern_3D7Lo.ToInt())
+                return 1000;
+
+            if (betKindId == BetKind.SecondNorthern_Northern_4DDuoi.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Northern_4D20Lo.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Southern_4DDuoi.ToInt() ||
+                betKindId == BetKind.SecondNorthern_Southern_4D16Lo.ToInt())
+                return 10000;
+
+            return 100;
+        }
+
         public static int GetPositionOfPrize(this int prize, int position)
         {
             return 10 * prize + position;
