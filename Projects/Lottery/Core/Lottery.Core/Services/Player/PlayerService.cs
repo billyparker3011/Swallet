@@ -354,7 +354,7 @@ namespace Lottery.Core.Services.Player
 
             decimal outstanding = 0m; //TODO: update later
             var agent = await agentRepos.FindByIdAsync(targetPlayer.AgentId) ?? throw new NotFoundException();
-            var availableCreditOfAgent = await playerRepos.FindQueryBy(x => x.AgentId == agent.AgentId).SumAsync(x => x.Credit);
+            var availableCreditOfAgent = await playerRepos.FindQueryBy(x => x.AgentId == agent.AgentId && x.PlayerId != playerId).SumAsync(x => x.Credit);
             
             var maxCreditToCompare = agent.MemberMaxCredit.HasValue ? Math.Min(agent.MemberMaxCredit.Value, agent.Credit - outstanding - availableCreditOfAgent) : agent.Credit - outstanding - availableCreditOfAgent;
 
