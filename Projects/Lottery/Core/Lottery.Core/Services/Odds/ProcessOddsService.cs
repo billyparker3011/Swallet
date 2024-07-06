@@ -123,6 +123,14 @@ namespace Lottery.Core.Services.Odds
                 {
                     { rateStatsKey.SubKey, rateStatsValue.ToString() }
                 }, rateStatsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+
+                _publishCommonService.PublishOddsValueSingle(new RateOfOddsValueModel
+                {
+                    BetKindId = betKindId,
+                    MatchId = matchId,
+                    Number = item.Key,
+                    TotalRate = item.Value
+                });
             }
         }
     }
