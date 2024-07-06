@@ -18,11 +18,13 @@ using Lottery.Core.Models.Agent.GetCreditBalanceDetailPopup;
 using Lottery.Core.Models.Agent.GetSubAgents;
 using Lottery.Core.Models.Agent.UpdateAgent;
 using Lottery.Core.Models.Agent.UpdateAgentCreditBalance;
+using Lottery.Core.Models.Setting;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.Services.Audit;
+using Lottery.Core.Services.Player;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -36,10 +38,15 @@ namespace Lottery.Core.Services.Agent
     public class AgentService : LotteryBaseService<AgentService>, IAgentService
     {
         private readonly IAuditService _auditService;
+        private readonly IPlayerSettingService _playerSettingService;
         private readonly CultureInfo _culture = CultureInfo.CreateSpecificCulture("de-DE");
-        public AgentService(ILogger<AgentService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow, IAuditService auditService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+
+        public AgentService(ILogger<AgentService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
+            IAuditService auditService,
+            IPlayerSettingService playerSettingService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _auditService = auditService;
+            _playerSettingService = playerSettingService;
         }
 
         public async Task CreateAgent(CreateAgentModel model)
@@ -1424,6 +1431,7 @@ namespace Lottery.Core.Services.Agent
             var agent = await agentRepository.FindByIdAsync(agentId) ?? throw new NotFoundException();
 
             var auditBetSettings = new List<AuditSettingData>();
+            var dictPlayerBetSettings = new Dictionary<long, Dictionary<int, BetSettingModel>>();
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
             var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentBetSettings = await agentOddRepository.FindQueryBy(x => x.AgentId == agent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
@@ -1453,7 +1461,7 @@ namespace Lottery.Core.Services.Agent
                         childAgentItem.Buy = item.Buy < childAgentItem.Buy ? item.Buy : childAgentItem.Buy;
                         childAgentItem.MaxBet = item.MaxBet < childAgentItem.MaxBet ? item.MaxBet : childAgentItem.MaxBet;
                         childAgentItem.MaxPerNumber = item.MaxPerNumber < childAgentItem.MaxPerNumber ? item.MaxPerNumber : childAgentItem.MaxPerNumber;
-                        if(childAgentItem.MaxBet > childAgentItem.MaxPerNumber)
+                        if (childAgentItem.MaxBet > childAgentItem.MaxPerNumber)
                         {
                             childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
                         }
@@ -1468,6 +1476,19 @@ namespace Lottery.Core.Services.Agent
                         {
                             childPlayerItem.MaxBet = childPlayerItem.MaxPerNumber;
                         }
+
+                        if (!dictPlayerBetSettings.TryGetValue(childPlayerItem.PlayerId, out Dictionary<int, BetSettingModel> playerBetSettings))
+                        {
+                            playerBetSettings = new Dictionary<int, BetSettingModel>();
+                            dictPlayerBetSettings[childPlayerItem.PlayerId] = playerBetSettings;
+                        }
+                        playerBetSettings[childPlayerItem.BetKindId] = new BetSettingModel
+                        {
+                            MinBet = childPlayerItem.MinBet,
+                            MaxBet = childPlayerItem.MaxBet,
+                            MaxPerNumber = childPlayerItem.MaxPerNumber,
+                            OddsValue = childPlayerItem.Buy
+                        };
                     });
 
                     if (oldMinBetValue == item.MinBet && oldMaxBetValue == item.MaxBet && oldMaxPerNumber == item.MaxPerNumber) return;
@@ -1511,6 +1532,16 @@ namespace Lottery.Core.Services.Agent
                     MasterId = GetAuditMasterId(agent),
                     AuditSettingDatas = auditBetSettings.OrderBy(x => x.BetKind).ToList()
                 });
+            }
+
+            await InternalProcessPlayerBetSetting(dictPlayerBetSettings);
+        }
+
+        private async Task InternalProcessPlayerBetSetting(Dictionary<long, Dictionary<int, BetSettingModel>> dictPlayerBetSettings)
+        {
+            foreach (var item in dictPlayerBetSettings)
+            {
+                await _playerSettingService.BuildSettingByBetKindCache(item.Key, item.Value);
             }
         }
 
