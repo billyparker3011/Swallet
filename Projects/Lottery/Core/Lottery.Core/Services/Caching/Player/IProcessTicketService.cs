@@ -16,9 +16,9 @@ namespace Lottery.Core.Services.Caching.Player
         Task UpdatePointsByMatchAndNumbersCache(Dictionary<long, Dictionary<long, Dictionary<int, decimal>>> points);
         Task UpdateStatsByMatchBetKindAndNumbers(Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> outs, Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> points);
 
-        Task<AgentOddsForProcessModel> GetAgentOdds(int betKindId, long supermasterId, long masterId, long agentId);
+        Task<AgentOddsForProcessModel> GetAgentOdds(int betKindId, long supermasterId, long masterId, long agentId, int noOfNumbers = 100);
         Task<AgentMixedOddsModel> GetAgentMixedOdds(int originBetKindId, List<int> subBetKindIds, long supermasterId, long masterId, long agentId);
-        Task<Dictionary<int, decimal>> GetMatchPlayerOddsByBetKindAndNumbers(long playerId, decimal defaultOddsValue, long matchId, int betKindId, List<int> numbers);
+        Task<Dictionary<int, decimal>> GetMatchPlayerOddsByBetKindAndNumbers(long playerId, decimal defaultOddsValue, long matchId, int betKindId, List<int> numbers, int noOfNumbers = 100);
         Task<Dictionary<int, decimal>> GetMatchPlayerMixedOddsByBetKind(long playerId, long matchId, int originBetKindId, Dictionary<int, BetSettingModel> subBetKinds);
         Task<(decimal, bool)> GetGivenCredit(long playerId);
 

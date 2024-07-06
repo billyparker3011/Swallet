@@ -2,8 +2,10 @@
 {
     public static class StringLotteryHelper
     {
-        public static string NormalizeNumber(this int number)
+        public static string NormalizeNumber(this int number, int noOfNumbers = 100)
         {
+            if (noOfNumbers == 1000) return number <= 9 ? $"00{number}" : number.ToString("N0");
+            else if (noOfNumbers == 10000) return number <= 9 ? $"000{number}" : number.ToString("N0");
             return number <= 9 ? $"0{number}" : number.ToString("N0");
         }
 

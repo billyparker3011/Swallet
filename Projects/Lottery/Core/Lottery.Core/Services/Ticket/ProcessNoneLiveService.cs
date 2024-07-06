@@ -46,6 +46,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
 
     public async Task<(Data.Entities.Ticket, List<Data.Entities.Ticket>)> Process(ProcessTicketModel model, ProcessValidationTicketModel processValidation)
     {
+        var noOfNumbers = model.BetKindId.GetNoOfNumbers();
         var enableStats = _ticketProcessor.EnableStats(model.BetKindId);
 
         //  Get Player OddsValue, MinBet, MaxBet, MaxPerMatch
@@ -54,14 +55,14 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
         if (refreshSettingCache) await _playerSettingService.BuildSettingByBetKindCache(processValidation.Player.PlayerId, processValidation.BetKind.Id, setting);
 
         //  Get rate of OddsValue from Company
-        var rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(processValidation.Match.MatchId, new List<int> { model.BetKindId });
+        var rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(processValidation.Match.MatchId, new List<int> { model.BetKindId }, noOfNumbers);
         if (!rateOfOddsValue.TryGetValue(model.BetKindId, out Dictionary<int, decimal> rateOfOddsValueByBetKind)) rateOfOddsValueByBetKind = new Dictionary<int, decimal>();
 
         //  Player Odds by Match, BetKind and Numbers
-        var dictPlayerOdds = await _processTicketService.GetMatchPlayerOddsByBetKindAndNumbers(processValidation.Player.PlayerId, setting.OddsValue, processValidation.Match.MatchId, processValidation.BetKind.Id, model.Numbers.Select(f => f.Number).ToList());
+        var dictPlayerOdds = await _processTicketService.GetMatchPlayerOddsByBetKindAndNumbers(processValidation.Player.PlayerId, setting.OddsValue, processValidation.Match.MatchId, processValidation.BetKind.Id, model.Numbers.Select(f => f.Number).ToList(), noOfNumbers);
 
         //  Get Company Odds, Agent Odds
-        var agentOddsValue = await _processTicketService.GetAgentOdds(processValidation.BetKind.Id, processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotReadAgentOdds);
+        var agentOddsValue = await _processTicketService.GetAgentOdds(processValidation.BetKind.Id, processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId, noOfNumbers) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotReadAgentOdds);
 
         //  Get agent position taking
         var agentPts = await _agentPositionTakingService.GetAgentPositionTakingByAgentIds(new List<int> { processValidation.BetKind.Id }, new List<long> { processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId });
@@ -160,7 +161,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
         if (model.Numbers.Count == 1)
         {
             var thisNumber = model.Numbers.First();
-            ticket.ChoosenNumbers = thisNumber.Number.NormalizeNumber();
+            ticket.ChoosenNumbers = thisNumber.Number.NormalizeNumber(noOfNumbers);
             ticket.ShowMore = false;
 
             //  Rate of odds value
@@ -230,7 +231,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
                 //  Company
                 if (!agentOddsValue.CompanyOdds.TryGetValue(item.Number, out decimal cOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
 
-                var normalizeNumber = item.Number.NormalizeNumber();
+                var normalizeNumber = item.Number.NormalizeNumber(noOfNumbers);
 
                 var playerPayout = _ticketProcessor.GetPayoutByNumber(processValidation.BetKind, item.Point, playerOddsValue + rateValue);
                 var agentPayout = _ticketProcessor.GetPayoutByNumber(processValidation.BetKind, item.Point, aOddsValue);
