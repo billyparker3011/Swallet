@@ -378,13 +378,13 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
         if (model.TicketIds.Count > 0) ticketQuery = ticketQuery.Where(f => model.TicketIds.Contains(f.TicketId));
         if (model.Username.Count > 0)
         {
-            var playerIds = await playerRepository.FindQueryBy(f => model.Username.Any(f1 => f.Username.Contains(f1.ToUpper()))).Select(f => f.PlayerId).ToListAsync();
+            var playerIds = await playerRepository.FindQuery().Where(model.Username.ContainsUsername(ContainOperator.Or)).Select(f => f.PlayerId).ToListAsync();
             if (playerIds.Count > 0) ticketQuery = ticketQuery.Where(f => playerIds.Contains(f.PlayerId));
         }
         if (model.BetKindIds.Count > 0) ticketQuery = ticketQuery.Where(f => model.BetKindIds.Contains(f.BetKindId));
         if (model.RegionId > 0) ticketQuery = ticketQuery.Where(f => f.RegionId == model.RegionId);
         if (model.ChannelId > 0) ticketQuery = ticketQuery.Where(f => f.ChannelId == model.ChannelId);
-        if (model.ChooseNumbers.Count > 0) ticketQuery = ticketQuery.Where(model.ChooseNumbers.ContainsNumbers(model.ContainNumberOperator.ToEnum<Core.Enums.ContainNumberOperator>()));
+        if (model.ChooseNumbers.Count > 0) ticketQuery = ticketQuery.Where(model.ChooseNumbers.ContainsNumbers(model.ContainNumberOperator.ToEnum<ContainOperator>()));
         if (model.States.Count > 0) ticketQuery = ticketQuery.Where(f => model.States.Contains(f.State));
         if (model.Prizes.Count > 0) ticketQuery = ticketQuery.Where(f => model.Prizes.Contains(f.Prize.Value));
         if (model.LiveStates.HasValue)
