@@ -1,10 +1,16 @@
-﻿using HnMicro.Framework.Services;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Configs;
 using Lottery.Core.Contexts;
+using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.Repositories.Agent;
+using Lottery.Core.Repositories.Announcement;
 using Lottery.Core.Repositories.Player;
+using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -15,11 +21,106 @@ namespace Lottery.Core.Services.Agent
     public class NormalizePlayerService : LotteryBaseService<NormalizePlayerService>, INormalizePlayerService
     {
         private readonly IRedisCacheService _cacheService;
+        private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
 
         public NormalizePlayerService(ILogger<NormalizePlayerService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
-            IRedisCacheService cacheService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+            IRedisCacheService cacheService,
+            IInMemoryUnitOfWork inMemoryUnitOfWork) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _cacheService = cacheService;
+            _inMemoryUnitOfWork = inMemoryUnitOfWork;
+        }
+
+        public async Task DeleteSupermaster(long supermasterId)
+        {
+            var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
+            var betKinds = betKindInMemoryRepository.GetAll().ToList();
+
+            var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
+            var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
+
+            var agents = await agentRepository.FindQueryBy(f => f.AgentId == supermasterId || f.SupermasterId == supermasterId || f.ParentId == supermasterId).ToListAsync();
+            var agentIds = agents.Select(f => f.AgentId).ToList();
+
+            var agentAuditRepository = LotteryUow.GetRepository<IAgentAuditRepository>();
+            var agentAudits = await agentAuditRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+
+            var agentOddsRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
+            var agentOdds = await agentOddsRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+
+            var agentPositionTakingRepository = LotteryUow.GetRepository<IAgentPositionTakingRepository>();
+            var agentPositionTakings = await agentPositionTakingRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+
+            var agentSessionRepository = LotteryUow.GetRepository<IAgentSessionRepository>();
+            var agentSessions = await agentSessionRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+
+            var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
+            var tickets = await ticketRepository.FindQueryBy(f => agentIds.Contains(f.SupermasterId)).ToListAsync();
+
+            var agentAnnouncementRepository = LotteryUow.GetRepository<IAgentAnnouncementRepository>();
+            var agentAnnouncements = await agentAnnouncementRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+
+            var players = await playerRepository.FindQueryBy(f => f.SupermasterId == supermasterId).ToListAsync();
+            var playerIds = players.Select(f => f.PlayerId).ToList();
+
+            var playerAnnouncementRepository = LotteryUow.GetRepository<IPlayerAnnouncementRepository>();
+            var playerAnnouncements = await playerAnnouncementRepository.FindQueryBy(f => playerIds.Contains(f.PlayerId)).ToListAsync();
+
+            var playerAuditRepository = LotteryUow.GetRepository<IPlayerAuditRepository>();
+            var playerAudits = await playerAuditRepository.FindQueryBy(f => playerIds.Contains(f.PlayerId)).ToListAsync();
+
+            var playerOddsRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
+            var playerOdds = await playerOddsRepository.FindQueryBy(f => playerIds.Contains(f.PlayerId)).ToListAsync();
+
+            var playerSessionRepository = LotteryUow.GetRepository<IPlayerSessionRepository>();
+            var playerSessions = await playerSessionRepository.FindQueryBy(f => playerIds.Contains(f.PlayerId)).ToListAsync();
+
+            foreach (var item in agents)
+            {
+                var sessionKey = item.RoleId.GetSessionKeyByRole(item.AgentId);
+                await _cacheService.RemoveAsync(sessionKey, CachingConfigs.RedisConnectionForApp);
+            }
+
+            foreach (var item in players)
+            {
+                var sessionKey = Role.Player.ToInt().GetSessionKeyByRole(item.PlayerId);
+                await _cacheService.RemoveAsync(sessionKey, CachingConfigs.RedisConnectionForApp);
+
+                var givenCreditKey = item.PlayerId.GetPlayerGivenCredit();
+                await _cacheService.HashDeleteFieldsAsync(givenCreditKey.MainKey, new List<string> { givenCreditKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+
+                foreach (var itemBetKind in betKinds)
+                {
+                    var betKindKey = item.PlayerId.GetMaxPerNumberPlayer(itemBetKind.Id);
+                    await _cacheService.HashDeleteFieldsAsync(betKindKey.MainKey, new List<string> { betKindKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+
+                    var maxBetKey = item.PlayerId.GetMaxBetPlayer(itemBetKind.Id);
+                    await _cacheService.HashDeleteFieldsAsync(maxBetKey.MainKey, new List<string> { maxBetKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+
+                    var minBetKey = item.PlayerId.GetMinBetPlayer(itemBetKind.Id);
+                    await _cacheService.HashDeleteFieldsAsync(minBetKey.MainKey, new List<string> { minBetKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+
+                    var oddsKey = item.PlayerId.GetPlayerOddsByBetKind(itemBetKind.Id);
+                    await _cacheService.HashDeleteFieldsAsync(oddsKey.MainKey, new List<string> { oddsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                }
+            }
+
+            foreach (var item in playerAnnouncements) playerAnnouncementRepository.Delete(item);
+            foreach (var item in playerAudits) playerAuditRepository.Delete(item);
+            foreach (var item in playerOdds) playerOddsRepository.Delete(item);
+            foreach (var item in playerSessions) playerSessionRepository.Delete(item);
+            foreach (var item in players) playerRepository.Delete(item);
+
+            foreach (var item in agentAudits) agentAuditRepository.Delete(item);
+            foreach (var item in agentOdds) agentOddsRepository.Delete(item);
+            foreach (var item in agentPositionTakings) agentPositionTakingRepository.Delete(item);
+            foreach (var item in agentSessions) agentSessionRepository.Delete(item);
+            foreach (var item in tickets) ticketRepository.Delete(item);
+            foreach (var item in agentAnnouncements) agentAnnouncementRepository.Delete(item);
+
+            foreach (var item in agents) agentRepository.Delete(item);
+
+            await LotteryUow.SaveChangesAsync();
         }
 
         public async Task NormalizePlayerBySupermaster(List<long> supermasterIds)
