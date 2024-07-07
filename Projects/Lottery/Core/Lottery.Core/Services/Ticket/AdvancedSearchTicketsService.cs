@@ -379,7 +379,7 @@ public class AdvancedSearchTicketsService : LotteryBaseService<AdvancedSearchTic
         if (model.Username.Count > 0)
         {
             var playerIds = await playerRepository.FindQuery().Where(model.Username.ContainsUsername(ContainOperator.Or)).Select(f => f.PlayerId).ToListAsync();
-            if (playerIds.Count > 0) ticketQuery = ticketQuery.Where(f => playerIds.Contains(f.PlayerId));
+            ticketQuery = ticketQuery.Where(f => playerIds.Contains(f.PlayerId));
         }
         if (model.BetKindIds.Count > 0) ticketQuery = ticketQuery.Where(f => model.BetKindIds.Contains(f.BetKindId));
         if (model.RegionId > 0) ticketQuery = ticketQuery.Where(f => f.RegionId == model.RegionId);

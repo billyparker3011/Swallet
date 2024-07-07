@@ -8,6 +8,7 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Channel;
+using Lottery.Core.InMemory.Prize;
 using Lottery.Core.Models.Match;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
@@ -91,6 +92,10 @@ namespace Lottery.Core.Services.Match
             var channelIds = match.MatchResults.Select(f => f.ChannelId).ToList();
             var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
             var channels = channelInMemoryRepository.FindBy(f => channelIds.Contains(f.Id)).ToList();
+
+            var prizeInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IPrizeInMemoryRepository>();
+            var prizes = prizeInMemoryRepository.GetAll().ToList();
+
             var resultsByRegion = new Dictionary<int, List<ResultByRegionModel>>();
             foreach (var item in match.MatchResults)
             {
@@ -103,6 +108,11 @@ namespace Lottery.Core.Services.Match
                 if (itemChannel == null) continue;
 
                 var detailResults = DeserializeResults(item.Results);
+                detailResults.ForEach(f =>
+                {
+                    var prize = prizes.FirstOrDefault(f1 => f1.RegionId == item.RegionId && f1.PrizeId == f.Prize);
+                    f.PrizeName = prize != null ? prize.Name : string.Empty;
+                });
                 var noOfRemainingNumbers = CountNoOfRemainingNumbers(item.RegionId, detailResults);
 
                 resultsByRegionDetail.Add(new ResultByRegionModel

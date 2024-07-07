@@ -32,6 +32,13 @@ namespace Lottery.Agent.AgentService.Controllers
             _normalizePlayerService = normalizePlayerService;
         }
 
+        [HttpGet("delete-supermaster"), LotteryAuthorize(Permission.MemberInformation.FullControl)]
+        public async Task<IActionResult> DeleteSupermaster([FromQuery] long supermasterId)
+        {
+            await _normalizePlayerService.DeleteSupermaster(supermasterId);
+            return Ok();
+        }
+
         [HttpGet("normalize-players"), LotteryAuthorize(Permission.Management.DefaultBetSetting)]
         public async Task<IActionResult> NormalizePlayerBySupermaster([FromQuery] List<long> supermasterIds)
         {

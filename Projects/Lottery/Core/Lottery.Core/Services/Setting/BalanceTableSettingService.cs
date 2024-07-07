@@ -5,9 +5,11 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.Setting;
 using Lottery.Core.Enums;
 using Lottery.Core.Localizations;
+using Lottery.Core.Models.Setting;
 using Lottery.Core.Models.Setting.BetKind;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.Setting;
+using Lottery.Core.Services.Pubs;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -18,8 +20,12 @@ namespace Lottery.Core.Services.Setting
 {
     public class BalanceTableSettingService : LotteryBaseService<BalanceTableSettingService>, IBalanceTableSettingService
     {
-        public BalanceTableSettingService(ILogger<BalanceTableSettingService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+        private readonly IPublishCommonService _publishCommonService;
+
+        public BalanceTableSettingService(ILogger<BalanceTableSettingService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
+            IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
+            _publishCommonService = publishCommonService;
         }
 
         public string CreateBalanceTableKey(int betKindId)
@@ -54,6 +60,14 @@ namespace Lottery.Core.Services.Setting
             }
 
             await LotteryUow.SaveChangesAsync();
+
+            await _publishCommonService.PublishSetting(new SettingModel
+            {
+                Id = existingBetKindBalanceTable.Id,
+                Category = existingBetKindBalanceTable.Category.ToEnum<CategoryOfSetting>(),
+                KeySetting = existingBetKindBalanceTable.KeySetting,
+                ValueSetting = existingBetKindBalanceTable.ValueSetting
+            });
         }
 
         public async Task<BalanceTableDto> GetBetKindBalanceTableSetting(int betKindId)

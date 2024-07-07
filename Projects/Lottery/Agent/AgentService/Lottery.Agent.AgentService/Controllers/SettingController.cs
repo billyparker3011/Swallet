@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Controllers;
+using Lottery.Agent.AgentService.Requests.Setting.BetKind;
 using Lottery.Agent.AgentService.Requests.Setting.ProcessTicket;
 using Lottery.Core.Models.Setting.BetKind;
 using Lottery.Core.Models.Setting.ProcessTicket;
