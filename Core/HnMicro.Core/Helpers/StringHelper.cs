@@ -1,5 +1,6 @@
 ﻿using HnMicro.Core.Enums;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -256,6 +257,20 @@ namespace HnMicro.Core.Helpers
         public static string GetNextDoubleNumerics(this List<string> suffix)
         {
             return suffix.GetNextDoubleBySource(_onlyNumerics);
+        }
+
+        public static bool IsValidJson(this string jsonString)
+        {
+            try
+            {
+                JObject.Parse(jsonString);
+                return true;
+            }
+            catch (JsonReaderException ex)
+            {
+                // Optional: Log or handle parsing error
+                return false;
+            }
         }
     }
 }

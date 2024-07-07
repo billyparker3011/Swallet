@@ -2,6 +2,6 @@
 {
     public class BalanceTableCommonDetailModel
     {
-        public List<BalanceTableRateModel> RateValues { get; set; }
+        public List<BalanceTableRateModel> RateValues { get; set; } = new List<BalanceTableRateModel>();
     }
 }

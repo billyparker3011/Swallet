@@ -1,5 +1,6 @@
 ﻿using HnMicro.Framework.Controllers;
 using Lottery.Agent.AgentService.Requests.Setting.ProcessTicket;
+using Lottery.Core.Models.Setting.BetKind;
 using Lottery.Core.Models.Setting.ProcessTicket;
 using Lottery.Core.Services.Setting;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,12 @@ namespace Lottery.Agent.AgentService.Controllers
     public class SettingController : HnControllerBase
     {
         private readonly IProcessTicketSettingService _processTicketSettingService;
+        private readonly IBalanceTableSettingService _balanceTableSettingService;
 
-        public SettingController(IProcessTicketSettingService processTicketSettingService)
+        public SettingController(IProcessTicketSettingService processTicketSettingService, IBalanceTableSettingService balanceTableSettingService)
         {
             _processTicketSettingService = processTicketSettingService;
+            _balanceTableSettingService = balanceTableSettingService;
         }
 
         #region Process Ticket Setting
@@ -57,6 +60,21 @@ namespace Lottery.Agent.AgentService.Controllers
         public async Task<IActionResult> GetValidationPrizeSetting([FromRoute] int betKindId)
         {
             return Ok(await _processTicketSettingService.GetValidationPrizeSetting(betKindId));
+        }
+        #endregion
+
+        #region Balance Table Setting
+        [HttpPost("balance-table/{betkindId:int}")]
+        public async Task<IActionResult> CreateOrModifyBetKindBalanceTableSetting([FromRoute] int betKindId, [FromBody] BalanceTableModel request)
+        {
+            await _balanceTableSettingService.CreateOrModifyBetKindBalanceTableSetting(betKindId, request);
+            return Ok();
+        }
+
+        [HttpGet("balance-table/{betkindId:int}")]
+        public async Task<IActionResult> GetBetKindBalanceTableSetting([FromRoute] int betKindId)
+        {
+            return Ok(await _balanceTableSettingService.GetBetKindBalanceTableSetting(betKindId));
         }
         #endregion
     }
