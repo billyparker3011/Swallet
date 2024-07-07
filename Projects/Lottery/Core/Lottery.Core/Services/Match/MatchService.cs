@@ -239,36 +239,12 @@ namespace Lottery.Core.Services.Match
             var matchRepository = LotteryUow.GetRepository<IMatchRepository>();
             var match = await matchRepository.GetMatchByKickoffTime(kickOffTime);
             if (match == null) return new ResultModel();
-
-            var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
-            var channels = channelInMemoryRepository.FindBy(f => true).ToList();
-
-            var resultByRegion = new Dictionary<int, List<ResultByRegionModel>>();
-            var matchResults = match.MatchResults.OrderBy(f => f.RegionId).ToList();
-            foreach (var item in matchResults)
-            {
-                var itemChannel = channels.FirstOrDefault(f => f.Id == item.ChannelId);
-
-                List<ResultByRegionModel> rs;
-                if (!resultByRegion.TryGetValue(item.RegionId, out rs))
-                {
-                    rs = new List<ResultByRegionModel>();
-                    resultByRegion[item.RegionId] = rs;
-                }
-
-                rs.Add(new ResultByRegionModel
-                {
-                    ChannelId = item.ChannelId,
-                    ChannelName = itemChannel != null ? itemChannel.Name : string.Empty,
-                    Prize = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeResultModel>>(item.Results)
-                });
-            }
             return new ResultModel
             {
                 MatchId = match.MatchId,
                 KickoffTime = match.KickOffTime,
                 State = match.MatchState,
-                ResultByRegion = resultByRegion
+                ResultByRegion = GetMatchResults(match)
             };
         }
 
@@ -345,6 +321,10 @@ namespace Lottery.Core.Services.Match
             var channelIds = match.MatchResults.Select(f => f.ChannelId).ToList();
             var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
             var channels = channelInMemoryRepository.FindBy(f => channelIds.Contains(f.Id)).ToList();
+
+            var prizeInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IPrizeInMemoryRepository>();
+            var prizes = prizeInMemoryRepository.GetAll().ToList();
+
             var resultsByRegion = new Dictionary<int, List<ResultByRegionModel>>();
             foreach (var item in match.MatchResults)
             {
@@ -357,6 +337,11 @@ namespace Lottery.Core.Services.Match
                 if (itemChannel == null) continue;
 
                 var detailResults = _runningMatchService.DeserializeResults(item.Results);
+                detailResults.ForEach(f =>
+                {
+                    var prize = prizes.FirstOrDefault(f1 => f1.RegionId == item.RegionId && f1.PrizeId == f.Prize);
+                    f.PrizeName = prize != null ? prize.Name : string.Empty;
+                });
                 var noOfRemainingNumbers = _runningMatchService.CountNoOfRemainingNumbers(item.RegionId, detailResults);
 
                 resultsByRegionDetail.Add(new ResultByRegionModel
