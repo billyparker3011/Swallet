@@ -2,7 +2,7 @@
 {
     public class BalanceTableNumberDetailModel
     {
-        public List<int> Numbers { get; set; }
-        public List<BalanceTableRateModel> RateValues { get; set; }
+        public List<int> Numbers { get; set; } = new List<int>();
+        public List<BalanceTableRateModel> RateValues { get; set; } = new List<BalanceTableRateModel>();
     }
 }

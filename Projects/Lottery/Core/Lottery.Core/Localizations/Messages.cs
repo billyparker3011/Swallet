@@ -66,5 +66,10 @@
         {
             public const string AnnouncementLevelIsRequired = "Announcement level is required.";
         }
+
+        public static class BalanceTableSetting
+        {
+            public const string ErrorValueBalanceTableSetting = "Value setting of balance table setting is not valid.";
+        }
     }
 }
