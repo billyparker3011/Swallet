@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.Setting;
@@ -25,7 +26,8 @@ public class FirstNorthern_Northern_DeDau_Processor : AbstractBetKindProcessor
         if (!metadata.IsLive) return 0;
 
         using var scope = ServiceProvider.CreateScope();
-        var settingInMemoryRepository = scope.ServiceProvider.GetService<ISettingInMemoryRepository>();
+        var inMemoryUow = scope.ServiceProvider.GetService<IInMemoryUnitOfWork>();
+        var settingInMemoryRepository = inMemoryUow.GetRepository<ISettingInMemoryRepository>();
         var key = $"{nameof(ValidationPrizeSettingModel)}|{BetKindId}";
         var setting = settingInMemoryRepository.FindByKey(key);
         var valSetting = setting == null || string.IsNullOrEmpty(setting.ValueSetting) ? ValidationPrizeSettingModel.CreateForBetKindEquals10() : Newtonsoft.Json.JsonConvert.DeserializeObject<ValidationPrizeSettingModel>(setting.ValueSetting);
