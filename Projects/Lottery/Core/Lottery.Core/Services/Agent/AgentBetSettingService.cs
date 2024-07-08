@@ -162,7 +162,8 @@ namespace Lottery.Core.Services.Agent
             var existedAgentBetSettings = await agentOddRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             var childAgentIds = clientAgent.RoleId != Role.Agent.ToInt() ? await agentRepos.FindQueryBy(x => x.RoleId > clientAgent.RoleId).Select(x => x.AgentId).ToListAsync() : new List<long> { clientAgent.AgentId };
             var childPlayerIds = await playerRepos.FindQueryBy(x => childAgentIds.Contains(x.SupermasterId) || childAgentIds.Contains(x.MasterId) || childAgentIds.Contains(x.AgentId)).Select(x => x.PlayerId).ToListAsync();
-            var existedChildAgentBetSettings = await agentOddRepos.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var existedChildAgentBetSettings = await agentOddRepos.FindQuery().Include(x => x.Agent).Where(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var adjacentChildAgentBetSettings = GetAdjacentChildAgentBetSettings(existedChildAgentBetSettings, clientAgent);
             var existedChildPlayerBetSettings = await playerOddRepository.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentBetSettings.ForEach(item =>
             {
@@ -190,6 +191,11 @@ namespace Lottery.Core.Services.Agent
                         {
                             childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
                         }
+                    });
+
+                    adjacentChildAgentBetSettings.ForEach(adjacentChild =>
+                    {
+                        adjacentChild.MinBuy = item.Buy;
                     });
 
                     updatedChildPlayerItems.ForEach(childPlayerItem =>
@@ -247,6 +253,20 @@ namespace Lottery.Core.Services.Agent
                 });
             }
         }
+
+        private List<AgentOdd> GetAdjacentChildAgentBetSettings(List<AgentOdd> existedChildAgentBetSettings, Data.Entities.Agent clientAgent)
+        {
+            switch (clientAgent.RoleId)
+            {
+                case (int)Role.Supermaster:
+                    return existedChildAgentBetSettings.Where(x => x.Agent.RoleId == clientAgent.RoleId + 1 && x.Agent.SupermasterId == clientAgent.AgentId).ToList();
+                case (int)Role.Master:
+                    return existedChildAgentBetSettings.Where(x => x.Agent.RoleId == clientAgent.RoleId + 1 && x.Agent.MasterId == clientAgent.AgentId).ToList();
+                default:
+                    return new List<AgentOdd>();
+            }
+        }
+
         private long GetAuditMasterId(Data.Entities.Agent targetUser)
         {
             return targetUser.RoleId is (int)Role.Agent ? targetUser.MasterId : 0;
