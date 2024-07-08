@@ -4,9 +4,9 @@
     {
         public static string NormalizeNumber(this int number, int noOfNumbers = 100)
         {
-            if (noOfNumbers == 1000) return number <= 9 ? $"00{number}" : number.ToString("N0");
-            else if (noOfNumbers == 10000) return number <= 9 ? $"000{number}" : number.ToString("N0");
-            return number <= 9 ? $"0{number}" : number.ToString("N0");
+            if (noOfNumbers == 1000) return number.ToString().PadLeft(3, '0');
+            else if (noOfNumbers == 10000) return number.ToString().PadLeft(4, '0');
+            return number.ToString().PadLeft(2, '0');
         }
 
         public static bool GetEndOfResult(this string rs, out string val, int noOfCharacter = 2)
