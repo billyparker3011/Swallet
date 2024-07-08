@@ -1024,7 +1024,9 @@ namespace Lottery.Core.Services.Agent
                                        DraftCompany = x.Sum(s => s.DraftMasterWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
-                                   }).ToListAsync();
+                                   })
+                                   .OrderBy(x => x.Username)
+                                   .ToListAsync();
             return new GetAgentWinLossSummaryResult
             {
                 AgentWinlossSummaries = agentWinlossSummaries,
@@ -1148,7 +1150,9 @@ namespace Lottery.Core.Services.Agent
                                        DraftCompany = x.Sum(s => s.DraftSupermasterWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
-                                   }).ToListAsync();
+                                   })
+                                   .OrderBy(x => x.Username)
+                                   .ToListAsync();
             return new GetAgentWinLossSummaryResult
             {
                 AgentWinlossSummaries = agentWinlossSummaries,
@@ -1285,7 +1289,9 @@ namespace Lottery.Core.Services.Agent
                                        DraftCompany = x.Sum(s => s.DraftCompanyWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
-                                   }).ToListAsync();
+                                   })
+                                   .OrderBy(x => x.Username)
+                                   .ToListAsync();
             return new GetAgentWinLossSummaryResult
             {
                 AgentWinlossSummaries = agentWinlossSummaries,
@@ -1416,6 +1422,7 @@ namespace Lottery.Core.Services.Agent
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
                                    })
+                                   .OrderBy(x => x.Username)
                                    .ToListAsync();
             return new GetAgentWinLossSummaryResult
             {
