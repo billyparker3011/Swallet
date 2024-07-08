@@ -82,14 +82,22 @@ public class FirstNorthern_Northern_LoTruot_Processor : AbstractBetKindProcessor
                 playerWinlose = item.Stake * ticket.RewardRate.Value;
             }
             child.PlayerWinLoss = playerWinlose;
+
             child.AgentWinLoss = -1 * playerWinlose * item.AgentPt;
-            child.AgentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
+            var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
+            if (agentComm < 0m) agentComm = 0m;
+            child.AgentCommission = agentComm * item.Stake;
 
             child.MasterWinLoss = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
-            child.MasterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
+            var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
+            if (masterComm < 0m) masterComm = 0m;
+            child.MasterCommission = masterComm * item.Stake;
 
             child.SupermasterWinLoss = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
-            child.SupermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
+            var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
+            if (supermasterComm < 0m) supermasterComm = 0m;
+            child.SupermasterCommission = supermasterComm * item.Stake;
+
             child.CompanyWinLoss = -1 * (1 - item.SupermasterPt) * playerWinlose;
             dataResult.Children.Add(child);
 

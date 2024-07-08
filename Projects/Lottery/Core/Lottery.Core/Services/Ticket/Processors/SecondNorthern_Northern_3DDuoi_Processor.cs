@@ -59,13 +59,19 @@ public class SecondNorthern_Northern_3DDuoi_Processor : AbstractBetKindProcessor
             }
 
             dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
-            dataResult.AgentCommission = (ticket.PlayerOdds ?? 0m - ticket.AgentOdds ?? 0m) * ticket.Stake;
+            var agentComm = (ticket.PlayerOdds ?? 0m) - (ticket.AgentOdds ?? 0m);
+            if (agentComm < 0m) agentComm = 0m;
+            dataResult.AgentCommission = agentComm * ticket.Stake;
 
             dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
-            dataResult.MasterCommission = (ticket.AgentOdds ?? 0m - ticket.MasterOdds ?? 0m) * ticket.Stake;
+            var masterComm = (ticket.AgentOdds ?? 0m) - (ticket.MasterOdds ?? 0m);
+            if (masterComm < 0m) masterComm = 0m;
+            dataResult.MasterCommission = masterComm * ticket.Stake;
 
             dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
-            dataResult.SupermasterCommission = (ticket.MasterOdds ?? 0m - ticket.SupermasterOdds ?? 0m) * ticket.Stake;
+            var supermasterComm = (ticket.MasterOdds ?? 0m) - (ticket.SupermasterOdds ?? 0m);
+            if (supermasterComm < 0m) supermasterComm = 0m;
+            dataResult.SupermasterCommission = supermasterComm * ticket.Stake;
 
             dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
         }
@@ -101,14 +107,22 @@ public class SecondNorthern_Northern_3DDuoi_Processor : AbstractBetKindProcessor
                     playerWinlose = findChooseNumbers.Count * item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
                 }
                 child.PlayerWinLoss = playerWinlose;
+
                 child.AgentWinLoss = -1 * playerWinlose * item.AgentPt;
-                child.AgentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
+                var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
+                if (agentComm < 0m) agentComm = 0m;
+                child.AgentCommission = agentComm * item.Stake;
 
                 child.MasterWinLoss = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
-                child.MasterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
+                var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
+                if (masterComm < 0m) masterComm = 0m;
+                child.MasterCommission = masterComm * item.Stake;
 
                 child.SupermasterWinLoss = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
-                child.SupermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
+                var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
+                if (supermasterComm < 0m) supermasterComm = 0m;
+                child.SupermasterCommission = supermasterComm * item.Stake;
+
                 child.CompanyWinLoss = -1 * (1 - item.SupermasterPt) * playerWinlose;
                 dataResult.Children.Add(child);
 

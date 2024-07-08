@@ -54,13 +54,19 @@ public class FirstNorthern_Northern_DeDau_Processor : AbstractBetKindProcessor
                 dataResult.PlayerWinLoss = ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
 
                 dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
-                dataResult.AgentCommission = (ticket.PlayerOdds ?? 0m - ticket.AgentOdds ?? 0m) * ticket.Stake;
+                var agentComm = (ticket.PlayerOdds ?? 0m) - (ticket.AgentOdds ?? 0m);
+                if (agentComm < 0m) agentComm = 0m;
+                dataResult.AgentCommission = agentComm * ticket.Stake;
 
                 dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
-                dataResult.MasterCommission = (ticket.AgentOdds ?? 0m - ticket.MasterOdds ?? 0m) * ticket.Stake;
+                var masterComm = (ticket.AgentOdds ?? 0m) - (ticket.MasterOdds ?? 0m);
+                if (masterComm < 0m) masterComm = 0m;
+                dataResult.MasterCommission = masterComm * ticket.Stake;
 
                 dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
-                dataResult.SupermasterCommission = (ticket.MasterOdds ?? 0m - ticket.SupermasterOdds ?? 0m) * ticket.Stake;
+                var supermasterComm = (ticket.MasterOdds ?? 0m) - (ticket.SupermasterOdds ?? 0m);
+                if (supermasterComm < 0m) supermasterComm = 0m;
+                dataResult.SupermasterCommission = supermasterComm * ticket.Stake;
 
                 dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
             }
@@ -71,13 +77,19 @@ public class FirstNorthern_Northern_DeDau_Processor : AbstractBetKindProcessor
                 dataResult.PlayerWinLoss = -1 * ticket.PlayerPayout;
 
                 dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
-                dataResult.AgentCommission = (ticket.PlayerOdds ?? 0m - ticket.AgentOdds ?? 0m) * ticket.Stake;
+                var agentComm = (ticket.PlayerOdds ?? 0m) - (ticket.AgentOdds ?? 0m);
+                if (agentComm < 0m) agentComm = 0m;
+                dataResult.AgentCommission = agentComm * ticket.Stake;
 
                 dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
-                dataResult.MasterCommission = (ticket.AgentOdds ?? 0m - ticket.MasterOdds ?? 0m) * ticket.Stake;
+                var masterComm = (ticket.AgentOdds ?? 0m) - (ticket.MasterOdds ?? 0m);
+                if (masterComm < 0m) masterComm = 0m;
+                dataResult.MasterCommission = masterComm * ticket.Stake;
 
                 dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
-                dataResult.SupermasterCommission = (ticket.MasterOdds ?? 0m - ticket.SupermasterOdds ?? 0m) * ticket.Stake;
+                var supermasterComm = (ticket.MasterOdds ?? 0m) - (ticket.SupermasterOdds ?? 0m);
+                if (supermasterComm < 0m) supermasterComm = 0m;
+                dataResult.SupermasterCommission = supermasterComm * ticket.Stake;
 
                 dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
             }
@@ -136,13 +148,19 @@ public class FirstNorthern_Northern_DeDau_Processor : AbstractBetKindProcessor
                         playerWinlose = item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
 
                         agentWinlose = -1 * playerWinlose * item.AgentPt;
-                        agentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
+                        var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
+                        if (agentComm < 0m) agentComm = 0m;
+                        agentCommission = agentComm * item.Stake;
 
                         masterWinlose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
-                        masterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
+                        var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
+                        if (masterComm < 0m) masterComm = 0m;
+                        masterCommission = masterComm * item.Stake;
 
                         supermasterWinlose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
-                        supermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
+                        var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
+                        if (supermasterComm < 0m) supermasterComm = 0m;
+                        supermasterCommission = supermasterComm * item.Stake;
 
                         companyWinlose = -1 * (1 - item.SupermasterPt) * playerWinlose;
 
@@ -165,13 +183,19 @@ public class FirstNorthern_Northern_DeDau_Processor : AbstractBetKindProcessor
                         playerWinlose = -1 * item.PlayerPayout;
 
                         agentWinlose = -1 * playerWinlose * item.AgentPt;
-                        agentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
+                        var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
+                        if (agentComm < 0m) agentComm = 0m;
+                        agentCommission = agentComm * item.Stake;
 
                         masterWinlose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
-                        masterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
+                        var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
+                        if (masterComm < 0m) masterComm = 0m;
+                        masterCommission = masterComm * item.Stake;
 
                         supermasterWinlose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
-                        supermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
+                        var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
+                        if (supermasterComm < 0m) supermasterComm = 0m;
+                        supermasterCommission = supermasterComm * item.Stake;
 
                         companyWinlose = -1 * (1 - item.SupermasterPt) * playerWinlose;
 

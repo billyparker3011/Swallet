@@ -180,20 +180,20 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                     PlayerOdds = f.PlayerOdds,
                     PlayerPayout = f.PlayerPayout,
 
-                    AgentOdds = item.AgentOdds,
-                    AgentPayout = item.AgentPayout,
-                    AgentPt = item.AgentPt,
+                    AgentOdds = f.AgentOdds,
+                    AgentPayout = f.AgentPayout,
+                    AgentPt = f.AgentPt,
 
-                    MasterOdds = item.MasterOdds,
-                    MasterPayout = item.MasterPayout,
-                    MasterPt = item.MasterPt,
+                    MasterOdds = f.MasterOdds,
+                    MasterPayout = f.MasterPayout,
+                    MasterPt = f.MasterPt,
 
-                    SupermasterOdds = item.SupermasterOdds,
-                    SupermasterPayout = item.SupermasterPayout,
-                    SupermasterPt = item.SupermasterPt,
+                    SupermasterOdds = f.SupermasterOdds,
+                    SupermasterPayout = f.SupermasterPayout,
+                    SupermasterPt = f.SupermasterPt,
 
-                    CompanyOdds = item.CompanyOdds,
-                    CompanyPayout = item.CompanyPayout
+                    CompanyOdds = f.CompanyOdds,
+                    CompanyPayout = f.CompanyPayout
                 }).ToList()
             }, result);
             if (resultTicket == null) continue;
