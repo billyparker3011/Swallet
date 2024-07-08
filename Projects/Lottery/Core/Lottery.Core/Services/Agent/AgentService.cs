@@ -1021,7 +1021,7 @@ namespace Lottery.Core.Services.Agent
                                                        }
                                                        : null,
                                        Company = x.Sum(s => s.MasterWinLoss),
-                                       DraftCompany = x.Sum(s => s.DraftCompanyWinLoss),
+                                       DraftCompany = x.Sum(s => s.DraftMasterWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
                                    }).ToListAsync();
@@ -1036,12 +1036,17 @@ namespace Lottery.Core.Services.Agent
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftSubtotal),
                         RoleId = Role.Agent.ToInt()
                     }
                 },
-                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company),
+                TotalDraftCompany = agentWinlossSummaries.Sum(x => x.DraftCompany)
             };
         }
 
@@ -1140,7 +1145,7 @@ namespace Lottery.Core.Services.Agent
                                                        }
                                                        : null,
                                        Company = x.Sum(s => s.SupermasterWinLoss),
-                                       DraftCompany = x.Sum(s => s.DraftCompanyWinLoss),
+                                       DraftCompany = x.Sum(s => s.DraftSupermasterWinLoss),
                                        IpAddress = x.Key.IpAddress,
                                        Platform = x.Key.Platform
                                    }).ToListAsync();
@@ -1155,17 +1160,26 @@ namespace Lottery.Core.Services.Agent
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftSubtotal),
                         RoleId = Role.Agent.ToInt()
                     },
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftSubtotal),
                         RoleId = Role.Master.ToInt()
                     }
                 },
-                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company),
+                TotalDraftCompany = agentWinlossSummaries.Sum(x => x.DraftCompany)
             };
         }
 
@@ -1282,22 +1296,35 @@ namespace Lottery.Core.Services.Agent
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftSubtotal),
                         RoleId = Role.Agent.ToInt()
                     },
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftSubtotal),
                         RoleId = Role.Master.ToInt()
                     },
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.DraftSubtotal),
                         RoleId = Role.Supermaster.ToInt()
                     }
                 },
-                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company),
+                TotalDraftCompany = agentWinlossSummaries.Sum(x => x.DraftCompany)
             };
         }
 
@@ -1401,22 +1428,35 @@ namespace Lottery.Core.Services.Agent
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.AgentWinlose != null).Sum(x => x.AgentWinlose.DraftSubtotal),
                         RoleId = Role.Agent.ToInt()
                     },
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.MasterWinlose != null).Sum(x => x.MasterWinlose.DraftSubtotal),
                         RoleId = Role.Master.ToInt()
                     },
                     new() {
-                        TotalWinLose = 0m,
-                        TotalCommission = 0m,
+                        TotalWinLose = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.WinLose),
+                        TotalDraftWinLose = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.DraftWinLose),
+                        TotalCommission = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.Commission),
+                        TotalDraftCommission = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.DraftCommission),
+                        TotalSubTotal = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.Subtotal),
+                        TotalDraftSubTotal = agentWinlossSummaries.Where(x => x.SupermasterWinlose != null).Sum(x => x.SupermasterWinlose.DraftSubtotal),
                         RoleId = Role.Supermaster.ToInt()
                     }
                 },
-                TotalCompany = agentWinlossSummaries.Sum(x => x.Company)
+                TotalCompany = agentWinlossSummaries.Sum(x => x.Company),
+                TotalDraftCompany = agentWinlossSummaries.Sum(x => x.DraftCompany)
             };
         }
 
@@ -1435,9 +1475,9 @@ namespace Lottery.Core.Services.Agent
             var updateBetKindIds = updateItems.Select(x => x.BetKindId);
             var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentBetSettings = await agentOddRepository.FindQueryBy(x => x.AgentId == agent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
-            var childAgentIds = agent.RoleId != Role.Agent.ToInt() ? await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId).Select(x => x.AgentId).ToListAsync() : new List<long> { agent.AgentId };
-            var childPlayerIds = await playerRepository.FindQueryBy(x => childAgentIds.Contains(x.SupermasterId) || childAgentIds.Contains(x.MasterId) || childAgentIds.Contains(x.AgentId)).Select(x => x.PlayerId).ToListAsync();
-            var existedChildAgentBetSettings = await agentOddRepository.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var childAgentIds = await GetChildAgentIds(agentRepository, agent);
+            var childPlayerIds = await GetChildPlayerIds(playerRepository, agent);
+            var existedChildAgentBetSettings = await agentOddRepository.FindQuery().Include(x => x.Agent).Where(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             var existedChildPlayerBetSettings = await playerOddRepository.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentBetSettings.ForEach(item =>
             {
@@ -1458,13 +1498,20 @@ namespace Lottery.Core.Services.Agent
                     // Update all children of target agent if new value of agent is lower than the oldest one
                     updatedChildAgentItems.ForEach(childAgentItem =>
                     {
-                        childAgentItem.Buy = item.Buy < childAgentItem.Buy ? item.Buy : childAgentItem.Buy;
+                        // Update maxBet, maxPerNumber
                         childAgentItem.MaxBet = item.MaxBet < childAgentItem.MaxBet ? item.MaxBet : childAgentItem.MaxBet;
                         childAgentItem.MaxPerNumber = item.MaxPerNumber < childAgentItem.MaxPerNumber ? item.MaxPerNumber : childAgentItem.MaxPerNumber;
                         if (childAgentItem.MaxBet > childAgentItem.MaxPerNumber)
                         {
                             childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
                         }
+
+                        // Update minBuy, actualBuy
+                        childAgentItem.MinBuy = item.Buy;
+                        if (childAgentItem.MinBuy > childAgentItem.Buy) 
+                        {
+                            childAgentItem.Buy = childAgentItem.MinBuy;
+                        } 
                     });
 
                     updatedChildPlayerItems.ForEach(childPlayerItem =>
@@ -1535,6 +1582,47 @@ namespace Lottery.Core.Services.Agent
             }
 
             await InternalProcessPlayerBetSetting(dictPlayerBetSettings);
+        }
+
+        private async Task<List<long>> GetChildPlayerIds(IPlayerRepository playerRepository, Data.Entities.Agent agent)
+        {
+            switch (agent.RoleId)
+            {
+                case (int)Role.Supermaster:
+                    return await playerRepository.FindQueryBy(x => x.SupermasterId == agent.AgentId).Select(x => x.PlayerId).ToListAsync();
+                case (int)Role.Master:
+                    return await playerRepository.FindQueryBy(x => x.MasterId == agent.AgentId).Select(x => x.PlayerId).ToListAsync();
+                case (int)Role.Agent:
+                    return await playerRepository.FindQueryBy(x => x.AgentId == agent.AgentId).Select(x => x.PlayerId).ToListAsync();
+                default:
+                    return new List<long>();
+            }
+        }
+
+        private async Task<List<long>> GetChildAgentIds(IAgentRepository agentRepository, Data.Entities.Agent agent)
+        {
+            switch (agent.RoleId)
+            {
+                case (int)Role.Supermaster:
+                    return await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId && x.SupermasterId == agent.AgentId && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+                case (int)Role.Master:
+                    return await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId && x.MasterId == agent.AgentId && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+                default:
+                    return new List<long>();
+            }
+        }
+
+        private List<AgentOdd> GetAdjacentChildAgentBetSettings(List<AgentOdd> existedChildAgentBetSettings, Data.Entities.Agent clientAgent)
+        {
+            switch (clientAgent.RoleId)
+            {
+                case (int)Role.Supermaster:
+                    return existedChildAgentBetSettings.Where(x => x.Agent.RoleId == clientAgent.RoleId + 1 && x.Agent.SupermasterId == clientAgent.AgentId).ToList();
+                case (int)Role.Master:
+                    return existedChildAgentBetSettings.Where(x => x.Agent.RoleId == clientAgent.RoleId + 1 && x.Agent.MasterId == clientAgent.AgentId).ToList();
+                default:
+                    return new List<AgentOdd>();
+            }
         }
 
         private async Task InternalProcessPlayerBetSetting(Dictionary<long, Dictionary<int, BetSettingModel>> dictPlayerBetSettings)
