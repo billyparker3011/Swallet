@@ -43,6 +43,7 @@
             public const int ChannelIsClosed = -14;
             public const int PrizeOrPostionIsInvalid = -15;
             public const int NoOfSelectedNumbersExceed512 = -16;
+            public const int NumberIsLessThan = -17;
         }
 
         public static class Match

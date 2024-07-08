@@ -25,11 +25,5 @@ public class ProcessTicketValidator : AbstractValidator<ProcessTicketRequest>
                     context.AddFailure(Core.Localizations.Messages.Ticket.NumbersAreDuplicate);
                 }
             });
-
-        RuleForEach(f => f.Numbers)
-            .SetValidator(f =>
-            {
-                return new NumberDetailRequestValidator();
-            });
     }
 }

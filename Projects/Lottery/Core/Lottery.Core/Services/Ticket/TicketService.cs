@@ -67,6 +67,8 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
     public async Task Process(ProcessTicketModel model)
     {
+        CommonValidation(model);
+
         var processValidation = await InternalProcess(model.BetKindId);
 
         //  Validation BetKind
@@ -82,6 +84,14 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
         (var ticket2, var childTickets2) = await _processNoneLiveService.Process(model, processValidation);
         AddToAcceptedScanService(ticket2, childTickets2);
+    }
+
+    private void CommonValidation(ProcessTicketModel model)
+    {
+        var betKindId = model.BetKindId;
+        var noOfNumbers = betKindId.GetNoOfNumbers();
+        if (!model.Numbers.Any(f => f.Number > noOfNumbers)) return;
+        throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumberIsLessThan, noOfNumbers.ToString());
     }
 
     private void AddToAcceptedScanService(Data.Entities.Ticket ticket, List<Data.Entities.Ticket> childTickets)

@@ -63,12 +63,22 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
             var playerWinlose = item.ChoosenNumbers.Equals(val)
                                     ? -1 * item.PlayerPayout
                                     : item.Stake * ticket.RewardRate.Value;
+
             var agentWinlose = -1 * playerWinlose * item.AgentPt;
-            var agentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
+            var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
+            if (agentComm < 0m) agentComm = 0m;
+            var agentCommission = agentComm * item.Stake;
+
             var masterWinlose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
-            var masterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
+            var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
+            if (masterComm < 0m) masterComm = 0m;
+            var masterCommission = masterComm * item.Stake;
+
             var supermasterWinlose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
-            var supermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
+            var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
+            if (supermasterComm < 0m) supermasterComm = 0m;
+            var supermasterCommission = supermasterComm * item.Stake;
+
             var companyWinlose = -1 * (1 - item.SupermasterPt) * playerWinlose;
 
             dataResult.Children.Add(new CompletedChildrenTicketResultModel

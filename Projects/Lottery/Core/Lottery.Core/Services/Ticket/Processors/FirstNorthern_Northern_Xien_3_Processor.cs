@@ -67,26 +67,6 @@ public class FirstNorthern_Northern_Xien_3_Processor : AbstractBetKindProcessor
             if (isWon)
             {
                 //  Won
-                //var times = 0;
-                //var mixedTimes = new Dictionary<string, int>();
-                //if (timesOfFirstNumber.Count > 1)
-                //{
-                //    times += timesOfFirstNumber.Count;
-                //    mixedTimes[timesOfFirstNumber.Key] = timesOfFirstNumber.Count;
-                //}
-                //if (timesOfSecondNumber.Count > 1)
-                //{
-                //    times += timesOfSecondNumber.Count;
-                //    mixedTimes[timesOfSecondNumber.Key] = timesOfSecondNumber.Count;
-                //}
-                //if (timesOfThirdNumber.Count > 1)
-                //{
-                //    times += timesOfThirdNumber.Count;
-                //    mixedTimes[timesOfThirdNumber.Key] = timesOfThirdNumber.Count;
-                //}
-                //times = times == 0 ? 1 : times;
-                //totalPlayerWinLose = times * ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
-                //ticket.MixedTimes = Newtonsoft.Json.JsonConvert.SerializeObject(mixedTimes);
                 totalPlayerWinLose = ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
             }
             else
@@ -96,13 +76,20 @@ public class FirstNorthern_Northern_Xien_3_Processor : AbstractBetKindProcessor
             }
 
             totalAgentWinLose = -1 * totalPlayerWinLose * ticket.AgentPt;
-            totalAgentCommission = (ticket.PlayerOdds ?? 0m - ticket.AgentOdds ?? 0m) * ticket.Stake;
+            var agentComm = (ticket.PlayerOdds ?? 0m) - (ticket.AgentOdds ?? 0m);
+            if (agentComm < 0m) agentComm = 0m;
+            totalAgentCommission = agentComm * ticket.Stake;
 
             totalMasterWinLose = -1 * (ticket.MasterPt - ticket.AgentPt) * totalPlayerWinLose;
-            totalMasterCommission = (ticket.AgentOdds ?? 0m - ticket.MasterOdds ?? 0m) * ticket.Stake;
+            var masterComm = (ticket.AgentOdds ?? 0m) - (ticket.MasterOdds ?? 0m);
+            if (masterComm < 0m) masterComm = 0m;
+            totalMasterCommission = masterComm * ticket.Stake;
 
             totalSupermasterWinLose = -1 * (ticket.SupermasterPt - ticket.MasterPt) * totalPlayerWinLose;
-            totalSupermasterCommission = (ticket.MasterOdds ?? 0m - ticket.SupermasterOdds ?? 0m) * ticket.Stake;
+            var supermasterComm = (ticket.MasterOdds ?? 0m) - (ticket.SupermasterOdds ?? 0m);
+            if (supermasterComm < 0m) supermasterComm = 0m;
+            totalSupermasterCommission = supermasterComm * ticket.Stake;
+
             totalCompanyWinLose = -1 * (1 - ticket.SupermasterPt) * totalPlayerWinLose;
         }
         else
@@ -134,26 +121,6 @@ public class FirstNorthern_Northern_Xien_3_Processor : AbstractBetKindProcessor
                 {
                     //  Won
                     child.State = TicketState.Won;
-                    //var times = 0;
-                    //var mixedTimes = new Dictionary<string, int>();
-                    //if (timesOfFirstNumber.Count > 1)
-                    //{
-                    //    times += timesOfFirstNumber.Count;
-                    //    mixedTimes[timesOfFirstNumber.Key] = timesOfFirstNumber.Count;
-                    //}
-                    //if (timesOfSecondNumber.Count > 1)
-                    //{
-                    //    times += timesOfSecondNumber.Count;
-                    //    mixedTimes[timesOfSecondNumber.Key] = timesOfSecondNumber.Count;
-                    //}
-                    //if (timesOfThirdNumber.Count > 1)
-                    //{
-                    //    times += timesOfThirdNumber.Count;
-                    //    mixedTimes[timesOfThirdNumber.Key] = timesOfThirdNumber.Count;
-                    //}
-                    //times = times == 0 ? 1 : times;
-                    //playerWinlose = times * item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
-                    //child.MixedTimes = Newtonsoft.Json.JsonConvert.SerializeObject(mixedTimes);
                     playerWinlose = item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
                 }
                 else
@@ -163,14 +130,22 @@ public class FirstNorthern_Northern_Xien_3_Processor : AbstractBetKindProcessor
                     playerWinlose = -1 * item.PlayerPayout;
                 }
                 child.PlayerWinLoss = playerWinlose;
+
                 child.AgentWinLoss = -1 * playerWinlose * item.AgentPt;
-                child.AgentCommission = (item.PlayerOdds ?? 0m - item.AgentOdds ?? 0m) * item.Stake;
+                var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
+                if (agentComm < 0m) agentComm = 0m;
+                child.AgentCommission = agentComm * item.Stake;
 
                 child.MasterWinLoss = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
-                child.MasterCommission = (item.AgentOdds ?? 0m - item.MasterOdds ?? 0m) * item.Stake;
+                var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
+                if (masterComm < 0m) masterComm = 0m;
+                child.MasterCommission = masterComm * item.Stake;
 
                 child.SupermasterWinLoss = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
-                child.SupermasterCommission = (item.MasterOdds ?? 0m - item.SupermasterOdds ?? 0m) * item.Stake;
+                var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
+                if (supermasterComm < 0m) supermasterComm = 0m;
+                child.SupermasterCommission = supermasterComm * item.Stake;
+
                 child.CompanyWinLoss = -1 * (1 - item.SupermasterPt) * playerWinlose;
                 dataResult.Children.Add(child);
 
