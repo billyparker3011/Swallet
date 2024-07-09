@@ -44,6 +44,7 @@
             public const int PrizeOrPostionIsInvalid = -15;
             public const int NoOfSelectedNumbersExceed512 = -16;
             public const int NumberIsLessThan = -17;
+            public const int NumbersWasSuspended = -18;
         }
 
         public static class Match

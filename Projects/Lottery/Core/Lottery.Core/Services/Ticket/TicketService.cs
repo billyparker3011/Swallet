@@ -442,6 +442,9 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         var channelRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
         var channel = channelRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickoffTime.DayOfWeek) ?? throw new NotFoundException();
 
+        //  TODO Check numbers belong to suspended
+        //throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumbersWasSuspended, "00, 01");
+
         //  MatchResult
         var resultByChannel = matchResultDetail.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
         if (!resultByChannel.EnabledProcessTicket) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.ChannelIsClosed);
