@@ -39,7 +39,7 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
         public static IEnumerable<T> ToListObject<T>(this IEnumerable<RedisValue> values)
         {
             var redisValues = values as RedisValue[] ?? values.ToArray();
-            return !redisValues.Any() ? null : redisValues.Select(v => v.ToObject<T>());
+            return !redisValues.Any() ? new List<T>() : redisValues.Select(v => v.ToObject<T>());
         }
 
         public static HashEntry[] ToHashEntries(this Dictionary<string, string> entries)
