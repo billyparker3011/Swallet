@@ -40,6 +40,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
     private readonly IProcessOddsService _processOddsService;
     private readonly IProcessNoneLiveService _processNoneLiveService;
     private readonly IProcessLiveService _processLiveService;
+    private readonly INumberService _numberService;
 
     public TicketService(ILogger<TicketService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         IInMemoryUnitOfWork inMemoryUnitOfWork,
@@ -51,7 +52,8 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         IProcessTicketService processTicketService,
         IProcessOddsService processOddsService,
         IProcessNoneLiveService processNoneLiveService,
-        IProcessLiveService processLiveService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+        IProcessLiveService processLiveService,
+        INumberService numberService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _inMemoryUnitOfWork = inMemoryUnitOfWork;
         _runningMatchService = runningMatchService;
@@ -63,13 +65,12 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         _processOddsService = processOddsService;
         _processNoneLiveService = processNoneLiveService;
         _processLiveService = processLiveService;
+        _numberService = numberService;
     }
 
     public async Task Process(ProcessTicketModel model)
     {
-        CommonValidation(model);
-
-        var processValidation = await InternalProcess(model.BetKindId);
+        var processValidation = await InternalProcess(model.BetKindId, model.Numbers.Select(f => f.Number).ToList());
 
         //  Validation BetKind
         var errCode = _ticketProcessor.Valid(model, processValidation.Metadata);
@@ -86,14 +87,6 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         AddToAcceptedScanService(ticket2, childTickets2);
     }
 
-    private void CommonValidation(ProcessTicketModel model)
-    {
-        var betKindId = model.BetKindId;
-        var noOfNumbers = betKindId.GetNoOfNumbers();
-        if (!model.Numbers.Any(f => f.Number > noOfNumbers)) return;
-        throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumberIsLessThan, noOfNumbers.ToString());
-    }
-
     private void AddToAcceptedScanService(Data.Entities.Ticket ticket, List<Data.Entities.Ticket> childTickets)
     {
         var ticketInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ITicketInMemoryRepository>();
@@ -108,7 +101,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
     public async Task ProcessMixed(ProcessMixedTicketModel model)
     {
-        var processValidation = await InternalProcess(model.BetKindId);
+        var processValidation = await InternalProcess(model.BetKindId, model.Numbers);
 
         //  Validation BetKind
         var errCode = _ticketProcessor.ValidMixed(model, processValidation.Metadata);
@@ -414,12 +407,15 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         };
     }
 
-    private async Task<ProcessValidationTicketModel> InternalProcess(int betKindId)
+    private async Task<ProcessValidationTicketModel> InternalProcess(int betKindId, List<int> numbers)
     {
         //  Check auth
         var clientInformation = ClientContext.GetClientInformation();
         var player = ClientContext.Player;
         if (clientInformation == null || player == null || player.PlayerId <= 0L) throw new UnauthorizedException();
+
+        var noOfNumbers = betKindId.GetNoOfNumbers();
+        if (numbers.Any(f => f > noOfNumbers)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumberIsLessThan, noOfNumbers.ToString());
 
         //  Player information
         //  TODO Convert to cache
@@ -442,8 +438,13 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         var channelRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
         var channel = channelRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickoffTime.DayOfWeek) ?? throw new NotFoundException();
 
-        //  TODO Check numbers belong to suspended
-        //throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumbersWasSuspended, "00, 01");
+        //  Checking Numbers was suspended
+        var suspendedNumbers = await _numberService.GetSuspendedNumbersByMatchAndBetKind(match.MatchId, betKindId);
+        if (suspendedNumbers.Count > 0 && numbers.Any(suspendedNumbers.Contains))
+        {
+            var normalizeSuspendedNumbers = string.Join(", ", suspendedNumbers.Select(f => f.NormalizeNumber(noOfNumbers))).Trim();
+            throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumbersWasSuspended, normalizeSuspendedNumbers);
+        }
 
         //  MatchResult
         var resultByChannel = matchResultDetail.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
