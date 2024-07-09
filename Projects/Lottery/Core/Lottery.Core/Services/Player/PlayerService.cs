@@ -247,16 +247,19 @@ namespace Lottery.Core.Services.Player
                     var oldMinBetValue = item.MinBet;
                     var oldMaxBetValue = item.MaxBet;
                     var oldMaxPerNumber = item.MaxPerNumber;
+                    var oldBuy = item.Buy;
+
                     item.MinBet = updateItem.ActualMinBet;
                     item.MaxBet = updateItem.ActualMaxBet;
                     item.MaxPerNumber = updateItem.ActualMaxPerNumber;
+                    item.Buy = updateItem.ActualBuy;
 
                     dictBetSettings[item.BetKindId] = new BetSettingModel
                     {
                         MinBet = updateItem.ActualMinBet,
                         MaxBet = updateItem.ActualMaxBet,
                         MaxPerNumber = updateItem.ActualMaxPerNumber,
-                        OddsValue = item.Buy
+                        OddsValue = updateItem.ActualBuy
                     };
 
                     auditBetSettings.AddRange(new List<AuditSettingData>
@@ -281,6 +284,13 @@ namespace Lottery.Core.Services.Player
                             BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
                             OldValue = oldMaxPerNumber,
                             NewValue = item.MaxPerNumber
+                        },
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.BuyTitle,
+                            BetKind = updatedBetKinds.FirstOrDefault(x => x.Id == updateItem.BetKindId)?.Name,
+                            OldValue = oldBuy,
+                            NewValue = item.Buy
                         }
                     });
                 }
