@@ -916,7 +916,7 @@ namespace Lottery.Core.Services.Agent
                                                     ? ClientContext.Agent.AgentId
                                                     : ClientContext.Agent.ParentId;
             var loginAgent = await agentRepos.FindByIdAsync(targetAgentId) ?? throw new NotFoundException();
-            var ticketStates = selectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketState();
+            var ticketStates = selectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketWithoutRefundOrRejectState();
             switch (loginAgent.RoleId)
             {
                 case (int)Role.Company:
@@ -1347,21 +1347,26 @@ namespace Lottery.Core.Services.Agent
                                        agent.AgentSession.IpAddress,
                                        agent.AgentSession.Platform,
                                        ticket.Stake,
+                                       //   Player
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
                                        ticket.DraftPlayerWinLoss,
+                                       //   Agent
                                        ticket.AgentWinLoss,
                                        ticket.AgentCommission,
                                        ticket.DraftAgentWinLoss,
                                        ticket.DraftAgentCommission,
+                                       //   Master
                                        ticket.MasterWinLoss,
                                        ticket.MasterCommission,
                                        ticket.DraftMasterWinLoss,
                                        ticket.DraftMasterCommission,
+                                       //   Supermaster
                                        ticket.SupermasterWinLoss,
                                        ticket.SupermasterCommission,
                                        ticket.DraftSupermasterWinLoss,
                                        ticket.DraftSupermasterCommission,
+                                       //   Company
                                        ticket.CompanyWinLoss,
                                        ticket.DraftCompanyWinLoss
                                    })
@@ -1427,11 +1432,6 @@ namespace Lottery.Core.Services.Agent
             return new GetAgentWinLossSummaryResult
             {
                 AgentWinlossSummaries = agentWinlossSummaries,
-                TotalBetCount = agentWinlossSummaries.Sum(x => x.BetCount),
-                TotalPoint = agentWinlossSummaries.Sum(x => x.Point),
-                TotalPayout = agentWinlossSummaries.Sum(x => x.Payout),
-                TotalWinLose = agentWinlossSummaries.Sum(x => x.WinLose),
-                TotalDraftWinLose = agentWinlossSummaries.Sum(x => x.DraftWinLose),
                 TotalAgentWinLoseInfo = new List<TotalAgentWinLoseInfo>
                 {
                     new() {
@@ -1462,6 +1462,11 @@ namespace Lottery.Core.Services.Agent
                         RoleId = Role.Supermaster.ToInt()
                     }
                 },
+                TotalBetCount = agentWinlossSummaries.Sum(x => x.BetCount),
+                TotalPoint = agentWinlossSummaries.Sum(x => x.Point),
+                TotalPayout = agentWinlossSummaries.Sum(x => x.Payout),
+                TotalWinLose = agentWinlossSummaries.Sum(x => x.WinLose),
+                TotalDraftWinLose = agentWinlossSummaries.Sum(x => x.DraftWinLose),
                 TotalCompany = agentWinlossSummaries.Sum(x => x.Company),
                 TotalDraftCompany = agentWinlossSummaries.Sum(x => x.DraftCompany)
             };
@@ -1515,10 +1520,10 @@ namespace Lottery.Core.Services.Agent
 
                         // Update minBuy, actualBuy
                         childAgentItem.MinBuy = item.Buy;
-                        if (childAgentItem.MinBuy > childAgentItem.Buy) 
+                        if (childAgentItem.MinBuy > childAgentItem.Buy)
                         {
                             childAgentItem.Buy = childAgentItem.MinBuy;
-                        } 
+                        }
                     });
 
                     updatedChildPlayerItems.ForEach(childPlayerItem =>
