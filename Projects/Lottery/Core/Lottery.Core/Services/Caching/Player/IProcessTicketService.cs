@@ -11,6 +11,7 @@ namespace Lottery.Core.Services.Caching.Player
         Task BuildPointsByMatchAndNumbersCache(long playerId, long matchId, Dictionary<int, decimal> pointsByMatchAndNumbers, Dictionary<int, decimal> pointByNumbers);
         Task BuildOutsByMatchCache(long playerId, long matchId, decimal totalOuts);
         Task BuildStatsByMatchBetKindAndNumbers(long matchId, int betKindId, Dictionary<int, decimal> pointByNumbers, Dictionary<int, decimal> payoutByNumbers, Dictionary<int, decimal> companyPayoutByNumbers);
+        Task BuildMixedStatsByMatch(long matchId, Dictionary<int, Dictionary<string, decimal>> pointByPair, Dictionary<int, Dictionary<string, decimal>> payoutByPair, Dictionary<int, Dictionary<string, decimal>> realPayoutByPair);
 
         Task UpdateOutsByMatchCache(Dictionary<long, Dictionary<long, decimal>> downOuts);
         Task UpdatePointsByMatchAndNumbersCache(Dictionary<long, Dictionary<long, Dictionary<int, decimal>>> points);

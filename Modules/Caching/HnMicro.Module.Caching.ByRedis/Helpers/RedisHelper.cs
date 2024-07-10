@@ -78,13 +78,23 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
             return dict;
         }
 
-        public static Dictionary<string, double> ToDictionaryValue(this IEnumerable<SortedSetEntry> entries)
+        public static Dictionary<string, double> ToDictionaryValueInDouble(this IEnumerable<SortedSetEntry> entries)
         {
             var sortedSetEntries = entries as SortedSetEntry[] ?? entries.ToArray();
             if (!sortedSetEntries.Any()) return null;
 
             var dict = new Dictionary<string, double>();
             foreach (var entry in sortedSetEntries) dict[entry.Element] = entry.Score;
+            return dict;
+        }
+
+        public static Dictionary<string, decimal> ToDictionaryValueInDecimal(this IEnumerable<SortedSetEntry> entries)
+        {
+            var sortedSetEntries = entries as SortedSetEntry[] ?? entries.ToArray();
+            if (!sortedSetEntries.Any()) return null;
+
+            var dict = new Dictionary<string, decimal>();
+            foreach (var entry in sortedSetEntries) dict[entry.Element] = (decimal)entry.Score;
             return dict;
         }
     }

@@ -66,6 +66,10 @@
 
         public const string RateStatsKeyByMatchBetKindNumberMainKey = "table-rate.{0}.{1}.{2}"; //  <MatchId / 1000>.<BetKindId>.<Number>
         public const string RateStatsKeyByMatchBetKindNumberSubKey = "rate.{0}"; //  <MatchId % 1000>
+
+        public const string PointMixedStatsByMatchAndBetKindMainKey = "mixed-table-point.{0}.{1}";  //  <MatchId>.<BetKindId>
+        public const string PayoutMixedStatsByMatchAndBetKindMainKey = "mixed-table-payout.{0}.{1}";  //  <MatchId>.<BetKindId>
+        public const string CompanyPayoutMixedStatsByMatchAndBetKindMainKey = "mixed-table-company-payout.{0}.{1}";  //  <MatchId>.<BetKindId>
         //  End: Stats by Match
 
         //  Begin: Suspend Numbers

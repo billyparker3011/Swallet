@@ -40,6 +40,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
     private readonly IProcessOddsService _processOddsService;
     private readonly IProcessNoneLiveService _processNoneLiveService;
     private readonly IProcessLiveService _processLiveService;
+    private readonly INumberService _numberService;
 
     public TicketService(ILogger<TicketService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         IInMemoryUnitOfWork inMemoryUnitOfWork,
@@ -51,7 +52,8 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         IProcessTicketService processTicketService,
         IProcessOddsService processOddsService,
         IProcessNoneLiveService processNoneLiveService,
-        IProcessLiveService processLiveService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+        IProcessLiveService processLiveService,
+        INumberService numberService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _inMemoryUnitOfWork = inMemoryUnitOfWork;
         _runningMatchService = runningMatchService;
@@ -63,13 +65,12 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         _processOddsService = processOddsService;
         _processNoneLiveService = processNoneLiveService;
         _processLiveService = processLiveService;
+        _numberService = numberService;
     }
 
     public async Task Process(ProcessTicketModel model)
     {
-        CommonValidation(model);
-
-        var processValidation = await InternalProcess(model.BetKindId);
+        var processValidation = await InternalProcess(model.BetKindId, model.Numbers.Select(f => f.Number).ToList());
 
         //  Validation BetKind
         var errCode = _ticketProcessor.Valid(model, processValidation.Metadata);
@@ -86,14 +87,6 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         AddToAcceptedScanService(ticket2, childTickets2);
     }
 
-    private void CommonValidation(ProcessTicketModel model)
-    {
-        var betKindId = model.BetKindId;
-        var noOfNumbers = betKindId.GetNoOfNumbers();
-        if (!model.Numbers.Any(f => f.Number > noOfNumbers)) return;
-        throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumberIsLessThan, noOfNumbers.ToString());
-    }
-
     private void AddToAcceptedScanService(Data.Entities.Ticket ticket, List<Data.Entities.Ticket> childTickets)
     {
         var ticketInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ITicketInMemoryRepository>();
@@ -108,12 +101,13 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
     public async Task ProcessMixed(ProcessMixedTicketModel model)
     {
-        var processValidation = await InternalProcess(model.BetKindId);
+        var processValidation = await InternalProcess(model.BetKindId, model.Numbers);
 
         //  Validation BetKind
         var errCode = _ticketProcessor.ValidMixed(model, processValidation.Metadata);
         if (errCode < 0) throw new BadRequestException(errCode);
 
+        var noOfNumbers = model.BetKindId.GetNoOfNumbers();
         var enableStats = _ticketProcessor.EnableStats(model.BetKindId);
         var dictSubBetKindIds = _ticketProcessor.GetSubBetKindIds(model.BetKindId);
         var listSubBetKindIds = dictSubBetKindIds.Keys.ToList();
@@ -148,9 +142,13 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var correlationId = Guid.NewGuid();
         var numbers = model.Numbers.OrderBy(f => f).ToList();
-        var normalizedNumbers = numbers.Select(f => f.NormalizeNumber()).ToList();
+        var normalizedNumbers = JoinNumbers(numbers, noOfNumbers);
         var totalPayouts = 0m;
         var tickets = new List<Data.Entities.Ticket>();
+        //  Stats
+        var pointByPair = new Dictionary<int, Dictionary<string, decimal>>();
+        var payoutByPair = new Dictionary<int, Dictionary<string, decimal>>();
+        var realPayoutByPair = new Dictionary<int, Dictionary<string, decimal>>();
         foreach (var item in dictSubBetKindIds)
         {
             var betKindId = item.Key;
@@ -161,6 +159,10 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
             if (!agentPts.TryGetValue(betKindId, out List<AgentPositionTakingModel> positionTakings)) positionTakings = new List<AgentPositionTakingModel>();
             if (!rateOfOddsValue.TryGetValue(betKindId, out Dictionary<int, decimal> rateValue)) rateValue = new Dictionary<int, decimal>();
+
+            if (!pointByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPointByPair)) valPointByPair = new Dictionary<string, decimal>();
+            if (!payoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPayoutByPair)) valPayoutByPair = new Dictionary<string, decimal>();
+            if (!realPayoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valRealPayoutByPair)) valRealPayoutByPair = new Dictionary<string, decimal>();
 
             var subsets = new List<List<int>>();
             numbers.ToArray().GenerateCombination(noOfElements, subsets);
@@ -174,12 +176,17 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
             if (subsets.Count == 1)
             {
-                var ticket = CreateSingleTicket(correlationId, processValidation, currentBetKind, pointByBetKind, playerOddsValue, normalizedNumbers);
+                var ticket = CreateSingleTicket(correlationId, processValidation, currentBetKind, pointByBetKind, playerOddsValue, normalizedNumbers, positionTakings);
                 foreach (var number in numbers)
                 {
                     if (!outs.PointsByMatchAndNumbers.TryGetValue(number, out decimal outsByMatchAndNumberValue)) outsByMatchAndNumberValue = 0m;
                     if ((outsByMatchAndNumberValue + ticket.Stake) > betSetting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid);
                 }
+
+                valPointByPair[normalizedNumbers] = pointByBetKind;
+                valPayoutByPair[normalizedNumbers] = ticket.PlayerPayout;
+                valRealPayoutByPair[normalizedNumbers] = _ticketProcessor.GetRealPayoutForCompany(ticket.PlayerPayout, ticket.SupermasterPt);
+
                 totalPayouts += ticket.PlayerPayout;
                 ticketRepository.Add(ticket);
                 tickets.Add(ticket);
@@ -202,13 +209,19 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
                     if ((pointsByMatchAndNumberValue + number.Value) > betSetting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid);
                 }
 
-                var ticket = CreateParentTicket(correlationId, processValidation, betKindId, currentBetKind, playerOddsValue, normalizedNumbers);
+                var ticket = CreateParentTicket(correlationId, processValidation, betKindId, currentBetKind, playerOddsValue, normalizedNumbers, positionTakings);
                 var childTickets = new List<Data.Entities.Ticket>();
                 foreach (var itemSubsets in subsets)
                 {
                     var subsetNumbers = itemSubsets.OrderBy(f => f).ToList();
-                    var normalizedSubsetNumbers = subsetNumbers.Select(f => f.NormalizeNumber()).ToList();
-                    childTickets.Add(CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, normalizedSubsetNumbers));
+                    var normalizedSubsetNumbers = JoinNumbers(subsetNumbers, noOfNumbers);
+                    var childTicketItem = CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, normalizedSubsetNumbers, positionTakings);
+
+                    valPointByPair[normalizedSubsetNumbers] = pointByBetKind;
+                    valPayoutByPair[normalizedSubsetNumbers] = childTicketItem.PlayerPayout;
+                    valRealPayoutByPair[normalizedSubsetNumbers] = _ticketProcessor.GetRealPayoutForCompany(childTicketItem.PlayerPayout, childTicketItem.SupermasterPt);
+
+                    childTickets.Add(childTicketItem);
                 }
                 var subTotalPoints = childTickets.Sum(f => f.Stake);
                 var subTotalPayouts = childTickets.Sum(f => f.PlayerPayout);
@@ -232,9 +245,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
 
         await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPayouts);
 
-        //  TODO Update again...
-        //await _processTicketService.BuildOutsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatchAndNumbers, payoutByNumbers);
-        //if (enableStats) await _processTicketService.BuildStatsByMatchAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers);
+        if (enableStats) await _processTicketService.BuildMixedStatsByMatch(processValidation.Match.MatchId, pointByPair, payoutByPair, realPayoutByPair);
 
         AddToAcceptedScanMixedService(tickets);
     }
@@ -251,8 +262,20 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         }).ToList());
     }
 
-    private Data.Entities.Ticket CreateChildrenTicket(Data.Entities.Ticket parentTicket, BetKindModel betKind, decimal points, decimal playerOddsValue, List<string> normalizedNumbers)
+    private Data.Entities.Ticket CreateChildrenTicket(Data.Entities.Ticket parentTicket, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
     {
+        var agentPt = 0m;
+        var agentPostionTaking = positionTakings.Find(f => f.AgentId == parentTicket.AgentId);
+        if (agentPostionTaking != null) agentPt = agentPostionTaking.PositionTaking;
+
+        var masterPt = 0m;
+        var masterPostionTaking = positionTakings.Find(f => f.AgentId == parentTicket.MasterId);
+        if (masterPostionTaking != null) masterPt = masterPostionTaking.PositionTaking;
+
+        var supermasterPt = 0m;
+        var supermasterPostionTaking = positionTakings.Find(f => f.AgentId == parentTicket.SupermasterId);
+        if (supermasterPostionTaking != null) supermasterPt = supermasterPostionTaking.PositionTaking;
+
         return new Data.Entities.Ticket
         {
             PlayerId = parentTicket.PlayerId,
@@ -265,7 +288,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             KickOffTime = parentTicket.KickOffTime,
             RegionId = parentTicket.RegionId,
             ChannelId = parentTicket.ChannelId,
-            ChoosenNumbers = JoinNumbers(normalizedNumbers),
+            ChoosenNumbers = normalizedNumbers,
             RewardRate = betKind.Award,
             Stake = points,
             IsLive = parentTicket.IsLive,
@@ -280,16 +303,19 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             AgentPayout = 0m,
             AgentWinLoss = 0m,
             DraftAgentWinLoss = 0m,
+            AgentPt = agentPt,
             //  Master
             MasterOdds = 0m,
             MasterPayout = 0m,
             MasterWinLoss = 0m,
             DraftMasterWinLoss = 0m,
+            MasterPt = masterPt,
             //  Supermaster
             SupermasterOdds = 0m,
             SupermasterPayout = 0m,
             SupermasterWinLoss = 0m,
             DraftSupermasterWinLoss = 0m,
+            SupermasterPt = supermasterPt,
             //  Company
             CompanyOdds = 0m,
             CompanyPayout = 0m,
@@ -302,8 +328,20 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         };
     }
 
-    private Data.Entities.Ticket CreateParentTicket(Guid correlationId, ProcessValidationTicketModel processValidation, int betKindId, BetKindModel betKind, decimal playerOddsValue, List<string> normalizedNumbers)
+    private Data.Entities.Ticket CreateParentTicket(Guid correlationId, ProcessValidationTicketModel processValidation, int betKindId, BetKindModel betKind, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
     {
+        var agentPt = 0m;
+        var agentPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.AgentId);
+        if (agentPostionTaking != null) agentPt = agentPostionTaking.PositionTaking;
+
+        var masterPt = 0m;
+        var masterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.MasterId);
+        if (masterPostionTaking != null) masterPt = masterPostionTaking.PositionTaking;
+
+        var supermasterPt = 0m;
+        var supermasterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.SupermasterId);
+        if (supermasterPostionTaking != null) supermasterPt = supermasterPostionTaking.PositionTaking;
+
         return new Data.Entities.Ticket
         {
             PlayerId = processValidation.Player.PlayerId,
@@ -316,7 +354,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             KickOffTime = processValidation.Match.KickoffTime,
             RegionId = processValidation.BetKind.RegionId,
             ChannelId = processValidation.Channel.Id,
-            ChoosenNumbers = JoinNumbers(normalizedNumbers),
+            ChoosenNumbers = normalizedNumbers,
             ShowMore = true,
             CorrelationCode = correlationId,
             RewardRate = betKind.Award,
@@ -334,16 +372,19 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             AgentPayout = 0m,
             AgentWinLoss = 0m,
             DraftAgentWinLoss = 0m,
+            AgentPt = agentPt,
             //  Master
             MasterOdds = 0m,
             MasterPayout = 0m,
             MasterWinLoss = 0m,
             DraftMasterWinLoss = 0m,
+            MasterPt = masterPt,
             //  Supermaster
             SupermasterOdds = 0m,
             SupermasterPayout = 0m,
             SupermasterWinLoss = 0m,
             DraftSupermasterWinLoss = 0m,
+            SupermasterPt = supermasterPt,
             //  Company
             CompanyOdds = 0m,
             CompanyPayout = 0m,
@@ -358,8 +399,20 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         };
     }
 
-    private Data.Entities.Ticket CreateSingleTicket(Guid correlationId, ProcessValidationTicketModel processValidation, BetKindModel betKind, decimal points, decimal playerOddsValue, List<string> normalizedNumbers)
+    private Data.Entities.Ticket CreateSingleTicket(Guid correlationId, ProcessValidationTicketModel processValidation, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
     {
+        var agentPt = 0m;
+        var agentPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.AgentId);
+        if (agentPostionTaking != null) agentPt = agentPostionTaking.PositionTaking;
+
+        var masterPt = 0m;
+        var masterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.MasterId);
+        if (masterPostionTaking != null) masterPt = masterPostionTaking.PositionTaking;
+
+        var supermasterPt = 0m;
+        var supermasterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.SupermasterId);
+        if (supermasterPostionTaking != null) supermasterPt = supermasterPostionTaking.PositionTaking;
+
         return new Data.Entities.Ticket
         {
             PlayerId = processValidation.Player.PlayerId,
@@ -372,7 +425,7 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             KickOffTime = processValidation.Match.KickoffTime,
             RegionId = processValidation.BetKind.RegionId,
             ChannelId = processValidation.Channel.Id,
-            ChoosenNumbers = JoinNumbers(normalizedNumbers),
+            ChoosenNumbers = normalizedNumbers,
             CorrelationCode = correlationId,
             RewardRate = betKind.Award,
             Stake = points,
@@ -388,18 +441,20 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             AgentOdds = 0m,
             AgentPayout = 0m,
             AgentWinLoss = 0m,
-            AgentPt = 0m,
             DraftAgentWinLoss = 0m,
+            AgentPt = agentPt,
             //  Master
             MasterOdds = 0m,
             MasterPayout = 0m,
             MasterWinLoss = 0m,
             DraftMasterWinLoss = 0m,
+            MasterPt = masterPt,
             //  Supermaster
             SupermasterOdds = 0m,
             SupermasterPayout = 0m,
             SupermasterWinLoss = 0m,
             DraftSupermasterWinLoss = 0m,
+            SupermasterPt = supermasterPt,
             //  Company
             CompanyOdds = 0m,
             CompanyPayout = 0m,
@@ -414,12 +469,15 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         };
     }
 
-    private async Task<ProcessValidationTicketModel> InternalProcess(int betKindId)
+    private async Task<ProcessValidationTicketModel> InternalProcess(int betKindId, List<int> numbers)
     {
         //  Check auth
         var clientInformation = ClientContext.GetClientInformation();
         var player = ClientContext.Player;
         if (clientInformation == null || player == null || player.PlayerId <= 0L) throw new UnauthorizedException();
+
+        var noOfNumbers = betKindId.GetNoOfNumbers();
+        if (numbers.Any(f => f > noOfNumbers)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumberIsLessThan, noOfNumbers.ToString());
 
         //  Player information
         //  TODO Convert to cache
@@ -442,8 +500,13 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         var channelRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
         var channel = channelRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickoffTime.DayOfWeek) ?? throw new NotFoundException();
 
-        //  TODO Check numbers belong to suspended
-        //throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumbersWasSuspended, "00, 01");
+        //  Checking Numbers was suspended
+        var suspendedNumbers = await _numberService.GetSuspendedNumbersByMatchAndBetKind(match.MatchId, betKindId);
+        if (suspendedNumbers.Count > 0 && numbers.Any(suspendedNumbers.Contains))
+        {
+            var normalizeSuspendedNumbers = string.Join(", ", suspendedNumbers.Select(f => f.NormalizeNumber(noOfNumbers))).Trim();
+            throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumbersWasSuspended, normalizeSuspendedNumbers);
+        }
 
         //  MatchResult
         var resultByChannel = matchResultDetail.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
@@ -475,9 +538,9 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         };
     }
 
-    private string JoinNumbers(List<string> normalizedNumbers)
+    private string JoinNumbers(List<int> numbers, int noOfNumbers)
     {
-        return string.Join(", ", normalizedNumbers);
+        return string.Join(", ", numbers.Select(f => f.NormalizeNumber(noOfNumbers))).Trim();
     }
 
     public async Task LoadTicketsByMatch(long matchId, int top = -1)

@@ -13,12 +13,12 @@ public class FirstNorthern_Northern_LoLive_Processor : AbstractBetKindProcessor
     {
     }
 
+    public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt();
+
     public override bool EnableStats()
     {
         return true;
     }
-
-    public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt();
 
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
     {

@@ -21,6 +21,11 @@ public class FirstNorthern_Northern_DeDau_Processor : AbstractBetKindProcessor
 
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_DeDau.ToInt();
 
+    public override bool EnableStats()
+    {
+        return true;
+    }
+
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
     {
         if (!metadata.IsLive) return 0;

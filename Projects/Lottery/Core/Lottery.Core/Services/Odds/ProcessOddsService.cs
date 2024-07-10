@@ -27,8 +27,9 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<Dictionary<int, OddsStatsModel>> CalculateStats(long matchId, int betKindId)
         {
+            var noOfNumbers = betKindId.GetNoOfNumbers();
             var data = new Dictionary<int, OddsStatsModel>();
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < noOfNumbers; i++)
             {
                 var pointStatsKey = matchId.GetPointStatsKeyByMatchBetKindNumber(betKindId, i);
                 var pointStats = await _redisCacheService.HashGetFieldsAsync(pointStatsKey.MainKey, new List<string> { pointStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
