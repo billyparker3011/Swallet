@@ -1493,7 +1493,7 @@ namespace Lottery.Core.Services.Agent
             var existedChildPlayerBetSettings = await playerOddRepository.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentBetSettings.ForEach(item =>
             {
-                var updatedChildAgentItems = existedChildAgentBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
+                var updatedChildAgentItems = existedChildAgentBetSettings.Where(x => x.BetKindId == item.BetKindId).OrderBy(x => x.Agent.RoleId).ThenBy(x => x.AgentId).ToList();
                 var updatedChildPlayerItems = existedChildPlayerBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if (updateItem != null)
@@ -1508,27 +1508,48 @@ namespace Lottery.Core.Services.Agent
                     item.MaxPerNumber = updateItem.ActualMaxPerNumber;
 
                     // Update all children of target agent if new value of agent is lower than the oldest one
+                    // Update Child Agent maxBet, maxPerNumber
                     updatedChildAgentItems.ForEach(childAgentItem =>
                     {
-                        // Update maxBet, maxPerNumber
                         childAgentItem.MaxBet = item.MaxBet < childAgentItem.MaxBet ? item.MaxBet : childAgentItem.MaxBet;
                         childAgentItem.MaxPerNumber = item.MaxPerNumber < childAgentItem.MaxPerNumber ? item.MaxPerNumber : childAgentItem.MaxPerNumber;
                         if (childAgentItem.MaxBet > childAgentItem.MaxPerNumber)
                         {
                             childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
                         }
+                        
+                    });
 
-                        // Update minBuy, actualBuy
-                        childAgentItem.MinBuy = item.Buy;
+                    // Update child agent minBuy, actualBuy
+                    updatedChildAgentItems.ForEach(childAgentItem => 
+                    {
+                        AgentOdd parentItem = null;
+                        if(item.Agent.RoleId == Role.Supermaster.ToInt())
+                        {
+                            if (childAgentItem.Agent.RoleId == Role.Master.ToInt()) parentItem = item;
+                            else if (childAgentItem.Agent.RoleId == Role.Agent.ToInt()) parentItem = updatedChildAgentItems.FirstOrDefault(f => f.AgentId == childAgentItem.Agent.MasterId);
+                            if (parentItem == null) return;
+                        } 
+                        else if(item.Agent.RoleId == Role.Master.ToInt())
+                        {
+                            if (childAgentItem.Agent.RoleId == Role.Agent.ToInt()) parentItem = item;
+                            if (parentItem == null) return;
+                        }
+                        else if(item.Agent.RoleId == Role.Agent.ToInt())
+                        {
+                            return;
+                        }
+
+                        childAgentItem.MinBuy = parentItem.Buy;
                         if (childAgentItem.MinBuy > childAgentItem.Buy)
                         {
                             childAgentItem.Buy = childAgentItem.MinBuy;
                         }
                     });
 
+                    // Update Child Player MaxBet, MaxPerNumber
                     updatedChildPlayerItems.ForEach(childPlayerItem =>
                     {
-                        childPlayerItem.Buy = item.Buy < childPlayerItem.Buy ? item.Buy : childPlayerItem.Buy;
                         childPlayerItem.MaxBet = item.MaxBet < childPlayerItem.MaxBet ? item.MaxBet : childPlayerItem.MaxBet;
                         childPlayerItem.MaxPerNumber = item.MaxPerNumber < childPlayerItem.MaxPerNumber ? item.MaxPerNumber : childPlayerItem.MaxPerNumber;
                         if (childPlayerItem.MaxBet > childPlayerItem.MaxPerNumber)
@@ -1548,6 +1569,21 @@ namespace Lottery.Core.Services.Agent
                             MaxPerNumber = childPlayerItem.MaxPerNumber,
                             OddsValue = childPlayerItem.Buy
                         };
+                    });
+
+                    // Update Child Player MinBuy, ActualBuy
+                    updatedChildPlayerItems.ForEach(childPlayerItem =>
+                    {
+                        var parentAgentItem = item.Agent.RoleId == Role.Agent.ToInt() ? item : updatedChildAgentItems.FirstOrDefault(x => x.AgentId == childPlayerItem.Player.AgentId);
+                        if (parentAgentItem == null) return;
+
+                        childPlayerItem.Buy = parentAgentItem.Buy > childPlayerItem.Buy ? parentAgentItem.Buy : childPlayerItem.Buy;
+
+                        if (!dictPlayerBetSettings.TryGetValue(childPlayerItem.PlayerId, out Dictionary<int, BetSettingModel> playerBetSettings))
+                            return;
+                        if (!playerBetSettings.TryGetValue(childPlayerItem.BetKindId, out var result))
+                            return;
+                        result.OddsValue = childPlayerItem.Buy;
                     });
 
                     if (oldMinBetValue == item.MinBet && oldMaxBetValue == item.MaxBet && oldMaxPerNumber == item.MaxPerNumber) return;

@@ -160,15 +160,8 @@ namespace Lottery.Core.Services.Agent
             var updateBetKindIds = updateItems.Select(x => x.BetKindId).ToList();
             var updatedBetKinds = await betKindRepos.FindQueryBy(x => updateBetKindIds.Contains(x.Id)).ToListAsync();
             var existedAgentBetSettings = await agentOddRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
-            var childAgentIds = clientAgent.RoleId != Role.Agent.ToInt() ? await agentRepos.FindQueryBy(x => x.RoleId > clientAgent.RoleId).Select(x => x.AgentId).ToListAsync() : new List<long> { clientAgent.AgentId };
-            var childPlayerIds = await playerRepos.FindQueryBy(x => childAgentIds.Contains(x.SupermasterId) || childAgentIds.Contains(x.MasterId) || childAgentIds.Contains(x.AgentId)).Select(x => x.PlayerId).ToListAsync();
-            var existedChildAgentBetSettings = await agentOddRepos.FindQuery().Include(x => x.Agent).Where(x => childAgentIds.Contains(x.AgentId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
-            var adjacentChildAgentBetSettings = GetAdjacentChildAgentBetSettings(existedChildAgentBetSettings, clientAgent);
-            var existedChildPlayerBetSettings = await playerOddRepository.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && updateBetKindIds.Contains(x.BetKindId)).ToListAsync();
             existedAgentBetSettings.ForEach(item =>
             {
-                var updatedChildAgentItems = existedChildAgentBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
-                var updatedChildPlayerItems = existedChildPlayerBetSettings.Where(x => x.BetKindId == item.BetKindId).ToList();
                 var updateItem = updateItems.FirstOrDefault(x => x.BetKindId == item.BetKindId);
                 if(updateItem != null)
                 {
@@ -180,34 +173,6 @@ namespace Lottery.Core.Services.Agent
                     item.MinBet = updateItem.ActualMinBet;
                     item.MaxBet = updateItem.ActualMaxBet;
                     item.MaxPerNumber = updateItem.ActualMaxPerNumber;
-
-                    // Update all children of target agent if new value of agent is lower than the oldest one
-                    updatedChildAgentItems.ForEach(childAgentItem =>
-                    {
-                        childAgentItem.Buy = item.Buy < childAgentItem.Buy ? item.Buy : childAgentItem.Buy;
-                        childAgentItem.MaxBet = item.MaxBet < childAgentItem.MaxBet ? item.MaxBet : childAgentItem.MaxBet;
-                        childAgentItem.MaxPerNumber = item.MaxPerNumber < childAgentItem.MaxPerNumber ? item.MaxPerNumber : childAgentItem.MaxPerNumber;
-                        if (childAgentItem.MaxBet > childAgentItem.MaxPerNumber)
-                        {
-                            childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
-                        }
-                    });
-
-                    adjacentChildAgentBetSettings.ForEach(adjacentChild =>
-                    {
-                        adjacentChild.MinBuy = item.Buy;
-                    });
-
-                    updatedChildPlayerItems.ForEach(childPlayerItem =>
-                    {
-                        childPlayerItem.Buy = item.Buy < childPlayerItem.Buy ? item.Buy : childPlayerItem.Buy;
-                        childPlayerItem.MaxBet = item.MaxBet < childPlayerItem.MaxBet ? item.MaxBet : childPlayerItem.MaxBet;
-                        childPlayerItem.MaxPerNumber = item.MaxPerNumber < childPlayerItem.MaxPerNumber ? item.MaxPerNumber : childPlayerItem.MaxPerNumber;
-                        if (childPlayerItem.MaxBet > childPlayerItem.MaxPerNumber)
-                        {
-                            childPlayerItem.MaxBet = childPlayerItem.MaxPerNumber;
-                        }
-                    });
 
                     if (oldMinBetValue == item.MinBet && oldMaxBetValue == item.MaxBet && oldMaxPerNumber == item.MaxPerNumber) return;
                     auditBetSettings.AddRange(new List<AuditSettingData>
