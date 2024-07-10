@@ -86,7 +86,8 @@ namespace Lottery.Core.Services.Announcement
                     }
                 });
 
-                await agentAnnouncementRepos.AddRangeAsync(privateAgentAnnouncements);
+                if(privateAgentAnnouncements.Count > 0) await agentAnnouncementRepos.AddRangeAsync(privateAgentAnnouncements);
+                if(privatePlayerAnnouncements.Count > 0) await playerAnnouncementRepos.AddRangeAsync(privatePlayerAnnouncements);
 
                 await LotteryUow.SaveChangesAsync();
             }

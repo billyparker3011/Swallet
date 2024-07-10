@@ -1574,7 +1574,7 @@ namespace Lottery.Core.Services.Agent
                     // Update Child Player MinBuy, ActualBuy
                     updatedChildPlayerItems.ForEach(childPlayerItem =>
                     {
-                        var parentAgentItem = updatedChildAgentItems.FirstOrDefault(x => x.AgentId == childPlayerItem.Player.AgentId);
+                        var parentAgentItem = item.Agent.RoleId == Role.Agent.ToInt() ? item : updatedChildAgentItems.FirstOrDefault(x => x.AgentId == childPlayerItem.Player.AgentId);
                         if (parentAgentItem == null) return;
 
                         childPlayerItem.Buy = parentAgentItem.Buy > childPlayerItem.Buy ? parentAgentItem.Buy : childPlayerItem.Buy;
