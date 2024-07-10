@@ -15,6 +15,7 @@ namespace Lottery.Core.Services.Odds
 
         Task<OddsTableModel> GetOddsTableByBetKind(int betKindId);
         Task ChangeOddsValueOfOddsTable(ChangeOddsValueOfOddsTableModel model);
+        Task<MixedOddsTableModel> GetMixedOddsTableByBetKind(int betKindId);
 
         Task<List<OddsByNumberModel>> GetInitialOdds(long playerId, int betKindId);
         Task<Dictionary<long, LiveOddsModel>> GetLiveOdds(List<long> playerIds, int betKindId, long matchId, int regionId, int channelId);

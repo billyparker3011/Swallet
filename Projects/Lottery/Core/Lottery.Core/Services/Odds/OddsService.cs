@@ -165,12 +165,16 @@ namespace Lottery.Core.Services.Odds
         public async Task<OddsTableModel> GetOddsTableByBetKind(int betKindId)
         {
             var defaultOddsValue = (await GetDefaultOddsByBetKind(new List<int> { betKindId })).FirstOrDefault() ?? throw new BadRequestException();
+            var noOfNumbers = betKindId.GetNoOfNumbers();
             var oddsValue = new List<OddsTableDetailModel>();
-            for (var i = 0; i < 100; i++) oddsValue.Add(new OddsTableDetailModel
+            for (var i = 0; i < noOfNumbers; i++)
             {
-                Number = i,
-                OriginValue = defaultOddsValue.Buy
-            });
+                oddsValue.Add(new OddsTableDetailModel
+                {
+                    Number = i,
+                    OriginValue = defaultOddsValue.Buy
+                });
+            }
             var runningMatch = await _runningMatchService.GetRunningMatch();
             if (runningMatch == null)
             {
@@ -194,6 +198,44 @@ namespace Lottery.Core.Services.Odds
                 Match = runningMatch,
                 Odds = oddsValue
             };
+        }
+
+        public async Task<MixedOddsTableModel> GetMixedOddsTableByBetKind(int betKindId)
+        {
+            var noOfNumbers = betKindId.GetNoOfNumbers();
+            var betKindIds = betKindId.BuildBetKinds();
+            var oddsValue = await GetDefaultOddsByBetKind(betKindIds);
+            var dictOddsValue = new Dictionary<int, List<OddsTableDetailModel>>();
+            foreach (var betKindItem in betKindIds)
+            {
+                if (!dictOddsValue.TryGetValue(betKindItem, out List<OddsTableDetailModel> listOddsValue))
+                {
+                    listOddsValue = new List<OddsTableDetailModel>();
+                    dictOddsValue[betKindItem] = listOddsValue;
+                }
+
+                var oddsByBetKind = oddsValue.FirstOrDefault(f => f.BetKindId == betKindItem);
+                if (oddsByBetKind == null) continue;
+                for (var i = 0; i < noOfNumbers; i++)
+                {
+                    listOddsValue.Add(new OddsTableDetailModel
+                    {
+                        Number = i,
+                        OriginValue = oddsByBetKind.Buy
+                    });
+                }
+            }
+
+            var runningMatch = await _runningMatchService.GetRunningMatch();
+            if (runningMatch == null)
+            {
+                return new MixedOddsTableModel
+                {
+                    //Odds = oddsValue
+                };
+            }
+
+            throw new NotImplementedException();
         }
 
         public async Task ChangeOddsValueOfOddsTable(ChangeOddsValueOfOddsTableModel model)
@@ -238,12 +280,7 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<List<OddsByNumberModel>> GetInitialOdds(long playerId, int betKindId)
         {
-            var betKindIds = betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt()
-                                ? new List<int> { Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt(), Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt(), Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt() }
-                                : betKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()
-                                    ? new List<int> { Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), betKindId }
-                                    : new List<int> { betKindId };
-
+            var betKindIds = betKindId.BuildBetKinds();
             var noOfNumbers = betKindId.GetNoOfNumbers();
 
             var runningMatch = await _runningMatchService.GetRunningMatch();

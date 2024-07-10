@@ -15,6 +15,15 @@ namespace Lottery.Core.Helpers
             return state == UserState.Closed;
         }
 
+        public static List<int> BuildBetKinds(this int betKindId)
+        {
+            return betKindId == BetKind.FirstNorthern_Northern_LoXien.ToInt()
+                                ? new List<int> { BetKind.FirstNorthern_Northern_Xien2.ToInt(), BetKind.FirstNorthern_Northern_Xien3.ToInt(), BetKind.FirstNorthern_Northern_Xien4.ToInt() }
+                                : betKindId == BetKind.FirstNorthern_Northern_LoLive.ToInt()
+                                    ? new List<int> { BetKind.FirstNorthern_Northern_Lo.ToInt(), betKindId }
+                                    : new List<int> { betKindId };
+        }
+
         public static int GetNoOfNumbers(this int betKindId)
         {
             if (betKindId == BetKind.SecondNorthern_Northern_3DDau.ToInt() ||

@@ -148,5 +148,32 @@ namespace Lottery.Core.Helpers
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }
+
+        public static KeyOfRedisHash GetPointMixedStatsKeyByMatchBetKind(this long matchId, int betKindId)
+        {
+            return new KeyOfRedisHash
+            {
+                MainKey = string.Format(CachingConfigs.PointMixedStatsByMatchAndBetKindMainKey, matchId, betKindId),
+                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
+            };
+        }
+
+        public static KeyOfRedisHash GetPayoutMixedStatsKeyByMatchBetKind(this long matchId, int betKindId)
+        {
+            return new KeyOfRedisHash
+            {
+                MainKey = string.Format(CachingConfigs.PayoutMixedStatsByMatchAndBetKindMainKey, matchId, betKindId),
+                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
+            };
+        }
+
+        public static KeyOfRedisHash GetCompanyPayoutMixedStatsKeyByMatchBetKind(this long matchId, int betKindId)
+        {
+            return new KeyOfRedisHash
+            {
+                MainKey = string.Format(CachingConfigs.CompanyPayoutMixedStatsByMatchAndBetKindMainKey, matchId, betKindId),
+                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
+            };
+        }
     }
 }

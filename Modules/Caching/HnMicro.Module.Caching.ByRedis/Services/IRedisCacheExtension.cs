@@ -31,22 +31,33 @@ namespace HnMicro.Module.Caching.ByRedis.Services
 
         #region Sortedset
         bool SortedSetAdd(string key, string member, double score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
+        bool SortedSetAdd(string key, string member, decimal score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
         Task<bool> SortedSetAddAsync(string key, string member, double score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
+        Task<bool> SortedSetAddAsync(string key, string member, decimal score, TimeSpan? expiredTimeInSeconds = null, string to = "", int database = -1);
 
         long SortedSetRemove(string key, List<string> members, string to = "", int database = -1);
         Task<long> SortedSetRemoveAsync(string key, List<string> members, string to = "", int database = -1);
 
         double SortedSetIncrement(string key, string member, double value, string to = "", int database = -1);
+        decimal SortedSetIncrement(string key, string member, decimal value, string to = "", int database = -1);
         Task<double> SortedSetIncrementAsync(string key, string member, double value, string to = "", int database = -1);
+        Task<decimal> SortedSetIncrementAsync(string key, string member, decimal value, string to = "", int database = -1);
 
         double SortedSetDecrement(string key, string member, double value, string to = "", int database = -1);
+        decimal SortedSetDecrement(string key, string member, decimal value, string to = "", int database = -1);
         Task<double> SortedSetDecrementAsync(string key, string member, double value, string to = "", int database = -1);
+        Task<decimal> SortedSetDecrementAsync(string key, string member, decimal value, string to = "", int database = -1);
 
-        Dictionary<string, double> SortedSetRangeByRankWithScores(string key, long start = 0, long stop = -1, Order order = Order.Ascending, string to = "", int database = -1);
-        Task<Dictionary<string, double>> SortedSetRangeByRankWithScoresAsync(string key, long start = 0, long stop = -1, Order order = Order.Ascending, string to = "", int database = -1);
+        Dictionary<string, double> SortedSetRangeByRankWithScoresInDouble(string key, long start = 0, long stop = -1, Order order = Order.Ascending, string to = "", int database = -1);
+        Dictionary<string, decimal> SortedSetRangeByRankWithScoresInDecimal(string key, long start = 0, long stop = -1, Order order = Order.Ascending, string to = "", int database = -1);
+        Task<Dictionary<string, double>> SortedSetRangeByRankWithScoresInDoubleAsync(string key, long start = 0, long stop = -1, Order order = Order.Ascending, string to = "", int database = -1);
+        Task<Dictionary<string, decimal>> SortedSetRangeByRankWithScoresInDecimalAsync(string key, long start = 0, long stop = -1, Order order = Order.Ascending, string to = "", int database = -1);
 
-        Dictionary<string, double> SortedSetRangeByScoreWithScores(string key, double start = double.NegativeInfinity, double stop = double.PositiveInfinity, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1);
-        Task<Dictionary<string, double>> SortedSetRangeByScoreWithScoresAsync(string key, double start = double.NegativeInfinity, double stop = double.PositiveInfinity, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1);
+        Dictionary<string, double> SortedSetRangeByScoreWithScoresInDouble(string key, double start = double.NegativeInfinity, double stop = double.PositiveInfinity, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1);
+        Dictionary<string, decimal> SortedSetRangeByScoreWithScoresInDecimal(string key, decimal start = decimal.MinValue, decimal stop = decimal.MaxValue, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1);
+
+        Task<Dictionary<string, double>> SortedSetRangeByScoreWithScoresInDoubleAsync(string key, double start = double.NegativeInfinity, double stop = double.PositiveInfinity, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1);
+        Task<Dictionary<string, decimal>> SortedSetRangeByScoreWithScoresInDecimalAsync(string key, decimal start = decimal.MinValue, decimal stop = decimal.MaxValue, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1);
         #endregion
 
         #region Hash

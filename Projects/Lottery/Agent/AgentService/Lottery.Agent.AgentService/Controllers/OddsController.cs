@@ -49,6 +49,12 @@ namespace Lottery.Agent.AgentService.Controllers
             return Ok(OkResponse.Create(await _oddsService.GetOddsTableByBetKind(betKindId)));
         }
 
+        [HttpGet("mixed-odds-table")]
+        public async Task<IActionResult> MixedOddsTable([FromQuery] int betKindId)
+        {
+            return Ok(OkResponse.Create(await _oddsService.GetMixedOddsTableByBetKind(betKindId)));
+        }
+
         [HttpPut("odds-table/{matchId:long}/{betKindId:int}")]
         public async Task<IActionResult> ChangeOddsValueOfOddsTable([FromRoute] long matchId, [FromRoute] int betKindId, [FromBody] ChangeOddsValueOfOddsTableRequest request)
         {

@@ -18,6 +18,11 @@ public class FirstNorthern_Northern_LoDau_Processor : AbstractBetKindProcessor
 
     public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_LoDau.ToInt();
 
+    public override bool EnableStats()
+    {
+        return true;
+    }
+
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
     {
         return metadata.IsLive ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;

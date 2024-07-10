@@ -153,6 +153,72 @@ namespace Lottery.Core.Services.Caching.Player
             }
         }
 
+        public async Task BuildMixedStatsByMatch(long matchId, Dictionary<int, Dictionary<string, decimal>> pointByPair, Dictionary<int, Dictionary<string, decimal>> payoutByPair, Dictionary<int, Dictionary<string, decimal>> realPayoutByPair)
+        {
+            foreach (var item in pointByPair)
+            {
+                var pointMixStatsByMatchKey = matchId.GetPointMixedStatsKeyByMatchBetKind(item.Key);
+                var existed = await _cacheService.ExistsAsync(pointMixStatsByMatchKey.MainKey, CachingConfigs.RedisConnectionForApp);
+                var i = 0;
+                foreach (var subItem in item.Value)
+                {
+                    if (i == 0)
+                    {
+                        if (!existed)
+                        {
+                            await _cacheService.SortedSetAddAsync(pointMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, pointMixStatsByMatchKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                            existed = true;
+                        }
+                        else await _cacheService.SortedSetIncrementAsync(pointMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, CachingConfigs.RedisConnectionForApp);
+                    }
+                    await _cacheService.SortedSetIncrementAsync(pointMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, CachingConfigs.RedisConnectionForApp);
+                    i++;
+                }
+            }
+
+            foreach (var item in payoutByPair)
+            {
+                var payoutMixStatsByMatchKey = matchId.GetPayoutMixedStatsKeyByMatchBetKind(item.Key);
+                var existed = await _cacheService.ExistsAsync(payoutMixStatsByMatchKey.MainKey, CachingConfigs.RedisConnectionForApp);
+                var i = 0;
+                foreach (var subItem in item.Value)
+                {
+                    if (i == 0)
+                    {
+                        if (!existed)
+                        {
+                            await _cacheService.SortedSetAddAsync(payoutMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, payoutMixStatsByMatchKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                            existed = true;
+                        }
+                        else await _cacheService.SortedSetIncrementAsync(payoutMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, CachingConfigs.RedisConnectionForApp);
+                    }
+                    await _cacheService.SortedSetIncrementAsync(payoutMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, CachingConfigs.RedisConnectionForApp);
+                    i++;
+                }
+            }
+
+            foreach (var item in realPayoutByPair)
+            {
+                var companyPayoutMixStatsByMatchKey = matchId.GetCompanyPayoutMixedStatsKeyByMatchBetKind(item.Key);
+                var existed = await _cacheService.ExistsAsync(companyPayoutMixStatsByMatchKey.MainKey, CachingConfigs.RedisConnectionForApp);
+                var i = 0;
+                foreach (var subItem in item.Value)
+                {
+                    if (i == 0)
+                    {
+                        if (!existed)
+                        {
+                            await _cacheService.SortedSetAddAsync(companyPayoutMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, companyPayoutMixStatsByMatchKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                            existed = true;
+                        }
+                        else await _cacheService.SortedSetIncrementAsync(companyPayoutMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, CachingConfigs.RedisConnectionForApp);
+                    }
+                    await _cacheService.SortedSetIncrementAsync(companyPayoutMixStatsByMatchKey.MainKey, subItem.Key, subItem.Value, CachingConfigs.RedisConnectionForApp);
+                    i++;
+                }
+            }
+        }
+
         public async Task UpdateStatsByMatchBetKindAndNumbers(Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> outs, Dictionary<int, Dictionary<long, Dictionary<int, decimal>>> points)
         {
             //  Outs
