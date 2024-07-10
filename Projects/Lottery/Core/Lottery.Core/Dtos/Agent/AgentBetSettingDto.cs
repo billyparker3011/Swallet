@@ -18,5 +18,6 @@
         public decimal DefaultMaxPerNumber { get; set; }
         public decimal ActualMaxPerNumber { get; set; }
         public bool IsDisabled { get; set; }
+        public decimal Award { get; set; }
     }
 }
