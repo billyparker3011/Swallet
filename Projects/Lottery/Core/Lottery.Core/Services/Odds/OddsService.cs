@@ -192,6 +192,7 @@ namespace Lottery.Core.Services.Odds
                 f.Points = oddsStatsVal.Point;
                 f.Payouts = oddsStatsVal.Payout;
                 f.Rate = oddsStatsVal.Rate;
+                f.CompanyPayouts = oddsStatsVal.CompanyPayout;
             });
             return new OddsTableModel
             {
@@ -231,11 +232,15 @@ namespace Lottery.Core.Services.Odds
             {
                 return new MixedOddsTableModel
                 {
-                    //Odds = oddsValue
+                    Odds = dictOddsValue
                 };
             }
 
-            throw new NotImplementedException();
+            return new MixedOddsTableModel
+            {
+                Match = runningMatch,
+                Odds = dictOddsValue
+            };
         }
 
         public async Task ChangeOddsValueOfOddsTable(ChangeOddsValueOfOddsTableModel model)
