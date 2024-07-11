@@ -1,9 +1,11 @@
 ﻿using HnMicro.Core.Helpers;
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Contexts;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Repositories.Agent;
@@ -20,17 +22,20 @@ namespace Lottery.Core.Services.Odds
 {
     public class OddsService : LotteryBaseService<OddsService>, IOddsService
     {
+        private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
         private readonly IRunningMatchService _runningMatchService;
         private readonly IProcessOddsService _processOddsService;
         private readonly INormalizeValueService _normalizeValueService;
         private readonly IPublishCommonService _publishCommonService;
 
         public OddsService(ILogger<OddsService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
+            IInMemoryUnitOfWork inMemoryUnitOfWork,
             IRunningMatchService runningMatchService,
             IProcessOddsService processOddsService,
             INormalizeValueService normalizeValueService,
             IPublishCommonService publishCommonService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
+            _inMemoryUnitOfWork = inMemoryUnitOfWork;
             _runningMatchService = runningMatchService;
             _processOddsService = processOddsService;
             _normalizeValueService = normalizeValueService;
@@ -203,43 +208,48 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<MixedOddsTableModel> GetMixedOddsTableByBetKind(int betKindId)
         {
-            var noOfNumbers = betKindId.GetNoOfNumbers();
+            //var noOfNumbers = betKindId.GetNoOfNumbers();
             var betKindIds = betKindId.BuildBetKinds();
-            var oddsValue = await GetDefaultOddsByBetKind(betKindIds);
-            var dictOddsValue = new Dictionary<int, List<OddsTableDetailModel>>();
-            foreach (var betKindItem in betKindIds)
-            {
-                if (!dictOddsValue.TryGetValue(betKindItem, out List<OddsTableDetailModel> listOddsValue))
-                {
-                    listOddsValue = new List<OddsTableDetailModel>();
-                    dictOddsValue[betKindItem] = listOddsValue;
-                }
+            var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
+            var betKinds = betKindInMemoryRepository.FindBy(f => betKindIds.Contains(f.Id)).ToDictionary(f => f.Id, f => f.Name);
 
-                var oddsByBetKind = oddsValue.FirstOrDefault(f => f.BetKindId == betKindItem);
-                if (oddsByBetKind == null) continue;
-                for (var i = 0; i < noOfNumbers; i++)
-                {
-                    listOddsValue.Add(new OddsTableDetailModel
-                    {
-                        Number = i,
-                        OriginValue = oddsByBetKind.Buy
-                    });
-                }
-            }
+            //var oddsValue = await GetDefaultOddsByBetKind(betKindIds);
+            //var dictOddsValue = new Dictionary<int, List<OddsTableDetailModel>>();
+            //foreach (var betKindItem in betKindIds)
+            //{
+            //    if (!dictOddsValue.TryGetValue(betKindItem, out List<OddsTableDetailModel> listOddsValue))
+            //    {
+            //        listOddsValue = new List<OddsTableDetailModel>();
+            //        dictOddsValue[betKindItem] = listOddsValue;
+            //    }
+
+            //    var oddsByBetKind = oddsValue.FirstOrDefault(f => f.BetKindId == betKindItem);
+            //    if (oddsByBetKind == null) continue;
+            //    for (var i = 0; i < noOfNumbers; i++)
+            //    {
+            //        listOddsValue.Add(new OddsTableDetailModel
+            //        {
+            //            Number = i,
+            //            OriginValue = oddsByBetKind.Buy
+            //        });
+            //    }
+            //}
 
             var runningMatch = await _runningMatchService.GetRunningMatch();
             if (runningMatch == null)
             {
                 return new MixedOddsTableModel
                 {
-                    Odds = dictOddsValue
+                    //Odds = dictOddsValue
+                    BetKinds = betKinds
                 };
             }
 
             return new MixedOddsTableModel
             {
                 Match = runningMatch,
-                Odds = dictOddsValue
+                //Odds = dictOddsValue
+                BetKinds = betKinds
             };
         }
 
