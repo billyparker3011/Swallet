@@ -4,10 +4,10 @@ using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.Setting;
 using Lottery.Core.Enums;
+using Lottery.Core.Helpers;
 using Lottery.Core.Localizations;
 using Lottery.Core.Models.Setting;
 using Lottery.Core.Models.Setting.BetKind;
-using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.Setting;
 using Lottery.Core.Services.Pubs;
 using Lottery.Core.UnitOfWorks;
@@ -35,27 +35,36 @@ namespace Lottery.Core.Services.Setting
 
         public async Task CreateOrModifyBetKindBalanceTableSetting(int betKindId, BalanceTableModel detailSetting)
         {
-            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var settingRepos = LotteryUow.GetRepository<ISettingRepository>();
-            var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
-
+            var defaultList = CreateDefault(betKindId.GetNoOfNumbers());
+            foreach (var item in detailSetting.ByNumbers.RateValues)
+            {
+                if (!item.Applied) continue;
+                if (detailSetting.ByNumbers.Numbers.Count == 0) continue;
+                item.AppliedNumbers.AddRange(detailSetting.ByNumbers.Numbers);
+            }
+            foreach (var item in detailSetting.ForCommon.RateValues)
+            {
+                if (!item.Applied) continue;
+                item.AppliedNumbers.AddRange(defaultList);
+            }
             var balanceTableSettingKey = CreateBalanceTableKey(betKindId);
             var existingBetKindBalanceTable = await settingRepos.FindQueryBy(x => x.KeySetting == balanceTableSettingKey && x.Category == CategoryOfSetting.BalanceTable.ToInt()).FirstOrDefaultAsync();
-            if(existingBetKindBalanceTable == null)
+            if (existingBetKindBalanceTable == null)
             {
                 await settingRepos.AddAsync(new Data.Entities.Setting
                 {
                     KeySetting = balanceTableSettingKey,
                     Category = CategoryOfSetting.BalanceTable.ToInt(),
                     ValueSetting = JsonConvert.SerializeObject(detailSetting),
-                    CreatedBy = clientAgent.AgentId,
+                    CreatedBy = ClientContext.Agent.AgentId,
                     CreatedAt = ClockService.GetUtcNow()
                 });
             }
             else
             {
                 existingBetKindBalanceTable.ValueSetting = JsonConvert.SerializeObject(detailSetting);
-                existingBetKindBalanceTable.UpdatedBy = clientAgent.AgentId;
+                existingBetKindBalanceTable.UpdatedBy = ClientContext.Agent.AgentId;
                 existingBetKindBalanceTable.UpdatedAt = ClockService.GetUtcNow();
             }
 
@@ -72,19 +81,16 @@ namespace Lottery.Core.Services.Setting
 
         public async Task<BalanceTableDto> GetBetKindBalanceTableSetting(int betKindId)
         {
-            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var settingRepos = LotteryUow.GetRepository<ISettingRepository>();
-            var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
 
             var balanceTableSettingKey = CreateBalanceTableKey(betKindId);
             var existingBetKindBalanceTable = await settingRepos.FindQueryBy(x => x.KeySetting == balanceTableSettingKey && x.Category == CategoryOfSetting.BalanceTable.ToInt()).FirstOrDefaultAsync();
             if (existingBetKindBalanceTable is null) return new BalanceTableDto();
 
-            var balanceTableSetting = !string.IsNullOrEmpty(existingBetKindBalanceTable.ValueSetting) && existingBetKindBalanceTable.ValueSetting.IsValidJson() 
-                ? JsonConvert.DeserializeObject<BalanceTableModel>(existingBetKindBalanceTable.ValueSetting) 
+            var balanceTableSetting = !string.IsNullOrEmpty(existingBetKindBalanceTable.ValueSetting) && existingBetKindBalanceTable.ValueSetting.IsValidJson()
+                ? JsonConvert.DeserializeObject<BalanceTableModel>(existingBetKindBalanceTable.ValueSetting)
                 : new BalanceTableModel();
-
-            if(balanceTableSetting == null) throw new BadRequestException(Messages.BalanceTableSetting.ErrorValueBalanceTableSetting);
+            if (balanceTableSetting == null) throw new BadRequestException(Messages.BalanceTableSetting.ErrorValueBalanceTableSetting);
 
             return new BalanceTableDto
             {
@@ -95,6 +101,42 @@ namespace Lottery.Core.Services.Setting
                     RateValues = balanceTableSetting.ByNumbers?.RateValues
                 }
             };
+        }
+
+        private List<int> CreateDefault(int noOfNumbers)
+        {
+            var d = new List<int>();
+            for (var i = 0; i < noOfNumbers; i++) d.Add(i);
+            return d;
+        }
+
+        public decimal GetRealValue(decimal unitValue)
+        {
+            return 1000 * unitValue;
+        }
+
+        public void UpdateSetting(SettingModel setting)
+        {
+            if (setting.Id == 0) return;
+
+            var settingRepository = LotteryUow.GetRepository<ISettingRepository>();
+            var existingSetting = settingRepository.FindById(setting.Id);
+            if (existingSetting == null) return;
+
+            existingSetting.ValueSetting = setting.ValueSetting;
+            existingSetting.UpdatedAt = ClockService.GetUtcNow();
+            LotteryUow.SaveChanges();
+
+            Task.Run(async () =>
+            {
+                await _publishCommonService.PublishSetting(new SettingModel
+                {
+                    Id = existingSetting.Id,
+                    Category = existingSetting.Category.ToEnum<CategoryOfSetting>(),
+                    KeySetting = existingSetting.KeySetting,
+                    ValueSetting = existingSetting.ValueSetting
+                });
+            });
         }
     }
 }

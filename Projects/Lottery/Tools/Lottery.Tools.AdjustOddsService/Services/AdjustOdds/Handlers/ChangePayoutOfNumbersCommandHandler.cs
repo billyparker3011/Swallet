@@ -43,11 +43,12 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
                 if (payoutByBetKindAndNumber == null) continue;
 
                 var rate = settingVal.ByNumbers.Numbers.Count > 0 && settingVal.ByNumbers.Numbers.Contains(item)
-                    ? settingVal.ByNumbers.RateValues.FirstOrDefault(f => f.From <= payoutByBetKindAndNumber.Payout && payoutByBetKindAndNumber.Payout < f.To && !f.Applied)
-                    : settingVal.ForCommon.RateValues.FirstOrDefault(f => f.From <= payoutByBetKindAndNumber.Payout && payoutByBetKindAndNumber.Payout < f.To && !f.Applied);
+                    ? settingVal.ByNumbers.RateValues.FirstOrDefault(f => balanceTableSettingService.GetRealValue(f.From) <= payoutByBetKindAndNumber.Payout && payoutByBetKindAndNumber.Payout < balanceTableSettingService.GetRealValue(f.To))
+                    : settingVal.ForCommon.RateValues.FirstOrDefault(f => balanceTableSettingService.GetRealValue(f.From) <= payoutByBetKindAndNumber.Payout && payoutByBetKindAndNumber.Payout < balanceTableSettingService.GetRealValue(f.To));
                 if (rate == null) continue;
+                if (rate.AppliedNumbers.Contains(item)) continue;
 
-                rate.Applied = true;
+                rate.AppliedNumbers.Add(item);
                 setting.ValueSetting = Newtonsoft.Json.JsonConvert.SerializeObject(settingVal);
                 dictRate[item] = rate.RateValue;
             }
@@ -56,6 +57,8 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
 
             var processOddsService = scope.ServiceProvider.GetService<IProcessOddsService>();
             processOddsService.UpdateRateOfOddsValue(deviredAdjustCommand.MatchId, deviredAdjustCommand.BetKindId, dictRate);
+
+            balanceTableSettingService.UpdateSetting(setting);
         }
     }
 }

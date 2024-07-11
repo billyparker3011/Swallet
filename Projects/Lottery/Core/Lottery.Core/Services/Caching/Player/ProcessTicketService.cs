@@ -150,6 +150,8 @@ namespace Lottery.Core.Services.Caching.Player
                 {
                     { companyPayoutStatsByMatchAndNumbersKey.SubKey, newPayout.ToString() }
                 }, companyPayoutStatsByMatchAndNumbersKey.TimeSpan == TimeSpan.Zero ? null : companyPayoutStatsByMatchAndNumbersKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+
+                companyPayoutByNumbers[item.Key] = newPayout;
             }
         }
 
