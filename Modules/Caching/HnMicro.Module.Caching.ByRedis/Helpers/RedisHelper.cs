@@ -59,7 +59,7 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
         public static Dictionary<string, string> ToDictionaryValue(this IEnumerable<HashEntry> entries)
         {
             var hashEntries = entries as HashEntry[] ?? entries.ToArray();
-            if (!hashEntries.Any()) return null;
+            if (!hashEntries.Any()) return new Dictionary<string, string>();
 
             var dict = new Dictionary<string, string>();
             foreach (var entry in hashEntries) dict[entry.Name] = entry.Value;
@@ -70,7 +70,7 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
         public static Dictionary<string, string> ToDictionaryValue(this RedisValue[] hashValues, IEnumerable<string> fields)
         {
             var enumerable = fields as string[] ?? fields.ToArray();
-            if (hashValues == null || !hashValues.Any() || !enumerable.Any()) return null;
+            if (hashValues == null || !hashValues.Any() || !enumerable.Any()) return new Dictionary<string, string>();
 
             var dict = new Dictionary<string, string>();
             for (var i = 0; i < enumerable.Count(); i++)
@@ -81,7 +81,7 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
         public static Dictionary<string, double> ToDictionaryValueInDouble(this IEnumerable<SortedSetEntry> entries)
         {
             var sortedSetEntries = entries as SortedSetEntry[] ?? entries.ToArray();
-            if (!sortedSetEntries.Any()) return null;
+            if (!sortedSetEntries.Any()) return new Dictionary<string, double>();
 
             var dict = new Dictionary<string, double>();
             foreach (var entry in sortedSetEntries) dict[entry.Element] = entry.Score;
@@ -91,7 +91,7 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
         public static Dictionary<string, decimal> ToDictionaryValueInDecimal(this IEnumerable<SortedSetEntry> entries)
         {
             var sortedSetEntries = entries as SortedSetEntry[] ?? entries.ToArray();
-            if (!sortedSetEntries.Any()) return null;
+            if (!sortedSetEntries.Any()) return new Dictionary<string, decimal>();
 
             var dict = new Dictionary<string, decimal>();
             foreach (var entry in sortedSetEntries) dict[entry.Element] = (decimal)entry.Score;
