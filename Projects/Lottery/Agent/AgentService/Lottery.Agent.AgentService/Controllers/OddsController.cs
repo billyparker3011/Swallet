@@ -13,11 +13,13 @@ namespace Lottery.Agent.AgentService.Controllers
     {
         private readonly IOddsService _oddsService;
         private readonly INumberService _numberService;
+        private readonly IProcessOddsService _processOddsService;
 
-        public OddsController(IOddsService oddsService, INumberService numberService)
+        public OddsController(IOddsService oddsService, INumberService numberService, IProcessOddsService processOddsService)
         {
             _oddsService = oddsService;
             _numberService = numberService;
+            _processOddsService = processOddsService;
         }
 
         [HttpGet("default-odds")]
@@ -53,6 +55,18 @@ namespace Lottery.Agent.AgentService.Controllers
         public async Task<IActionResult> MixedOddsTable([FromQuery] int betKindId)
         {
             return Ok(OkResponse.Create(await _oddsService.GetMixedOddsTableByBetKind(betKindId)));
+        }
+
+        [HttpGet("mixed-odds-table/{matchId:long}/{betKindId:int}")]
+        public async Task<IActionResult> MixedOddsTableDetail([FromRoute] long matchId, [FromRoute] int betKindId, [FromQuery] int? top)
+        {
+            return Ok(OkResponse.Create(await _processOddsService.GetMixedOddsTableDetail(matchId, betKindId, top ?? 30)));
+        }
+
+        [HttpGet("mixed-odds-table/{matchId:long}/related-betkind/{betKindId:int}")]
+        public async Task<IActionResult> MixedOddsTableRelatedBetKind([FromRoute] long matchId, [FromRoute] int betKindId, [FromQuery] int? top)
+        {
+            return Ok(OkResponse.Create(await _processOddsService.GetMixedOddsTableRelatedBetKind(matchId, betKindId, top ?? 10)));
         }
 
         [HttpPut("odds-table/{matchId:long}/{betKindId:int}")]
