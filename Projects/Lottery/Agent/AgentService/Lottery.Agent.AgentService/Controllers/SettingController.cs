@@ -66,9 +66,32 @@ namespace Lottery.Agent.AgentService.Controllers
 
         #region Balance Table Setting
         [HttpPost("balance-table/{betkindId:int}")]
-        public async Task<IActionResult> CreateOrModifyBetKindBalanceTableSetting([FromRoute] int betKindId, [FromBody] BalanceTableModel request)
+        public async Task<IActionResult> CreateOrModifyBetKindBalanceTableSetting([FromRoute] int betKindId, [FromBody] BalanceTableRequest request)
         {
-            await _balanceTableSettingService.CreateOrModifyBetKindBalanceTableSetting(betKindId, request);
+            await _balanceTableSettingService.CreateOrModifyBetKindBalanceTableSetting(betKindId, new BalanceTableModel
+            {
+                ByNumbers = new BalanceTableNumberDetailModel
+                {
+                    Numbers = request.ByNumbers.Numbers,
+                    RateValues = request.ByNumbers.RateValues.Select(f => new BalanceTableRateModel
+                    {
+                        From = f.From,
+                        To = f.To,
+                        RateValue = f.RateValue,
+                        Applied = f.Applied
+                    }).ToList()
+                },
+                ForCommon = new BalanceTableCommonDetailModel
+                {
+                    RateValues = request.ForCommon.RateValues.Select(f => new BalanceTableRateModel
+                    {
+                        From = f.From,
+                        To = f.To,
+                        RateValue = f.RateValue,
+                        Applied = f.Applied
+                    }).ToList()
+                }
+            });
             return Ok();
         }
 
