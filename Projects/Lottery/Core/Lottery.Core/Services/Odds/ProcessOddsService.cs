@@ -1,4 +1,5 @@
-﻿using HnMicro.Framework.Exceptions;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Configs;
@@ -133,6 +134,51 @@ namespace Lottery.Core.Services.Odds
                     TotalRate = item.Value
                 });
             }
+        }
+
+        public async Task<List<MixedOddsTableDetailModel>> GetMixedOddsTableDetail(long matchId, int betKindId, int top)
+        {
+            var pointMixStatsByMatchKey = matchId.GetPointMixedStatsKeyByMatchBetKind(betKindId);
+            var payoutMixStatsByMatchKey = matchId.GetPayoutMixedStatsKeyByMatchBetKind(betKindId);
+            var companyPayoutMixStatsByMatchKey = matchId.GetCompanyPayoutMixedStatsKeyByMatchBetKind(betKindId);
+
+            var dictPairs = await _redisCacheService.SortedSetRangeByRankWithScoresInDecimalAsync(companyPayoutMixStatsByMatchKey.MainKey, 0L, 1L * top, StackExchange.Redis.Order.Descending, CachingConfigs.RedisConnectionForApp);
+            var dictPoints = await _redisCacheService.SortedSetRangeByRankWithScoresInDecimalAsync(pointMixStatsByMatchKey.MainKey, 0L, -1L, StackExchange.Redis.Order.Ascending, CachingConfigs.RedisConnectionForApp);
+            var dictPayouts = await _redisCacheService.SortedSetRangeByRankWithScoresInDecimalAsync(payoutMixStatsByMatchKey.MainKey, 0L, -1L, StackExchange.Redis.Order.Ascending, CachingConfigs.RedisConnectionForApp);
+            var data = dictPairs.Select(f => new MixedOddsTableDetailModel
+            {
+                Pair = f.Key,
+                CompanyPayout = f.Value
+            }).ToList();
+            data.ForEach(f =>
+            {
+                if (dictPoints.TryGetValue(f.Pair, out decimal point)) f.Point = point;
+                if (dictPayouts.TryGetValue(f.Pair, out decimal payout)) f.Payout = payout;
+            });
+            return data;
+        }
+
+        public async Task<List<MixedOddsTableRelatedBetKindModel>> GetMixedOddsTableRelatedBetKind(long matchId, int betKindId, int top)
+        {
+            if (betKindId != Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt()) return new List<MixedOddsTableRelatedBetKindModel>();
+            betKindId = Enums.BetKind.FirstNorthern_Northern_Lo.ToInt();
+            var noOfNumbers = betKindId.GetNoOfNumbers();
+
+            var data = new List<MixedOddsTableRelatedBetKindModel>();
+            for (var i = 0; i < noOfNumbers; i++)
+            {
+                var companyPayoutStatsKey = matchId.GetCompanyPayoutStatsKeyByMatchBetKindNumber(betKindId, i);
+                var companyPayoutStats = await _redisCacheService.HashGetFieldsAsync(companyPayoutStatsKey.MainKey, new List<string> { companyPayoutStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!companyPayoutStats.TryGetValue(companyPayoutStatsKey.SubKey, out string sCompanyPayoutStatsValue) || !decimal.TryParse(sCompanyPayoutStatsValue, out decimal companyPayoutStatsValue))
+                    companyPayoutStatsValue = 0m;
+
+                data.Add(new MixedOddsTableRelatedBetKindModel
+                {
+                    Number = i,
+                    CompanyPayout = companyPayoutStatsValue
+                });
+            }
+            return data.OrderByDescending(f => f.CompanyPayout).Take(top).ToList();
         }
     }
 }
