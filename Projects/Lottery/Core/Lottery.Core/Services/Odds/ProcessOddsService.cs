@@ -167,6 +167,17 @@ namespace Lottery.Core.Services.Odds
             var data = new List<MixedOddsTableRelatedBetKindModel>();
             for (var i = 0; i < noOfNumbers; i++)
             {
+                var pointStatsKey = matchId.GetPointStatsKeyByMatchBetKindNumber(betKindId, i);
+                var pointStats = await _redisCacheService.HashGetFieldsAsync(pointStatsKey.MainKey, new List<string> { pointStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!pointStats.TryGetValue(pointStatsKey.SubKey, out string sPointStatsValue) || !decimal.TryParse(sPointStatsValue, out decimal pointStatsValue))
+                    pointStatsValue = 0m;
+                if (pointStatsValue <= 0m) continue;
+
+                var payoutStatsKey = matchId.GetPayoutStatsKeyByMatchBetKindNumber(betKindId, i);
+                var payoutStats = await _redisCacheService.HashGetFieldsAsync(payoutStatsKey.MainKey, new List<string> { payoutStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!payoutStats.TryGetValue(payoutStatsKey.SubKey, out string sPayoutStatsValue) || !decimal.TryParse(sPayoutStatsValue, out decimal payoutStatsValue))
+                    payoutStatsValue = 0m;
+
                 var companyPayoutStatsKey = matchId.GetCompanyPayoutStatsKeyByMatchBetKindNumber(betKindId, i);
                 var companyPayoutStats = await _redisCacheService.HashGetFieldsAsync(companyPayoutStatsKey.MainKey, new List<string> { companyPayoutStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
                 if (!companyPayoutStats.TryGetValue(companyPayoutStatsKey.SubKey, out string sCompanyPayoutStatsValue) || !decimal.TryParse(sCompanyPayoutStatsValue, out decimal companyPayoutStatsValue))
