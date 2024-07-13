@@ -160,9 +160,21 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             if (!agentPts.TryGetValue(betKindId, out List<AgentPositionTakingModel> positionTakings)) positionTakings = new List<AgentPositionTakingModel>();
             if (!rateOfOddsValue.TryGetValue(betKindId, out Dictionary<int, decimal> rateValue)) rateValue = new Dictionary<int, decimal>();
 
-            if (!pointByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPointByPair)) valPointByPair = new Dictionary<string, decimal>();
-            if (!payoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPayoutByPair)) valPayoutByPair = new Dictionary<string, decimal>();
-            if (!realPayoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valRealPayoutByPair)) valRealPayoutByPair = new Dictionary<string, decimal>();
+            if (!pointByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPointByPair))
+            {
+                valPointByPair = new Dictionary<string, decimal>();
+                pointByPair[betKindId] = valPointByPair;
+            }
+            if (!payoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPayoutByPair))
+            {
+                valPayoutByPair = new Dictionary<string, decimal>();
+                payoutByPair[betKindId] = valPayoutByPair;
+            }
+            if (!realPayoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valRealPayoutByPair))
+            {
+                valRealPayoutByPair = new Dictionary<string, decimal>();
+                realPayoutByPair[betKindId] = valRealPayoutByPair;
+            }
 
             var subsets = new List<List<int>>();
             numbers.ToArray().GenerateCombination(noOfElements, subsets);
