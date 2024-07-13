@@ -427,7 +427,7 @@ namespace HnMicro.Module.Caching.ByRedis.Services
         public Dictionary<string, decimal> SortedSetRangeByScoreWithScoresInDecimal(string key, decimal start = decimal.MinValue, decimal stop = decimal.MaxValue, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1)
         {
             var doubleStart = start == decimal.MinValue ? double.NegativeInfinity : (double)start;
-            var doubleStop = stop == decimal.MaxValue ? double.NegativeInfinity : (double)stop;
+            var doubleStop = stop == decimal.MaxValue ? double.PositiveInfinity : (double)stop;
             return GetDatabase(to, database).SortedSetRangeByScoreWithScores(key, doubleStart, doubleStop, exclude, order, skip, take).ToDictionaryValueInDecimal();
         }
 
@@ -439,7 +439,7 @@ namespace HnMicro.Module.Caching.ByRedis.Services
         public async Task<Dictionary<string, decimal>> SortedSetRangeByScoreWithScoresInDecimalAsync(string key, decimal start = decimal.MinValue, decimal stop = decimal.MaxValue, Exclude exclude = Exclude.None, Order order = Order.Ascending, long skip = 0, long take = -1, string to = "", int database = -1)
         {
             var doubleStart = start == decimal.MinValue ? double.NegativeInfinity : (double)start;
-            var doubleStop = stop == decimal.MaxValue ? double.NegativeInfinity : (double)stop;
+            var doubleStop = stop == decimal.MaxValue ? double.PositiveInfinity : (double)stop;
             return (await GetDatabase(to, database).SortedSetRangeByScoreWithScoresAsync(key, doubleStart, doubleStop, exclude, order, skip, take)).ToDictionaryValueInDecimal();
         }
         #endregion

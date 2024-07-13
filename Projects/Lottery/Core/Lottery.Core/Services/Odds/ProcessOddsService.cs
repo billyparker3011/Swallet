@@ -142,9 +142,9 @@ namespace Lottery.Core.Services.Odds
             var payoutMixStatsByMatchKey = matchId.GetPayoutMixedStatsKeyByMatchBetKind(betKindId);
             var companyPayoutMixStatsByMatchKey = matchId.GetCompanyPayoutMixedStatsKeyByMatchBetKind(betKindId);
 
-            var dictPairs = await _redisCacheService.SortedSetRangeByRankWithScoresInDecimalAsync(companyPayoutMixStatsByMatchKey.MainKey, 0L, 1L * top, StackExchange.Redis.Order.Descending, CachingConfigs.RedisConnectionForApp);
-            var dictPoints = await _redisCacheService.SortedSetRangeByRankWithScoresInDecimalAsync(pointMixStatsByMatchKey.MainKey, 0L, -1L, StackExchange.Redis.Order.Ascending, CachingConfigs.RedisConnectionForApp);
-            var dictPayouts = await _redisCacheService.SortedSetRangeByRankWithScoresInDecimalAsync(payoutMixStatsByMatchKey.MainKey, 0L, -1L, StackExchange.Redis.Order.Ascending, CachingConfigs.RedisConnectionForApp);
+            var dictPairs = await _redisCacheService.SortedSetRangeByScoreWithScoresInDecimalAsync(companyPayoutMixStatsByMatchKey.MainKey, decimal.MinValue, decimal.MaxValue, StackExchange.Redis.Exclude.None, StackExchange.Redis.Order.Descending, 0, 1L * top, CachingConfigs.RedisConnectionForApp);
+            var dictPoints = await _redisCacheService.SortedSetRangeByScoreWithScoresInDecimalAsync(pointMixStatsByMatchKey.MainKey, decimal.MinValue, decimal.MaxValue, StackExchange.Redis.Exclude.None, StackExchange.Redis.Order.Ascending, 0, -1L, CachingConfigs.RedisConnectionForApp);
+            var dictPayouts = await _redisCacheService.SortedSetRangeByScoreWithScoresInDecimalAsync(payoutMixStatsByMatchKey.MainKey, decimal.MinValue, decimal.MaxValue, StackExchange.Redis.Exclude.None, StackExchange.Redis.Order.Ascending, 0, -1L, CachingConfigs.RedisConnectionForApp);
             var data = dictPairs.Select(f => new MixedOddsTableDetailModel
             {
                 Pair = f.Key,
