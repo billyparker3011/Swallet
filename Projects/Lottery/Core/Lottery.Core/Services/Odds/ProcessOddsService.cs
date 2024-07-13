@@ -172,9 +172,21 @@ namespace Lottery.Core.Services.Odds
                 if (!companyPayoutStats.TryGetValue(companyPayoutStatsKey.SubKey, out string sCompanyPayoutStatsValue) || !decimal.TryParse(sCompanyPayoutStatsValue, out decimal companyPayoutStatsValue))
                     companyPayoutStatsValue = 0m;
 
+                var payoutStatsKey = matchId.GetPayoutStatsKeyByMatchBetKindNumber(betKindId, i);
+                var payoutStats = await _redisCacheService.HashGetFieldsAsync(payoutStatsKey.MainKey, new List<string> { payoutStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!payoutStats.TryGetValue(payoutStatsKey.SubKey, out string sPayoutStatsValue) || !decimal.TryParse(sPayoutStatsValue, out decimal payoutStatsValue))
+                    payoutStatsValue = 0m;
+
+                var pointStatsKey = matchId.GetPointStatsKeyByMatchBetKindNumber(betKindId, i);
+                var pointStats = await _redisCacheService.HashGetFieldsAsync(pointStatsKey.MainKey, new List<string> { pointStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!pointStats.TryGetValue(pointStatsKey.SubKey, out string sPointStatsValue) || !decimal.TryParse(sPointStatsValue, out decimal pointStatsValue))
+                    pointStatsValue = 0m;
+
                 data.Add(new MixedOddsTableRelatedBetKindModel
                 {
                     Number = i,
+                    Payout = payoutStatsValue,
+                    Point = pointStatsValue,
                     CompanyPayout = companyPayoutStatsValue
                 });
             }
