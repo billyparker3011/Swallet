@@ -1,6 +1,7 @@
 ﻿using HnMicro.Modules.EntityFrameworkCore.SqlServer;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data;
+using Lottery.Player.PlayerService.Services.InternalInitial;
 
 namespace Lottery.Player.PlayerService.Helpers
 {
@@ -10,7 +11,7 @@ namespace Lottery.Player.PlayerService.Helpers
         {
             builder.AddSqlServer<LotteryContext>();
             builder.Services.AddScoped<ILotteryUow, LotteryUow>();
-            //builder.Services.AddHostedService<InternalInitialService>();
+            builder.Services.AddHostedService<InternalInitialService>();
         }
     }
 }

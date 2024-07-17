@@ -16,13 +16,14 @@ namespace Lottery.Core.Services.Pubs
         Task PublishChannel(List<ChannelModel> updatedChannels);
         Task PublishPrize(List<PrizeModel> updatedPrizes);
         Task PublishDefaultOdds(List<OddsModel> defaultOdds);
-        Task PublishOddsValue(RateOfOddsValueModel rateOfOddsValue);
-        void PublishOddsValueSingle(RateOfOddsValueModel rateOfOddsValue);
+        Task PublishOddsValue(RateOfOddsValueModel model);
+        Task PublishOddsValueSingle(RateOfOddsValueModel model);
         Task PublishStartLive(StartLiveEventModel model);
         Task PublishUpdateMatch(UpdateMatchModel model);
         Task PublishUpdateLiveOdds(UpdateLiveOddsModel model);
         Task PublishSetting(SettingModel model);
         Task PublishCompanyPayouts(CompanyPayoutModel model);
+        Task PublishMixedCompanyPayouts(MixedCompanyPayoutModel model);
         Task PublishCompletedMatch(CompletedMatchModel model);
     }
 }

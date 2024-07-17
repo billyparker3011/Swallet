@@ -27,6 +27,7 @@ namespace Lottery.Tools.AdjustOddsService.Services.PubSub
         public void Start()
         {
             SubscribeSettings();
+            SubscribeMixedCompanyPayouts();
             SubscribeCompanyPayouts();
             SubscribeCompletedMatch();
         }
@@ -49,6 +50,14 @@ namespace Lottery.Tools.AdjustOddsService.Services.PubSub
             });
         }
 
+        private void SubscribeMixedCompanyPayouts()
+        {
+            _redisCacheService.Subscribe(SubscribeCommonConfigs.MixedCompanyPayoutChannel, (channel, message) =>
+            {
+                ProcessMixedCompanyPayout(message);
+            }, CachingConfigs.RedisConnectionForApp);
+        }
+
         private void SubscribeCompanyPayouts()
         {
             _redisCacheService.Subscribe(SubscribeCommonConfigs.CompanyPayoutChannel, (channel, message) =>
@@ -63,6 +72,44 @@ namespace Lottery.Tools.AdjustOddsService.Services.PubSub
             {
                 ProcessSetting(message);
             }, CachingConfigs.RedisConnectionForApp);
+        }
+
+        private void ProcessMixedCompanyPayout(string message)
+        {
+            var companyPayouts = Newtonsoft.Json.JsonConvert.DeserializeObject<MixedCompanyPayoutModel>(message);
+            if (companyPayouts.Payouts.Count == 0) return;
+
+            var dict = new Dictionary<int, List<string>>();
+
+            var payoutByMixedAndNumberInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IPayoutByMixedAndNumberInMemoryRepository>();
+            foreach (var item in companyPayouts.Payouts)
+            {
+                foreach (var pair in item.Value)
+                {
+                    List<string> listPairs;
+                    if (!dict.TryGetValue(item.Key, out listPairs))
+                    {
+                        listPairs = new List<string>();
+                        dict[item.Key] = listPairs;
+                    }
+
+                    if (!listPairs.Contains(pair.Key)) listPairs.Add(pair.Key);
+
+                    payoutByMixedAndNumberInMemoryRepository.Add(new Models.Payouts.PayoutByMixedAndNumberModel
+                    {
+                        MatchId = companyPayouts.MatchId,
+                        BetKindId = item.Key,
+                        PairNumber = pair.Key,
+                        Payout = pair.Value
+                    });
+                }
+            }
+
+            _oddsAdjustmentService.Enqueue(new ChangePayoutOfPairNumbersCommand
+            {
+                MatchId = companyPayouts.MatchId,
+                PairNumbers = dict
+            });
         }
 
         private void ProcessCompanyPayout(string message)

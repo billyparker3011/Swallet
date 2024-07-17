@@ -38,6 +38,12 @@ namespace Lottery.Core.Services.Pubs
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.CompanyPayoutChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }
 
+        public async Task PublishMixedCompanyPayouts(MixedCompanyPayoutModel model)
+        {
+            if (model == null) return;
+            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.MixedCompanyPayoutChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
+        }
+
         public async Task PublishCompletedMatch(CompletedMatchModel model)
         {
             if (model == null) return;
@@ -50,16 +56,16 @@ namespace Lottery.Core.Services.Pubs
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.DefaultOddsConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(defaultOdds), CachingConfigs.RedisConnectionForApp);
         }
 
-        public async Task PublishOddsValue(RateOfOddsValueModel rateOfOddsValue)
+        public async Task PublishOddsValue(RateOfOddsValueModel model)
         {
-            if (rateOfOddsValue == null) return;
-            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.RateOfOddsValueConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(rateOfOddsValue), CachingConfigs.RedisConnectionForApp);
+            if (model == null) return;
+            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.RateOfOddsValueConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }
 
-        public void PublishOddsValueSingle(RateOfOddsValueModel rateOfOddsValue)
+        public async Task PublishOddsValueSingle(RateOfOddsValueModel model)
         {
-            if (rateOfOddsValue == null) return;
-            _redisCacheService.Publish(SubscribeCommonConfigs.RateOfOddsValueConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(rateOfOddsValue), CachingConfigs.RedisConnectionForApp);
+            if (model == null) return;
+            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.RateOfOddsValueConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }
 
         public async Task PublishPrize(List<PrizeModel> updatedPrizes)

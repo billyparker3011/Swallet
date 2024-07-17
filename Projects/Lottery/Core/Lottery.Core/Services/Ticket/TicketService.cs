@@ -1,5 +1,4 @@
 ﻿using HnMicro.Core.Helpers;
-using HnMicro.Framework.Enums;
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
@@ -9,15 +8,10 @@ using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Channel;
 using Lottery.Core.InMemory.Ticket;
-using Lottery.Core.Models.BetKind;
 using Lottery.Core.Models.MatchResult;
-using Lottery.Core.Models.PositionTakings;
-using Lottery.Core.Models.Setting;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
 using Lottery.Core.Repositories.Ticket;
-using Lottery.Core.Services.Agent;
-using Lottery.Core.Services.Caching.Player;
 using Lottery.Core.Services.Match;
 using Lottery.Core.Services.Odds;
 using Lottery.Core.Services.Player;
@@ -33,38 +27,29 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
     private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
     private readonly IRunningMatchService _runningMatchService;
     private readonly ITicketProcessor _ticketProcessor;
-    private readonly IAgentPositionTakingService _agentPositionTakingService;
     private readonly IPlayerService _playerService;
-    private readonly IPlayerSettingService _playerSettingService;
-    private readonly IProcessTicketService _processTicketService;
-    private readonly IProcessOddsService _processOddsService;
     private readonly IProcessNoneLiveService _processNoneLiveService;
     private readonly IProcessLiveService _processLiveService;
+    private readonly IProcessMixedService _processMixedService;
     private readonly INumberService _numberService;
 
     public TicketService(ILogger<TicketService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
         IInMemoryUnitOfWork inMemoryUnitOfWork,
         IRunningMatchService runningMatchService,
         ITicketProcessor ticketProcessor,
-        IAgentPositionTakingService agentPositionTakingService,
         IPlayerService playerService,
-        IPlayerSettingService playerSettingService,
-        IProcessTicketService processTicketService,
-        IProcessOddsService processOddsService,
         IProcessNoneLiveService processNoneLiveService,
         IProcessLiveService processLiveService,
+        IProcessMixedService processMixedService,
         INumberService numberService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _inMemoryUnitOfWork = inMemoryUnitOfWork;
         _runningMatchService = runningMatchService;
         _ticketProcessor = ticketProcessor;
-        _agentPositionTakingService = agentPositionTakingService;
         _playerService = playerService;
-        _playerSettingService = playerSettingService;
-        _processTicketService = processTicketService;
-        _processOddsService = processOddsService;
         _processNoneLiveService = processNoneLiveService;
         _processLiveService = processLiveService;
+        _processMixedService = processMixedService;
         _numberService = numberService;
     }
 
@@ -72,7 +57,6 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
     {
         var processValidation = await InternalProcess(model.BetKindId, model.Numbers.Select(f => f.Number).ToList());
 
-        //  Validation BetKind
         var errCode = _ticketProcessor.Valid(model, processValidation.Metadata);
         if (errCode < 0) throw new BadRequestException(errCode);
 
@@ -103,162 +87,10 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
     {
         var processValidation = await InternalProcess(model.BetKindId, model.Numbers);
 
-        //  Validation BetKind
         var errCode = _ticketProcessor.ValidMixed(model, processValidation.Metadata);
         if (errCode < 0) throw new BadRequestException(errCode);
 
-        var noOfNumbers = model.BetKindId.GetNoOfNumbers();
-        var enableStats = _ticketProcessor.EnableStats(model.BetKindId);
-        var dictSubBetKindIds = _ticketProcessor.GetSubBetKindIds(model.BetKindId);
-        var listSubBetKindIds = dictSubBetKindIds.Keys.ToList();
-
-        var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
-        var betKinds = betKindInMemoryRepository.FindBy(f => listSubBetKindIds.Contains(f.Id)).ToList();
-
-        //  Get Player OddsValue, MinBet, MaxBet, MaxPerMatch
-        (var subBetKinds, var refreshSettingCache) = await _playerSettingService.GetBetSettings(processValidation.Player.PlayerId, listSubBetKindIds);
-        if (subBetKinds.Count == 0) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotReadBetSetting);
-        if (refreshSettingCache) await _playerSettingService.BuildSettingByBetKindCache(processValidation.Player.PlayerId, subBetKinds);
-
-        //  Get rate of OddsValue from Company
-        var rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(processValidation.Match.MatchId, listSubBetKindIds);
-
-        //  Player Odds by Match, BetKind
-        var dictPlayerOdds = await _processTicketService.GetMatchPlayerMixedOddsByBetKind(processValidation.Player.PlayerId, processValidation.Match.MatchId, model.BetKindId, subBetKinds);
-
-        //  Get Company Odds, Agent Odds
-        var agentOddsValue = await _processTicketService.GetAgentMixedOdds(processValidation.BetKind.Id, dictSubBetKindIds.Keys.ToList(), processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotReadAgentOdds);
-
-        //  Get agent position taking
-        var agentPts = await _agentPositionTakingService.GetAgentPositionTakingByAgentIds(listSubBetKindIds, new List<long> { processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId });
-
-        //  Get Credit
-        (var givenCredit, var refreshCreditCache) = await _processTicketService.GetGivenCredit(processValidation.Player.PlayerId);
-        if (refreshCreditCache) await _processTicketService.BuildGivenCreditCache(processValidation.Player.PlayerId, givenCredit);
-
-        //  Get Outs
-        var outs = await _processTicketService.GetOuts(processValidation.Player.PlayerId, processValidation.Match.MatchId, model.Numbers);
-
-        var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
-        var correlationId = Guid.NewGuid();
-        var numbers = model.Numbers.OrderBy(f => f).ToList();
-        var normalizedNumbers = JoinNumbers(numbers, noOfNumbers);
-        var totalPayouts = 0m;
-        var tickets = new List<Data.Entities.Ticket>();
-        //  Stats
-        var pointByPair = new Dictionary<int, Dictionary<string, decimal>>();
-        var payoutByPair = new Dictionary<int, Dictionary<string, decimal>>();
-        var realPayoutByPair = new Dictionary<int, Dictionary<string, decimal>>();
-        foreach (var item in dictSubBetKindIds)
-        {
-            var betKindId = item.Key;
-            var noOfElements = item.Value;
-
-            var currentBetKind = betKinds.FirstOrDefault(f => f.Id == betKindId);
-            if (currentBetKind == null) continue;
-
-            if (!agentPts.TryGetValue(betKindId, out List<AgentPositionTakingModel> positionTakings)) positionTakings = new List<AgentPositionTakingModel>();
-            if (!rateOfOddsValue.TryGetValue(betKindId, out Dictionary<int, decimal> rateValue)) rateValue = new Dictionary<int, decimal>();
-
-            if (!pointByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPointByPair))
-            {
-                valPointByPair = new Dictionary<string, decimal>();
-                pointByPair[betKindId] = valPointByPair;
-            }
-            if (!payoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPayoutByPair))
-            {
-                valPayoutByPair = new Dictionary<string, decimal>();
-                payoutByPair[betKindId] = valPayoutByPair;
-            }
-            if (!realPayoutByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valRealPayoutByPair))
-            {
-                valRealPayoutByPair = new Dictionary<string, decimal>();
-                realPayoutByPair[betKindId] = valRealPayoutByPair;
-            }
-
-            var subsets = new List<List<int>>();
-            numbers.ToArray().GenerateCombination(noOfElements, subsets);
-            if (subsets.Count == 0) continue;
-            if (!model.Points.TryGetValue(betKindId, out decimal pointByBetKind)) continue;
-            if (!dictPlayerOdds.TryGetValue(betKindId, out decimal playerOddsValue)) continue;
-
-            //  Bet setting
-            if (!subBetKinds.TryGetValue(betKindId, out BetSettingModel betSetting)) continue;
-            if (pointByBetKind < betSetting.MinBet || pointByBetKind > betSetting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
-
-            if (subsets.Count == 1)
-            {
-                var ticket = CreateSingleTicket(correlationId, processValidation, currentBetKind, pointByBetKind, playerOddsValue, normalizedNumbers, positionTakings);
-                foreach (var number in numbers)
-                {
-                    if (!outs.PointsByMatchAndNumbers.TryGetValue(number, out decimal outsByMatchAndNumberValue)) outsByMatchAndNumberValue = 0m;
-                    if ((outsByMatchAndNumberValue + ticket.Stake) > betSetting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid);
-                }
-
-                valPointByPair[normalizedNumbers] = pointByBetKind;
-                valPayoutByPair[normalizedNumbers] = ticket.PlayerPayout;
-                valRealPayoutByPair[normalizedNumbers] = _ticketProcessor.GetRealPayoutForCompany(ticket.PlayerPayout, ticket.SupermasterPt);
-
-                totalPayouts += ticket.PlayerPayout;
-                ticketRepository.Add(ticket);
-                tickets.Add(ticket);
-            }
-            else
-            {
-                //  Set total points
-                var dictTotalPointsByNumbers = new Dictionary<int, decimal>();
-                foreach (var itemSubsets in subsets)
-                {
-                    foreach (var itemNumber in itemSubsets)
-                    {
-                        if (!dictTotalPointsByNumbers.ContainsKey(itemNumber)) dictTotalPointsByNumbers[itemNumber] = pointByBetKind;
-                        else dictTotalPointsByNumbers[itemNumber] += pointByBetKind;
-                    }
-                }
-                foreach (var number in dictTotalPointsByNumbers)
-                {
-                    if (!outs.PointsByMatchAndNumbers.TryGetValue(number.Key, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
-                    if ((pointsByMatchAndNumberValue + number.Value) > betSetting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid);
-                }
-
-                var ticket = CreateParentTicket(correlationId, processValidation, betKindId, currentBetKind, playerOddsValue, normalizedNumbers, positionTakings);
-                var childTickets = new List<Data.Entities.Ticket>();
-                foreach (var itemSubsets in subsets)
-                {
-                    var subsetNumbers = itemSubsets.OrderBy(f => f).ToList();
-                    var normalizedSubsetNumbers = JoinNumbers(subsetNumbers, noOfNumbers);
-                    var childTicketItem = CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, normalizedSubsetNumbers, positionTakings);
-
-                    valPointByPair[normalizedSubsetNumbers] = pointByBetKind;
-                    valPayoutByPair[normalizedSubsetNumbers] = childTicketItem.PlayerPayout;
-                    valRealPayoutByPair[normalizedSubsetNumbers] = _ticketProcessor.GetRealPayoutForCompany(childTicketItem.PlayerPayout, childTicketItem.SupermasterPt);
-
-                    childTickets.Add(childTicketItem);
-                }
-                var subTotalPoints = childTickets.Sum(f => f.Stake);
-                var subTotalPayouts = childTickets.Sum(f => f.PlayerPayout);
-
-                ticket.Stake = subTotalPoints;
-                ticket.PlayerPayout = subTotalPayouts;
-
-                totalPayouts += ticket.PlayerPayout;
-
-                ticketRepository.Add(ticket);
-                ticketRepository.AddRange(childTickets);
-
-                tickets.Add(ticket);
-                tickets.AddRange(childTickets);
-            }
-        }
-
-        if ((outs.OutsByMatch + totalPayouts) > givenCredit) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.GivenCreditIsInvalid);
-
-        await LotteryUow.SaveChangesAsync();
-
-        await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPayouts);
-
-        if (enableStats) await _processTicketService.BuildMixedStatsByMatch(processValidation.Match.MatchId, pointByPair, payoutByPair, realPayoutByPair);
-
+        var tickets = await _processMixedService.Process(model, processValidation);
         AddToAcceptedScanMixedService(tickets);
     }
 
@@ -272,213 +104,6 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             CreatedAt = f.CreatedAt,
             Children = tickets.Where(f1 => f1.ParentId == f.TicketId).Select(f => f.TicketId).ToList()
         }).ToList());
-    }
-
-    private Data.Entities.Ticket CreateChildrenTicket(Data.Entities.Ticket parentTicket, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
-    {
-        var agentPt = 0m;
-        var agentPostionTaking = positionTakings.Find(f => f.AgentId == parentTicket.AgentId);
-        if (agentPostionTaking != null) agentPt = agentPostionTaking.PositionTaking;
-
-        var masterPt = 0m;
-        var masterPostionTaking = positionTakings.Find(f => f.AgentId == parentTicket.MasterId);
-        if (masterPostionTaking != null) masterPt = masterPostionTaking.PositionTaking;
-
-        var supermasterPt = 0m;
-        var supermasterPostionTaking = positionTakings.Find(f => f.AgentId == parentTicket.SupermasterId);
-        if (supermasterPostionTaking != null) supermasterPt = supermasterPostionTaking.PositionTaking;
-
-        return new Data.Entities.Ticket
-        {
-            PlayerId = parentTicket.PlayerId,
-            AgentId = parentTicket.AgentId,
-            MasterId = parentTicket.MasterId,
-            SupermasterId = parentTicket.SupermasterId,
-            BetKindId = parentTicket.BetKindId,
-            SportKindId = parentTicket.SportKindId,
-            MatchId = parentTicket.MatchId,
-            KickOffTime = parentTicket.KickOffTime,
-            RegionId = parentTicket.RegionId,
-            ChannelId = parentTicket.ChannelId,
-            ChoosenNumbers = normalizedNumbers,
-            RewardRate = betKind.Award,
-            Stake = points,
-            IsLive = parentTicket.IsLive,
-            Prize = parentTicket.Prize,
-            //  Player
-            PlayerOdds = playerOddsValue,
-            PlayerPayout = points * playerOddsValue,
-            PlayerWinLoss = 0m,
-            DraftPlayerWinLoss = 0m,
-            //  Agent
-            AgentOdds = 0m,
-            AgentPayout = 0m,
-            AgentWinLoss = 0m,
-            DraftAgentWinLoss = 0m,
-            AgentPt = agentPt,
-            //  Master
-            MasterOdds = 0m,
-            MasterPayout = 0m,
-            MasterWinLoss = 0m,
-            DraftMasterWinLoss = 0m,
-            MasterPt = masterPt,
-            //  Supermaster
-            SupermasterOdds = 0m,
-            SupermasterPayout = 0m,
-            SupermasterWinLoss = 0m,
-            DraftSupermasterWinLoss = 0m,
-            SupermasterPt = supermasterPt,
-            //  Company
-            CompanyOdds = 0m,
-            CompanyPayout = 0m,
-            CompanyWinLoss = 0m,
-            DraftCompanyWinLoss = 0m,
-            //  State & Others
-            State = parentTicket.State,
-            CreatedAt = parentTicket.CreatedAt,
-            Parent = parentTicket
-        };
-    }
-
-    private Data.Entities.Ticket CreateParentTicket(Guid correlationId, ProcessValidationTicketModel processValidation, int betKindId, BetKindModel betKind, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
-    {
-        var agentPt = 0m;
-        var agentPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.AgentId);
-        if (agentPostionTaking != null) agentPt = agentPostionTaking.PositionTaking;
-
-        var masterPt = 0m;
-        var masterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.MasterId);
-        if (masterPostionTaking != null) masterPt = masterPostionTaking.PositionTaking;
-
-        var supermasterPt = 0m;
-        var supermasterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.SupermasterId);
-        if (supermasterPostionTaking != null) supermasterPt = supermasterPostionTaking.PositionTaking;
-
-        return new Data.Entities.Ticket
-        {
-            PlayerId = processValidation.Player.PlayerId,
-            AgentId = processValidation.Player.AgentId,
-            MasterId = processValidation.Player.MasterId,
-            SupermasterId = processValidation.Player.SupermasterId,
-            BetKindId = betKindId,
-            SportKindId = SportKind.Lottery.ToInt(),
-            MatchId = processValidation.Match.MatchId,
-            KickOffTime = processValidation.Match.KickoffTime,
-            RegionId = processValidation.BetKind.RegionId,
-            ChannelId = processValidation.Channel.Id,
-            ChoosenNumbers = normalizedNumbers,
-            ShowMore = true,
-            CorrelationCode = correlationId,
-            RewardRate = betKind.Award,
-            Stake = 0m,
-            IsLive = processValidation.Metadata.IsLive,
-            Prize = processValidation.Metadata.Prize,
-            Position = processValidation.Metadata.Position,
-            //  Player
-            PlayerOdds = playerOddsValue,
-            PlayerPayout = 0m,
-            PlayerWinLoss = 0m,
-            DraftPlayerWinLoss = 0m,
-            //  Agent
-            AgentOdds = 0m,
-            AgentPayout = 0m,
-            AgentWinLoss = 0m,
-            DraftAgentWinLoss = 0m,
-            AgentPt = agentPt,
-            //  Master
-            MasterOdds = 0m,
-            MasterPayout = 0m,
-            MasterWinLoss = 0m,
-            DraftMasterWinLoss = 0m,
-            MasterPt = masterPt,
-            //  Supermaster
-            SupermasterOdds = 0m,
-            SupermasterPayout = 0m,
-            SupermasterWinLoss = 0m,
-            DraftSupermasterWinLoss = 0m,
-            SupermasterPt = supermasterPt,
-            //  Company
-            CompanyOdds = 0m,
-            CompanyPayout = 0m,
-            CompanyWinLoss = 0m,
-            DraftCompanyWinLoss = 0m,
-            //  State & Others
-            State = TicketState.Waiting.ToInt(),
-            IpAddress = processValidation.ClientInformation.IpAddress,
-            UserAgent = processValidation.ClientInformation.UserAgent,
-            Platform = processValidation.ClientInformation.Platform,
-            CreatedAt = ClockService.GetUtcNow()
-        };
-    }
-
-    private Data.Entities.Ticket CreateSingleTicket(Guid correlationId, ProcessValidationTicketModel processValidation, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
-    {
-        var agentPt = 0m;
-        var agentPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.AgentId);
-        if (agentPostionTaking != null) agentPt = agentPostionTaking.PositionTaking;
-
-        var masterPt = 0m;
-        var masterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.MasterId);
-        if (masterPostionTaking != null) masterPt = masterPostionTaking.PositionTaking;
-
-        var supermasterPt = 0m;
-        var supermasterPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.SupermasterId);
-        if (supermasterPostionTaking != null) supermasterPt = supermasterPostionTaking.PositionTaking;
-
-        return new Data.Entities.Ticket
-        {
-            PlayerId = processValidation.Player.PlayerId,
-            AgentId = processValidation.Player.AgentId,
-            MasterId = processValidation.Player.MasterId,
-            SupermasterId = processValidation.Player.SupermasterId,
-            BetKindId = betKind.Id,
-            SportKindId = SportKind.Lottery.ToInt(),
-            MatchId = processValidation.Match.MatchId,
-            KickOffTime = processValidation.Match.KickoffTime,
-            RegionId = processValidation.BetKind.RegionId,
-            ChannelId = processValidation.Channel.Id,
-            ChoosenNumbers = normalizedNumbers,
-            CorrelationCode = correlationId,
-            RewardRate = betKind.Award,
-            Stake = points,
-            IsLive = processValidation.Metadata.IsLive,
-            Prize = processValidation.Metadata.Prize,
-            Position = processValidation.Metadata.Position,
-            //  Player
-            PlayerOdds = playerOddsValue,
-            PlayerPayout = points * playerOddsValue,
-            PlayerWinLoss = 0m,
-            DraftPlayerWinLoss = 0m,
-            //  Agent
-            AgentOdds = 0m,
-            AgentPayout = 0m,
-            AgentWinLoss = 0m,
-            DraftAgentWinLoss = 0m,
-            AgentPt = agentPt,
-            //  Master
-            MasterOdds = 0m,
-            MasterPayout = 0m,
-            MasterWinLoss = 0m,
-            DraftMasterWinLoss = 0m,
-            MasterPt = masterPt,
-            //  Supermaster
-            SupermasterOdds = 0m,
-            SupermasterPayout = 0m,
-            SupermasterWinLoss = 0m,
-            DraftSupermasterWinLoss = 0m,
-            SupermasterPt = supermasterPt,
-            //  Company
-            CompanyOdds = 0m,
-            CompanyPayout = 0m,
-            CompanyWinLoss = 0m,
-            DraftCompanyWinLoss = 0m,
-            //  State & Others
-            State = TicketState.Waiting.ToInt(),
-            IpAddress = processValidation.ClientInformation.IpAddress,
-            UserAgent = processValidation.ClientInformation.UserAgent,
-            Platform = processValidation.ClientInformation.Platform,
-            CreatedAt = ClockService.GetUtcNow()
-        };
     }
 
     private async Task<ProcessValidationTicketModel> InternalProcess(int betKindId, List<int> numbers)
@@ -548,11 +173,6 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             Match = match,
             Metadata = ticketMetadata
         };
-    }
-
-    private string JoinNumbers(List<int> numbers, int noOfNumbers)
-    {
-        return string.Join(", ", numbers.Select(f => f.NormalizeNumber(noOfNumbers))).Trim();
     }
 
     public async Task LoadTicketsByMatch(long matchId, int top = -1)
