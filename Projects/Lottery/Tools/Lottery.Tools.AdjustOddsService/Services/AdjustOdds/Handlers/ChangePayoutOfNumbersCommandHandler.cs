@@ -55,10 +55,17 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
 
             if (dictRate.Count == 0) return;
 
-            var processOddsService = scope.ServiceProvider.GetService<IProcessOddsService>();
-            processOddsService.UpdateRateOfOddsValue(deviredAdjustCommand.MatchId, deviredAdjustCommand.BetKindId, dictRate);
-
+            UpdateRateOfOddsValue(scope.ServiceProvider, deviredAdjustCommand.MatchId, deviredAdjustCommand.BetKindId, dictRate);
             balanceTableSettingService.UpdateSetting(setting);
+        }
+
+        private void UpdateRateOfOddsValue(IServiceProvider serviceProvider, long matchId, int betKindId, Dictionary<int, decimal> dictRate)
+        {
+            Task.Run(async () =>
+            {
+                var processOddsService = serviceProvider.GetService<IProcessOddsService>();
+                await processOddsService.UpdateRateOfOddsValue(matchId, betKindId, dictRate);
+            });
         }
     }
 }

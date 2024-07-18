@@ -16,8 +16,12 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
         {
             using var scope = ServiceProvider.CreateScope();
             var inMemoryUow = scope.ServiceProvider.GetService<IInMemoryUnitOfWork>();
+
             var payoutByBetKindAndNumberInMemoryRepository = inMemoryUow.GetRepository<IPayoutByBetKindAndNumberInMemoryRepository>();
             payoutByBetKindAndNumberInMemoryRepository.RemoveByMatchId(command.MatchId);
+
+            var payoutByMixedAndNumberInMemoryRepository = inMemoryUow.GetRepository<IPayoutByMixedAndNumberInMemoryRepository>();
+            payoutByMixedAndNumberInMemoryRepository.RemoveByMatchId(command.MatchId);
         }
     }
 }

@@ -73,7 +73,14 @@ public class FirstNorthern_Northern_LoTruot_Processor : AbstractBetKindProcessor
             {
                 child.State = TicketState.Lose;
                 child.Times = existedItem.Count;
-                playerWinlose = -1 * item.PlayerPayout * existedItem.Count;
+                if (existedItem.Count == 1)
+                {
+                    playerWinlose = -1 * item.PlayerPayout * existedItem.Count;
+                }
+                else
+                {
+                    playerWinlose = -1 * item.PlayerPayout - item.Stake * (existedItem.Count - 1) * (item.PlayerOdds ?? 0m);
+                }
             }
             else
             {
