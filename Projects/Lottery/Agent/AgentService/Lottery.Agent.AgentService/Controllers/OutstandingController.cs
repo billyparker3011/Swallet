@@ -4,6 +4,7 @@ using HnMicro.Framework.Responses;
 using Lottery.Core.Enums;
 using Lottery.Core.Filters.Authorization;
 using Lottery.Core.Models.Agent.GetAgentOutstanding;
+using Lottery.Core.Models.BroadCaster.GetBroadCasterOutstanding;
 using Lottery.Core.Services.Agent;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,16 @@ namespace Lottery.Agent.AgentService.Controllers
             {
                 AgentId = agentId,
                 RoleId = roleId,
+                SortName = sortName,
+                SortType = sortType
+            })));
+        }
+
+        [HttpGet("broad-caster"), LotteryAuthorize(Permission.Report.Reports)]
+        public async Task<IActionResult> GetBroadCasterOutstandings([FromQuery] string sortName, [FromQuery] SortType sortType = SortType.Descending)
+        {
+            return Ok(OkResponse.Create(await _agentOutstandingService.GetBroadCasterOutstandings(new GetBroadCasterOutstandingModel
+            {
                 SortName = sortName,
                 SortType = sortType
             })));
