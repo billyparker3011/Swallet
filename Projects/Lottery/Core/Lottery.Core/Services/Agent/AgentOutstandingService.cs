@@ -2,11 +2,14 @@
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.Agent;
+using Lottery.Core.Dtos.BroadCaster;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Models.Agent.GetAgentOuts;
 using Lottery.Core.Models.Agent.GetAgentOutstanding;
+using Lottery.Core.Models.BroadCaster.GetBroadCasterOutstanding;
 using Lottery.Core.Repositories.Agent;
+using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.UnitOfWorks;
@@ -258,6 +261,107 @@ namespace Lottery.Core.Services.Agent
                 "totalpayout" => agentOuts => agentOuts.TotalPayout,
                 "username" => agentOuts => agentOuts.Username,
                 _ => agentOuts => agentOuts.Username
+            };
+        }
+
+        public async Task<GetBroadCasterOutstandingResult> GetBroadCasterOutstandings(GetBroadCasterOutstandingModel model)
+        {
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
+            var ticketRepos = LotteryUow.GetRepository<ITicketRepository>();
+            var listBroadCasterOustanding = new List<BroadCasterOutstandingDto>();
+            var targetAgentId =  ClientContext.Agent.ParentId == 0
+                                        ? ClientContext.Agent.AgentId
+                                        : ClientContext.Agent.ParentId;
+            var outsState = CommonHelper.OutsTicketState();
+            switch (ClientContext.Agent.RoleId)
+            {
+                case (int)Role.Company:
+                    var companyTicketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue && outsState.Contains(tk.State));
+                    listBroadCasterOustanding = await GetBroadCasterOutstandings(companyTicketQuery, betKindRepos, model);
+                    break;
+                case (int)Role.Supermaster:
+                    var superMasterTicketQuery = ticketRepos.FindQueryBy(tk => tk.SupermasterId == targetAgentId && !tk.ParentId.HasValue && outsState.Contains(tk.State));
+                    listBroadCasterOustanding = await GetBroadCasterOutstandings(superMasterTicketQuery, betKindRepos, model);
+                    break;
+                case (int)Role.Master:
+                    var masterTicketQuery = ticketRepos.FindQueryBy(tk => tk.MasterId == targetAgentId && !tk.ParentId.HasValue && outsState.Contains(tk.State));
+                    listBroadCasterOustanding = await GetBroadCasterOutstandings(masterTicketQuery, betKindRepos, model);
+                    break;
+                case (int)Role.Agent:
+                    var agentTicketQuery = ticketRepos.FindQueryBy(tk => tk.AgentId == targetAgentId && !tk.ParentId.HasValue && outsState.Contains(tk.State));
+                    listBroadCasterOustanding = await GetBroadCasterOutstandings(agentTicketQuery, betKindRepos, model);
+                    break;
+                default:
+                    break;
+            }
+
+            return new GetBroadCasterOutstandingResult
+            {
+                BroadCasterOuts = listBroadCasterOustanding,
+                SummaryBetCount = listBroadCasterOustanding.Sum(x => x.TotalBetCount),
+                SummaryStake = listBroadCasterOustanding.Sum(x => x.TotalStake),
+                SummaryPayout = listBroadCasterOustanding.Sum(x => x.TotalPayout)
+            };
+        }
+
+        private async Task<List<BroadCasterOutstandingDto>> GetBroadCasterOutstandings(IQueryable<Data.Entities.Ticket> ticketQuery, IBetKindRepository betKindRepos, GetBroadCasterOutstandingModel model)
+        {
+            var broadCasterOutsQuery = ticketQuery
+                 .Join(betKindRepos.FindQuery(),
+                 tk => new { tk.RegionId, tk.BetKindId },
+                 bk => new { bk.RegionId, BetKindId = bk.Id },
+                 (tk, bk) => new { bk.RegionId, bk.CategoryId, bk.Id, bk.Name, tk.Stake, tk.PlayerPayout })
+                 .GroupBy(joinedData => new { joinedData.RegionId, joinedData.CategoryId, joinedData.Id, joinedData.Name })
+                 .Select(groupedData => new BroadCasterOutstandingDto
+                 {
+                     RegionId = groupedData.Key.RegionId,
+                     CategoryId = groupedData.Key.CategoryId,
+                     BetKindId = groupedData.Key.Id,
+                     BetKindName = groupedData.Key.Name,
+                     TotalStake = groupedData.Sum(x => x.Stake),
+                     TotalPayout = groupedData.Sum(x => x.PlayerPayout),
+                     TotalBetCount = groupedData.Count()
+                 });
+
+            if (model.SortType == SortType.Descending)
+            {
+                if (string.IsNullOrEmpty(model.SortName) || model.SortName.ToLower() == "betkind")
+                {
+                    broadCasterOutsQuery = broadCasterOutsQuery.OrderByDescending(x => x.RegionId).ThenByDescending(x => x.CategoryId).ThenByDescending(x => x.BetKindId);
+                }
+                else
+                {
+                    broadCasterOutsQuery = broadCasterOutsQuery.OrderByDescending(GetSortBroadCasterOutsProperty(model));
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(model.SortName) || model.SortName.ToLower() == "betkind")
+                {
+                    broadCasterOutsQuery = broadCasterOutsQuery.OrderBy(x => x.RegionId).ThenBy(x => x.CategoryId).ThenBy(x => x.BetKindId);
+                }
+                else
+                {
+                    broadCasterOutsQuery = broadCasterOutsQuery.OrderBy(GetSortBroadCasterOutsProperty(model));
+                }
+            }
+            var result = await broadCasterOutsQuery.ToListAsync();
+            foreach (var item in result)
+            {
+                item.RegionName = EnumCategoryHelper.GetEnumRegionInformation((Region)item.RegionId)?.Name;
+                item.CategoryName = EnumCategoryHelper.GetEnumCategoryInformation((Category)item.CategoryId)?.Name;
+            }
+            return result;
+        }
+
+        private Expression<Func<BroadCasterOutstandingDto, object>> GetSortBroadCasterOutsProperty(GetBroadCasterOutstandingModel model)
+        {
+            return model.SortName?.ToLower() switch
+            {
+                "totalbetcount" => broadCasterOuts => broadCasterOuts.TotalBetCount,
+                "totalstake" => broadCasterOuts => broadCasterOuts.TotalStake,
+                "totalpayout" => broadCasterOuts => broadCasterOuts.TotalPayout
             };
         }
     }
