@@ -1,4 +1,5 @@
-﻿using Lottery.Core.Models.Ticket;
+﻿using HnMicro.Framework.Helpers;
+using Lottery.Core.Models.Ticket;
 using Lottery.Data.Entities;
 
 namespace Lottery.Core.Helpers.Converters.Tickets
@@ -23,7 +24,7 @@ namespace Lottery.Core.Helpers.Converters.Tickets
                 TotalPoints = ticket.Stake,
                 CreatedAt = ticket.CreatedAt,
                 IpAddress = ticket.IpAddress,
-                Platform = ticket.Platform,
+                Platform = string.IsNullOrEmpty(ticket.Platform) ? ticket.UserAgent.GetPlatform() : ticket.Platform,
                 PlayerOdds = ticket.PlayerOdds,
                 IsLive = ticket.IsLive,
                 MixedTimes = ticket.MixedTimes,

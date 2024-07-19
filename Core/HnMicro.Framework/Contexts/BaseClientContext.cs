@@ -29,12 +29,14 @@ namespace HnMicro.Framework.Contexts
 
             var userAgent = GetUserAgent();
             var browser = userAgent.GetBrowser();
+            var platform = GetPlatform();
+            if (string.IsNullOrEmpty(platform)) platform = userAgent.GetPlatform();
 
             return new ClientInformation
             {
                 IpAddress = GetIpAddress(),
                 UserAgent = userAgent,
-                Platform = GetPlatform(),
+                Platform = platform,
                 Header = string.Join(Environment.NewLine, headers),
                 Browser = browser,
                 Domain = GetUserDomain()
