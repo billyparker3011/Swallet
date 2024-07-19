@@ -7,6 +7,7 @@
         Task Odds(string message);
         Task LiveOdds(string message);
         Task UpdateOdds(string message);
+        Task UpdateMixedOdds(string message);
         Task StartLive(string message);
         Task UpdateMatch(string message);
     }

@@ -67,10 +67,10 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
         if (refreshSettingCache) await _playerSettingService.BuildSettingByBetKindCache(processValidation.Player.PlayerId, subBetKinds);
 
         //  Get rate of OddsValue from Company
-        var rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(processValidation.Match.MatchId, listSubBetKindIds);
+        var rateOfOddsValue = await _processOddsService.GetMixedRateOfOddsValue(processValidation.Match.MatchId, listSubBetKindIds);
 
         //  Player Odds by Match, BetKind
-        var dictPlayerOdds = await _processTicketService.GetMatchPlayerMixedOddsByBetKind(processValidation.Player.PlayerId, processValidation.Match.MatchId, model.BetKindId, subBetKinds);
+        var dictPlayerOdds = await _processTicketService.GetMatchPlayerMixedOddsByBetKind(processValidation.Player.PlayerId, processValidation.Match.MatchId, subBetKinds);
 
         //  Get Company Odds, Agent Odds
         var agentOddsValue = await _processTicketService.GetAgentMixedOdds(processValidation.BetKind.Id, dictSubBetKindIds.Keys.ToList(), processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotReadAgentOdds);
@@ -104,7 +104,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
             if (currentBetKind == null) continue;
 
             if (!agentPts.TryGetValue(betKindId, out List<AgentPositionTakingModel> positionTakings)) positionTakings = new List<AgentPositionTakingModel>();
-            if (!rateOfOddsValue.TryGetValue(betKindId, out Dictionary<int, decimal> rateValue)) rateValue = new Dictionary<int, decimal>();
+            if (!rateOfOddsValue.TryGetValue(betKindId, out decimal rateValue)) rateValue = 0m;
 
             if (!pointByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPointByPair))
             {
@@ -131,6 +131,8 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
             //  Bet setting
             if (!subBetKinds.TryGetValue(betKindId, out BetSettingModel betSetting)) continue;
             if (pointByBetKind < betSetting.MinBet || pointByBetKind > betSetting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
+
+            playerOddsValue += rateValue;
 
             if (subsets.Count == 1)
             {

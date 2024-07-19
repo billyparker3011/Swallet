@@ -90,6 +90,19 @@ namespace Lottery.Player.OddsService.Hubs
             }));
         }
 
+        public async Task UpdateMixedOdds(MixedRateOfOddsValueModel model)
+        {
+            await _hubContext.Clients.All.UpdateMixedOdds(Newtonsoft.Json.JsonConvert.SerializeObject(new UpdateMixedOddsMessage
+            {
+                MatchId = model.MatchId,
+                RateValues = model.TotalRate.Select(f => new UpdateMixedOddsDetailMessage
+                {
+                    BetKindId = f.Key,
+                    TotalRate = f.Value
+                }).ToList()
+            }));
+        }
+
         public async Task StartLive(StartLiveEventModel model)
         {
             await _hubContext.Clients.All.StartLive(Newtonsoft.Json.JsonConvert.SerializeObject(new StartLiveMessage

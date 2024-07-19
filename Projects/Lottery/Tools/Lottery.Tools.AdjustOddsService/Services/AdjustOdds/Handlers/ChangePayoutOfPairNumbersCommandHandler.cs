@@ -3,6 +3,7 @@ using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
 using Lottery.Core.InMemory.Setting;
 using Lottery.Core.Models.Setting.BetKind;
+using Lottery.Core.Services.Odds;
 using Lottery.Core.Services.Setting;
 using Lottery.Tools.AdjustOddsService.InMemory.Payouts;
 using Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Commands;
@@ -36,8 +37,8 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
             var settingVal = Newtonsoft.Json.JsonConvert.DeserializeObject<BalanceTableModel>(setting.ValueSetting);
             if (settingVal == null) return;
 
-            var listBetKind = new List<int>();
-
+            var listBetKind = new Dictionary<int, decimal>();
+            //  By numbers
             if (settingVal.ByNumbers.Numbers.Count > 0)
             {
                 foreach (var item in deviredAdjustCommand.PairNumbers)
@@ -45,6 +46,7 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
                     var betKindId = item.Key;
                     var pairs = item.Value; //  [ "00, 01", "02, 04", "05, 06" ]
                     var checkPairs = true;
+                    decimal? rateValue = null;
                     foreach (var itemPair in pairs)
                     {
                         var payoutByPair = payoutByMixedAndNumberInMemoryRepository.FindByBetKindNumber(deviredAdjustCommand.MatchId, betKindId, itemPair);
@@ -52,7 +54,8 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
 
                         var rate = settingVal.ByNumbers.RateValues.FirstOrDefault(f => balanceTableSettingService.GetRealValue(f.From) <= payoutByPair.Payout && payoutByPair.Payout < balanceTableSettingService.GetRealValue(f.To));
                         if (rate == null) continue;
-                        if (rate.Applied) continue;
+                        if (rate.AppliedNumbers.Any(f => f < 0)) continue;  //  I use this value < 0 because we cannot use no of numbers. Maybe no of mixed tickets are equal no of number.
+                        if (rate.PairNumbers.Any(f => f.Equals(itemPair))) continue;
 
                         var arrItemPair = itemPair.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
                         var isContains = true;
@@ -64,48 +67,71 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
                             isContains = false;
                             break;
                         }
+                        if (!isContains)
+                        {
+                            rateValue = rate.RateValue;
+                            rate.PairNumbers.Add(itemPair);
+                        }
                         checkPairs &= isContains;
                     }
-                    if (!checkPairs) continue;
-                    listBetKind.Add(betKindId);
+                    if (!checkPairs || !rateValue.HasValue) continue;
+                    listBetKind[betKindId] = rateValue.Value;
                 }
             }
 
-            //var dictRate = new Dictionary<int, decimal>();
-            //foreach (var item in deviredAdjustCommand.Numbers)
-            //{
-            //    var payoutByBetKindAndNumber = payoutByBetKindAndNumberInMemoryRepository.FindByBetKindNumber(deviredAdjustCommand.MatchId, deviredAdjustCommand.BetKindId, item);
-            //    if (payoutByBetKindAndNumber == null) continue;
+            //  By common
+            foreach (var item in deviredAdjustCommand.PairNumbers)
+            {
+                var betKindId = item.Key;
+                if (listBetKind.ContainsKey(betKindId)) continue;
 
-            //    var rate = settingVal.ByNumbers.Numbers.Count > 0 && settingVal.ByNumbers.Numbers.Contains(item)
-            //        ? settingVal.ByNumbers.RateValues.FirstOrDefault(f => balanceTableSettingService.GetRealValue(f.From) <= payoutByBetKindAndNumber.Payout && payoutByBetKindAndNumber.Payout < balanceTableSettingService.GetRealValue(f.To))
-            //        : settingVal.ForCommon.RateValues.FirstOrDefault(f => balanceTableSettingService.GetRealValue(f.From) <= payoutByBetKindAndNumber.Payout && payoutByBetKindAndNumber.Payout < balanceTableSettingService.GetRealValue(f.To));
-            //    if (rate == null) continue;
-            //    if (rate.AppliedNumbers.Contains(item)) continue;
+                var pairs = item.Value; //  [ "00, 01", "02, 04", "05, 06" ]
+                var checkPairs = true;
+                decimal? rateValue = null;
+                foreach (var itemPair in pairs)
+                {
+                    var payoutByPair = payoutByMixedAndNumberInMemoryRepository.FindByBetKindNumber(deviredAdjustCommand.MatchId, betKindId, itemPair);
+                    if (payoutByPair == null) continue;
 
-            //    rate.AppliedNumbers.Add(item);
-            //    setting.ValueSetting = Newtonsoft.Json.JsonConvert.SerializeObject(settingVal);
-            //    dictRate[item] = rate.RateValue;
-            //}
+                    var rate = settingVal.ForCommon.RateValues.FirstOrDefault(f => balanceTableSettingService.GetRealValue(f.From) <= payoutByPair.Payout && payoutByPair.Payout < balanceTableSettingService.GetRealValue(f.To));
+                    if (rate == null) continue;
+                    if (rate.AppliedNumbers.Any(f => f < 0)) continue;  //  I use this value < 0 because we cannot use no of numbers. Maybe no of mixed tickets are equal no of number.
+                    if (rate.PairNumbers.Any(f => f.Equals(itemPair))) continue;
 
-            //if (dictRate.Count == 0) return;
+                    var arrItemPair = itemPair.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                    var isContains = true;
+                    foreach (var itemInArr in arrItemPair)
+                    {
+                        if (!int.TryParse(itemInArr.Trim(), out int number)) continue;
+                        if (settingVal.ByNumbers.Numbers.Contains(number)) continue;
 
-            //UpdateRateOfOddsValue(scope.ServiceProvider, deviredAdjustCommand.MatchId, deviredAdjustCommand.BetKindId, dictRate);
-            //balanceTableSettingService.UpdateSetting(setting);
+                        isContains = false;
+                        break;
+                    }
+                    if (!isContains)
+                    {
+                        rateValue = rate.RateValue;
+                        rate.PairNumbers.Add(itemPair);
+                    }
+                    checkPairs &= isContains;
+                }
+                if (!checkPairs || !rateValue.HasValue) continue;
+                listBetKind[betKindId] = rateValue.Value;
+            }
 
-            //if (dictRate.Count == 0) return;
+            if (listBetKind.Count == 0) return;
 
-            //UpdateRateOfOddsValue(scope.ServiceProvider, deviredAdjustCommand.MatchId, deviredAdjustCommand.BetKindId, dictRate);
-            //balanceTableSettingService.UpdateSetting(setting);
+            UpdateRateOfOddsValue(scope.ServiceProvider, deviredAdjustCommand.MatchId, listBetKind);
+            balanceTableSettingService.UpdateSetting(setting);
         }
 
-        //private void UpdateRateOfOddsValue(IServiceProvider serviceProvider, long matchId, int betKindId, Dictionary<int, decimal> dictRate)
-        //{
-        //    Task.Run(async () =>
-        //    {
-        //        var processOddsService = serviceProvider.GetService<IProcessOddsService>();
-        //        await processOddsService.UpdateRateOfOddsValue(matchId, betKindId, dictRate);
-        //    });
-        //}
+        private void UpdateRateOfOddsValue(IServiceProvider serviceProvider, long matchId, Dictionary<int, decimal> rateByBetKind)
+        {
+            Task.Run(async () =>
+            {
+                var processOddsService = serviceProvider.GetService<IProcessOddsService>();
+                await processOddsService.UpdateMixedRateOfOddsValue(matchId, rateByBetKind);
+            });
+        }
     }
 }

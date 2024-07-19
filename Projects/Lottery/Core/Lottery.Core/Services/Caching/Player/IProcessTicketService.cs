@@ -20,7 +20,7 @@ namespace Lottery.Core.Services.Caching.Player
         Task<AgentOddsForProcessModel> GetAgentOdds(int betKindId, long supermasterId, long masterId, long agentId, int noOfNumbers = 100);
         Task<AgentMixedOddsModel> GetAgentMixedOdds(int originBetKindId, List<int> subBetKindIds, long supermasterId, long masterId, long agentId);
         Task<Dictionary<int, decimal>> GetMatchPlayerOddsByBetKindAndNumbers(long playerId, decimal defaultOddsValue, long matchId, int betKindId, List<int> numbers, int noOfNumbers = 100);
-        Task<Dictionary<int, decimal>> GetMatchPlayerMixedOddsByBetKind(long playerId, long matchId, int originBetKindId, Dictionary<int, BetSettingModel> subBetKinds);
+        Task<Dictionary<int, decimal>> GetMatchPlayerMixedOddsByBetKind(long playerId, long matchId, Dictionary<int, BetSettingModel> subBetKinds);
         Task<(decimal, bool)> GetGivenCredit(long playerId);
 
         Task<PlayerOutsModel> GetOuts(long playerId, long matchId, List<int> numbers);

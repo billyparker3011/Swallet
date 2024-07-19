@@ -56,16 +56,16 @@ namespace Lottery.Core.Services.Pubs
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.DefaultOddsConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(defaultOdds), CachingConfigs.RedisConnectionForApp);
         }
 
-        public async Task PublishOddsValue(RateOfOddsValueModel model)
+        public async Task PublishRateValue(RateOfOddsValueModel model)
         {
             if (model == null) return;
             await _redisCacheService.PublishAsync(SubscribeCommonConfigs.RateOfOddsValueConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }
 
-        public async Task PublishOddsValueSingle(RateOfOddsValueModel model)
+        public async Task PublishMixedRateValue(MixedRateOfOddsValueModel model)
         {
             if (model == null) return;
-            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.RateOfOddsValueConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
+            await _redisCacheService.PublishAsync(SubscribeCommonConfigs.MixedRateOfOddsValueConfigChannel, Newtonsoft.Json.JsonConvert.SerializeObject(model), CachingConfigs.RedisConnectionForApp);
         }
 
         public async Task PublishPrize(List<PrizeModel> updatedPrizes)

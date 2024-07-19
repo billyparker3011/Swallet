@@ -41,12 +41,14 @@ namespace Lottery.Core.Services.Setting
             {
                 if (!item.Applied) continue;
                 if (detailSetting.ByNumbers.Numbers.Count == 0) continue;
-                item.AppliedNumbers.AddRange(detailSetting.ByNumbers.Numbers);
+                if (betKindId.IsMixed()) item.AppliedNumbers.Add(-1);
+                else item.AppliedNumbers.AddRange(detailSetting.ByNumbers.Numbers);
             }
             foreach (var item in detailSetting.ForCommon.RateValues)
             {
                 if (!item.Applied) continue;
-                item.AppliedNumbers.AddRange(defaultList);
+                if (betKindId.IsMixed()) item.AppliedNumbers.Add(-1);
+                else item.AppliedNumbers.AddRange(defaultList);
             }
             var balanceTableSettingKey = CreateBalanceTableKey(betKindId);
             var existingBetKindBalanceTable = await settingRepos.FindQueryBy(x => x.KeySetting == balanceTableSettingKey && x.Category == CategoryOfSetting.BalanceTable.ToInt()).FirstOrDefaultAsync();

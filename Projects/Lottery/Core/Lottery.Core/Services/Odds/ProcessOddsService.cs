@@ -73,6 +73,16 @@ namespace Lottery.Core.Services.Odds
             return data;
         }
 
+        public async Task<Dictionary<int, decimal>> GetMixedRateOfOddsValue(long matchId, List<int> betKindIds)
+        {
+            var data = new Dictionary<int, decimal>();
+            foreach (var betKindId in betKindIds)
+            {
+                data[betKindId] = await GetMixedRateOfOddsValueBetKind(matchId, betKindId);
+            }
+            return data;
+        }
+
         private async Task<Dictionary<int, decimal>> GetRateOfOddsValueBetKind(long matchId, int betKindId, int noOfNumbers = 100)
         {
             var data = new Dictionary<int, decimal>();
@@ -89,6 +99,14 @@ namespace Lottery.Core.Services.Odds
             return data;
         }
 
+        private async Task<decimal> GetMixedRateOfOddsValueBetKind(long matchId, int betKindId)
+        {
+            var rateStatsKey = matchId.GetMixedRateStatsKeyByMatchBetKindNumber(betKindId);
+            var rateStats = await _redisCacheService.HashGetFieldsAsync(rateStatsKey.MainKey, new List<string> { rateStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+            if (!rateStats.TryGetValue(rateStatsKey.SubKey, out string sRateStatsValue) || !decimal.TryParse(sRateStatsValue, out decimal rateStatsValue)) return 0m;
+            return rateStatsValue;
+        }
+
         public async Task ChangeOddsValueOfOddsTable(ChangeOddsValueOfOddsTableModel model)
         {
             var rateStatsKey = model.MatchId.GetRateStatsKeyByMatchBetKindNumber(model.BetKindId, model.Number);
@@ -103,7 +121,7 @@ namespace Lottery.Core.Services.Odds
 
             await _redisCacheService.HashSetFieldsAsync(rateStatsKey.MainKey, new Dictionary<string, string> { { rateStatsKey.SubKey, rateStatsVal.ToString() } }, rateStatsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
 
-            await _publishCommonService.PublishOddsValue(new RateOfOddsValueModel
+            await _publishCommonService.PublishRateValue(new RateOfOddsValueModel
             {
                 MatchId = model.MatchId,
                 BetKindId = model.BetKindId,
@@ -126,7 +144,7 @@ namespace Lottery.Core.Services.Odds
                     { rateStatsKey.SubKey, rateStatsValue.ToString() }
                 }, rateStatsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
 
-                await _publishCommonService.PublishOddsValueSingle(new RateOfOddsValueModel
+                await _publishCommonService.PublishRateValue(new RateOfOddsValueModel
                 {
                     BetKindId = betKindId,
                     MatchId = matchId,
@@ -189,6 +207,34 @@ namespace Lottery.Core.Services.Odds
                 });
             }
             return data.OrderByDescending(f => f.CompanyPayout).Take(top).ToList();
+        }
+
+        public async Task UpdateMixedRateOfOddsValue(long matchId, Dictionary<int, decimal> rateByBetKind)
+        {
+            var totalMixedRate = new Dictionary<int, decimal>();
+            foreach (var item in rateByBetKind)
+            {
+                var betKindId = item.Key;
+                var rateValue = item.Value;
+
+                var rateStatsKey = matchId.GetMixedRateStatsKeyByMatchBetKindNumber(betKindId);
+                var rateStats = await _redisCacheService.HashGetFieldsAsync(rateStatsKey.MainKey, new List<string> { rateStatsKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (!rateStats.TryGetValue(rateStatsKey.SubKey, out string sRateStatsValue) || !decimal.TryParse(sRateStatsValue, out decimal rateStatsValue)) rateStatsValue = 0m;
+                rateStatsValue += rateValue;
+
+                totalMixedRate[betKindId] = rateStatsValue;
+
+                await _redisCacheService.HashSetFieldsAsync(rateStatsKey.MainKey, new Dictionary<string, string>
+                {
+                    { rateStatsKey.SubKey, rateStatsValue.ToString() }
+                }, rateStatsKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+            }
+
+            await _publishCommonService.PublishMixedRateValue(new MixedRateOfOddsValueModel
+            {
+                MatchId = matchId,
+                TotalRate = totalMixedRate
+            });
         }
     }
 }

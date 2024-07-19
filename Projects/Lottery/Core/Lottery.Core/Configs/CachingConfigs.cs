@@ -49,11 +49,6 @@
         public const string PlayerOddsByMatchSubKey = "odds.{0}"; //  <PlayerId % 1000>
         //  End: Default Player Odds By Match
 
-        //  Begin: Default Mixed Player Odds By Match
-        public const string MixedPlayerOddsByMatchMainKey = "odds.player.{0}.{1}.{2}.00-99.{3}"; //  <PlayerId / 1000>.<MatchId>.<OriginBetKindId>.00-99.<BetKindId>
-        public const string MixedPlayerOddsByMatchSubKey = "odds.{0}"; //  <PlayerId % 1000>
-        //  End: Default Player Odds By Match
-
         //  Begin: Stats by Match
         public const string PointStatsKeyByMatchBetKindNumberMainKey = "table-point.{0}.{1}.{2}"; //  <MatchId / 1000>.<BetKindId>.<Number>
         public const string PointStatsKeyByMatchBetKindNumberSubKey = "point.{0}"; //  <MatchId % 1000>

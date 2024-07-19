@@ -90,14 +90,9 @@ namespace Lottery.Core.Helpers
             };
         }
 
-        public static KeyOfRedisHash GetMixedPlayerOddsByMatch(this long playerId, long matchId, int originBetKindId, int betKindId)
+        public static KeyOfRedisHash GetMixedPlayerOddsByMatchBetKind(this long playerId, long matchId, int betKindId)
         {
-            return new KeyOfRedisHash
-            {
-                MainKey = string.Format(CachingConfigs.MixedPlayerOddsByMatchMainKey, playerId / CachingConfigs.HashStructureMaxLength, matchId, originBetKindId, betKindId),
-                SubKey = string.Format(CachingConfigs.MixedPlayerOddsByMatchSubKey, playerId % CachingConfigs.HashStructureMaxLength),
-                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
-            };
+            return playerId.GetPlayerOddsByMatchBetKindAndNumber(matchId, betKindId, -1);
         }
 
         public static KeyOfRedisHash GetPointStatsKeyByMatchBetKindNumber(this long matchId, int betKindId, int number)
@@ -118,6 +113,11 @@ namespace Lottery.Core.Helpers
                 SubKey = string.Format(CachingConfigs.PayoutStatsKeyByMatchBetKindNumberSubKey, matchId % CachingConfigs.HashStructureMaxLength),
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
+        }
+
+        public static KeyOfRedisHash GetMixedRateStatsKeyByMatchBetKindNumber(this long matchId, int betKindId)
+        {
+            return matchId.GetRateStatsKeyByMatchBetKindNumber(betKindId, -1);
         }
 
         public static KeyOfRedisHash GetRateStatsKeyByMatchBetKindNumber(this long matchId, int betKindId, int number)

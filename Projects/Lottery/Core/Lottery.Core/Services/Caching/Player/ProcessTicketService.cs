@@ -300,14 +300,14 @@ namespace Lottery.Core.Services.Caching.Player
             return odds;
         }
 
-        public async Task<Dictionary<int, decimal>> GetMatchPlayerMixedOddsByBetKind(long playerId, long matchId, int originBetKindId, Dictionary<int, BetSettingModel> subBetKinds)
+        public async Task<Dictionary<int, decimal>> GetMatchPlayerMixedOddsByBetKind(long playerId, long matchId, Dictionary<int, BetSettingModel> subBetKinds)
         {
             var odds = new Dictionary<int, decimal>();
             foreach (var item in subBetKinds)
             {
                 if (item.Value != null) odds[item.Key] = item.Value.OddsValue;
 
-                var key = playerId.GetMixedPlayerOddsByMatch(matchId, originBetKindId, item.Key);
+                var key = playerId.GetMixedPlayerOddsByMatchBetKind(matchId, item.Key);
                 var data = await _cacheService.HashGetFieldsAsync(key.MainKey, new List<string> { key.SubKey }, CachingConfigs.RedisConnectionForApp);
                 if (data.Count == 0) continue;
                 if (!data.TryGetValue(key.SubKey, out string sOddValue) || string.IsNullOrEmpty(sOddValue)) continue;

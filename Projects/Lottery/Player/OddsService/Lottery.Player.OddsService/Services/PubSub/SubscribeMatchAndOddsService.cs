@@ -22,6 +22,7 @@ namespace Lottery.Player.OddsService.Services.PubSub
         {
             SubscribeUpdateLiveOdds();
             SubscribeRateOfOddsValue();
+            SubscribeMixedRateOfOddsValue();
             SubscribeUpdateMatch();
             SubscribeStartLive();
         }
@@ -54,7 +55,15 @@ namespace Lottery.Player.OddsService.Services.PubSub
         {
             _redisCacheService.SubscribeAsync(SubscribeCommonConfigs.RateOfOddsValueConfigChannel, (channel, message) =>
             {
-                ProcessRateOfOddsValueConfig(message);
+                ProcessRateOfOddsValue(message);
+            }, CachingConfigs.RedisConnectionForApp);
+        }
+
+        private void SubscribeMixedRateOfOddsValue()
+        {
+            _redisCacheService.SubscribeAsync(SubscribeCommonConfigs.MixedRateOfOddsValueConfigChannel, (channel, message) =>
+            {
+                ProcessMixedRateOfOddsValue(message);
             }, CachingConfigs.RedisConnectionForApp);
         }
 
@@ -79,11 +88,18 @@ namespace Lottery.Player.OddsService.Services.PubSub
             Task.Run(async () => await _oddsHubHandler.StartLive(model));
         }
 
-        private void ProcessRateOfOddsValueConfig(string message)
+        private void ProcessRateOfOddsValue(string message)
         {
             var rateOfOddsValue = Newtonsoft.Json.JsonConvert.DeserializeObject<RateOfOddsValueModel>(message);
             if (rateOfOddsValue == null) return;
             Task.Run(async () => await _oddsHubHandler.UpdateOdds(rateOfOddsValue));
+        }
+
+        private void ProcessMixedRateOfOddsValue(string message)
+        {
+            var rateOfOddsValue = Newtonsoft.Json.JsonConvert.DeserializeObject<MixedRateOfOddsValueModel>(message);
+            if (rateOfOddsValue == null) return;
+            Task.Run(async () => await _oddsHubHandler.UpdateMixedOdds(rateOfOddsValue));
         }
     }
 }

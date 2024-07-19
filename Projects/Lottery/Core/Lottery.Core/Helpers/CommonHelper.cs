@@ -15,6 +15,11 @@ namespace Lottery.Core.Helpers
             return state == UserState.Closed;
         }
 
+        public static bool IsMixed(this int betKindId)
+        {
+            return betKindId == BetKind.FirstNorthern_Northern_LoXien.ToInt();
+        }
+
         public static List<int> BuildBetKinds(this int betKindId)
         {
             return betKindId == BetKind.FirstNorthern_Northern_LoXien.ToInt()
