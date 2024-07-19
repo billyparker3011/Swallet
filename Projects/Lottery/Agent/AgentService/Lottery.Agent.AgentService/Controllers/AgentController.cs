@@ -212,12 +212,6 @@ namespace Lottery.Agent.AgentService.Controllers
             return Ok(OkResponse.Create(result.SubAgents));
         }
 
-        [HttpGet("agent/winloss-summary")]
-        public async Task<IActionResult> GetAgentWinLossSummary([FromQuery] long? agentId, [FromQuery] GetAgentWinLossSearchRequest searchRequest)
-        {
-            return Ok(OkResponse.Create(await _agentService.GetAgentWinLossSummary(agentId, searchRequest.From, searchRequest.To, searchRequest.SelectedDraft)));
-        }
-
         [HttpGet("agent/credit-balance")]
         public async Task<IActionResult> GetAgentCreditBalance([FromQuery] long? agentId, [FromQuery] int? state, [FromQuery] string searchTerm)
         {

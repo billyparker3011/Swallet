@@ -8,6 +8,5 @@ namespace Lottery.Core.Services.Agent
     public interface IAgentOutstandingService: IScopedDependency
     {
         Task<GetAgentOutstandingResult> GetAgentOutstandings(GetAgentOutstandingModel model);
-        Task<GetBroadCasterOutstandingResult> GetBroadCasterOutstandings(GetBroadCasterOutstandingModel model);
     }
 }
