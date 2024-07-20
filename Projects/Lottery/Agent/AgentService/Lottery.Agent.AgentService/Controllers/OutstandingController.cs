@@ -6,6 +6,7 @@ using Lottery.Core.Filters.Authorization;
 using Lottery.Core.Models.Agent.GetAgentOutstanding;
 using Lottery.Core.Models.BroadCaster.GetBroadCasterOutstanding;
 using Lottery.Core.Services.Agent;
+using Lottery.Core.Services.BroadCaster;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lottery.Agent.AgentService.Controllers
@@ -13,10 +14,12 @@ namespace Lottery.Agent.AgentService.Controllers
     public class OutstandingController : HnControllerBase
     {
         private readonly IAgentOutstandingService _agentOutstandingService;
+        private readonly IBroadCasterService _broadCasterService;
 
-        public OutstandingController(IAgentOutstandingService agentOutstandingService)
+        public OutstandingController(IAgentOutstandingService agentOutstandingService, IBroadCasterService broadCasterService)
         {
             _agentOutstandingService = agentOutstandingService;
+            _broadCasterService = broadCasterService;
         }
 
         [HttpGet, LotteryAuthorize(Permission.Report.Reports)]
@@ -34,7 +37,7 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpGet("broad-caster"), LotteryAuthorize(Permission.Report.Reports)]
         public async Task<IActionResult> GetBroadCasterOutstandings([FromQuery] string sortName, [FromQuery] SortType sortType = SortType.Descending)
         {
-            return Ok(OkResponse.Create(await _agentOutstandingService.GetBroadCasterOutstandings(new GetBroadCasterOutstandingModel
+            return Ok(OkResponse.Create(await _broadCasterService.GetBroadCasterOutstandings(new GetBroadCasterOutstandingModel
             {
                 SortName = sortName,
                 SortType = sortType
