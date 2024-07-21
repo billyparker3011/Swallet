@@ -86,7 +86,6 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
                 if (listBetKind.ContainsKey(betKindId)) continue;
 
                 var pairs = item.Value; //  [ "00, 01", "02, 04", "05, 06" ]
-                var checkPairs = true;
                 decimal? rateValue = null;
                 foreach (var itemPair in pairs)
                 {
@@ -98,24 +97,11 @@ namespace Lottery.Tools.AdjustOddsService.Services.AdjustOdds.Handlers
                     if (rate.AppliedNumbers.Any(f => f < 0)) continue;  //  I use this value < 0 because we cannot use no of numbers. Maybe no of mixed tickets are equal no of number.
                     if (rate.PairNumbers.Any(f => f.Equals(itemPair))) continue;
 
-                    var arrItemPair = itemPair.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-                    var isContains = true;
-                    foreach (var itemInArr in arrItemPair)
-                    {
-                        if (!int.TryParse(itemInArr.Trim(), out int number)) continue;
-                        if (settingVal.ByNumbers.Numbers.Contains(number)) continue;
-
-                        isContains = false;
-                        break;
-                    }
-                    if (!isContains)
-                    {
-                        rateValue = rate.RateValue;
-                        rate.PairNumbers.Add(itemPair);
-                    }
-                    checkPairs &= isContains;
+                    rateValue = rate.RateValue;
+                    rate.PairNumbers.Add(itemPair);
+                    break;
                 }
-                if (!checkPairs || !rateValue.HasValue) continue;
+                if (!rateValue.HasValue) continue;
                 listBetKind[betKindId] = rateValue.Value;
             }
 
