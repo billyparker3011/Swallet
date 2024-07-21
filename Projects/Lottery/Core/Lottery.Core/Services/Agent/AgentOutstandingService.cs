@@ -2,14 +2,11 @@
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.Agent;
-using Lottery.Core.Dtos.BroadCaster;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Models.Agent.GetAgentOuts;
 using Lottery.Core.Models.Agent.GetAgentOutstanding;
-using Lottery.Core.Models.BroadCaster.GetBroadCasterOutstanding;
 using Lottery.Core.Repositories.Agent;
-using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.UnitOfWorks;
@@ -33,7 +30,7 @@ namespace Lottery.Core.Services.Agent
             var ticketRepos = LotteryUow.GetRepository<ITicketRepository>();
             var listAgentOustanding = new List<AgentOutstandingDto>();
             var targetAgentId = model.AgentId.HasValue ? model.AgentId.Value
-                                                : ClientContext.Agent.ParentId == 0
+                                                : ClientContext.Agent.ParentId == 0L
                                                     ? ClientContext.Agent.AgentId
                                                     : ClientContext.Agent.ParentId;
             var targetRoleId = model.RoleId.HasValue ? model.RoleId.Value : ClientContext.Agent.RoleId;
@@ -45,7 +42,7 @@ namespace Lottery.Core.Services.Agent
                     listAgentOustanding = await GetAgentOutstandingsOfCompany(agentRepos, ticketRepos, targetAgentId, targetRoleId, model, outsState);
                     break;
                 case (int)Role.Supermaster:
-                    listAgentOustanding = await GetAgentOutstandingsOfSuperMaster(agentRepos, ticketRepos, targetAgentId, targetRoleId, model, outsState);
+                    listAgentOustanding = await GetAgentOutstandingsOfSupermaster(agentRepos, ticketRepos, targetAgentId, targetRoleId, model, outsState);
                     break;
                 case (int)Role.Master:
                     listAgentOustanding = await GetAgentOutstandingsOfMaster(agentRepos, ticketRepos, targetAgentId, targetRoleId, model, outsState);
@@ -69,33 +66,28 @@ namespace Lottery.Core.Services.Agent
         private async Task<List<AgentOutstandingDto>> GetAgentOutstandingsOfAgent(IPlayerRepository playerRepos, ITicketRepository ticketRepos, long targetAgentId, int targetRoleId, GetAgentOutstandingModel model, List<int> outsState)
         {
             var playerIds = await playerRepos.FindQueryBy(x => x.AgentId == targetAgentId).Select(x => x.PlayerId).ToListAsync();
-            var agentOutsQuery = playerRepos.FindQueryBy(x => playerIds.Contains(x.PlayerId)).Include(x => x.PlayerSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.PlayerId, y => y.PlayerId, (player, ticket) => new
+            var agentOutsQuery = playerRepos.FindQueryBy(x => playerIds.Contains(x.PlayerId))
+                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.PlayerId, y => y.PlayerId, (player, ticket) => new
                                    {
                                        player.PlayerId,
                                        player.Username,
-                                       player.PlayerSession.IpAddress,
-                                       player.PlayerSession.Platform,
+                                       ticket.ParentId,
                                        ticket.Stake,
                                        ticket.PlayerPayout
                                    })
                                    .GroupBy(x => new
                                    {
                                        x.PlayerId,
-                                       x.Username,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.Username
                                    })
                                    .Select(x => new AgentOutstandingDto
                                    {
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
-                                       TotalBetCount = x.LongCount(),
-                                       TotalStake = x.Sum(s => s.Stake),
-                                       TotalPayout = x.Sum(s => s.PlayerPayout),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
                                    .AsQueryable();
 
@@ -113,15 +105,14 @@ namespace Lottery.Core.Services.Agent
 
         private async Task<List<AgentOutstandingDto>> GetAgentOutstandingsOfMaster(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, int targetRoleId, GetAgentOutstandingModel model, List<int> outsState)
         {
-            var agentIds = await agentRepos.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
-            var agentOutsQuery = agentRepos.FindQueryBy(x => agentIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.AgentId, y => y.AgentId, (agent, ticket) => new
+            var agentIds = await agentRepos.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+            var agentOutsQuery = agentRepos.FindQueryBy(x => agentIds.Contains(x.AgentId))
+                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.AgentId, y => y.AgentId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
                                        agent.RoleId,
-                                       agent.AgentSession.IpAddress,
-                                       agent.AgentSession.Platform,
+                                       ticket.ParentId,
                                        ticket.Stake,
                                        ticket.PlayerPayout
                                    })
@@ -129,20 +120,16 @@ namespace Lottery.Core.Services.Agent
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.RoleId
                                    })
                                    .Select(x => new AgentOutstandingDto
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(),
-                                       TotalStake = x.Sum(s => s.Stake),
-                                       TotalPayout = x.Sum(s => s.PlayerPayout),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
                                    .AsQueryable();
 
@@ -158,17 +145,16 @@ namespace Lottery.Core.Services.Agent
             return await agentOutsQuery.ToListAsync();
         }
 
-        private async Task<List<AgentOutstandingDto>> GetAgentOutstandingsOfSuperMaster(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, int targetRoleId, GetAgentOutstandingModel model, List<int> outsState)
+        private async Task<List<AgentOutstandingDto>> GetAgentOutstandingsOfSupermaster(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, int targetRoleId, GetAgentOutstandingModel model, List<int> outsState)
         {
-            var masterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
-            var agentOutsQuery = agentRepos.FindQueryBy(x => masterIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.AgentId, y => y.MasterId, (agent, ticket) => new
+            var masterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+            var agentOutsQuery = agentRepos.FindQueryBy(x => masterIds.Contains(x.AgentId))
+                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.AgentId, y => y.MasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
                                        agent.RoleId,
-                                       agent.AgentSession.IpAddress,
-                                       agent.AgentSession.Platform,
+                                       ticket.ParentId,
                                        ticket.Stake,
                                        ticket.PlayerPayout
                                    })
@@ -176,20 +162,16 @@ namespace Lottery.Core.Services.Agent
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.RoleId
                                    })
                                    .Select(x => new AgentOutstandingDto
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(),
-                                       TotalStake = x.Sum(s => s.Stake),
-                                       TotalPayout = x.Sum(s => s.PlayerPayout),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
                                    .AsQueryable();
 
@@ -207,15 +189,14 @@ namespace Lottery.Core.Services.Agent
 
         private async Task<List<AgentOutstandingDto>> GetAgentOutstandingsOfCompany(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, int targetRoleId, GetAgentOutstandingModel model, List<int> outsState)
         {
-            var supermasterIds = await agentRepos.FindQueryBy(x => x.RoleId == targetRoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
-            var agentOutsQuery = agentRepos.FindQueryBy(x => supermasterIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQuery().Where(y => !y.ParentId.HasValue && outsState.Contains(y.State)), x => x.AgentId, y => y.SupermasterId, (agent, ticket) => new
+            var supermasterIds = await agentRepos.FindQueryBy(x => x.RoleId == targetRoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+            var agentOutsQuery = agentRepos.FindQueryBy(x => supermasterIds.Contains(x.AgentId))
+                                   .Join(ticketRepos.FindQuery().Where(y => outsState.Contains(y.State)), x => x.AgentId, y => y.SupermasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
                                        agent.RoleId,
-                                       agent.AgentSession.IpAddress,
-                                       agent.AgentSession.Platform,
+                                       ticket.ParentId,
                                        ticket.Stake,
                                        ticket.PlayerPayout
                                    })
@@ -223,20 +204,16 @@ namespace Lottery.Core.Services.Agent
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.RoleId
                                    })
                                    .Select(x => new AgentOutstandingDto
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(),
-                                       TotalStake = x.Sum(s => s.Stake),
-                                       TotalPayout = x.Sum(s => s.PlayerPayout),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    }).AsQueryable();
 
             if (model.SortType == SortType.Descending)

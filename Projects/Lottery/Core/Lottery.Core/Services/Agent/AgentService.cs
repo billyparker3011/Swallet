@@ -912,7 +912,7 @@ namespace Lottery.Core.Services.Agent
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var ticketRepos = LotteryUow.GetRepository<ITicketRepository>();
             var targetAgentId = agentId.HasValue ? agentId.Value
-                                                : ClientContext.Agent.ParentId == 0
+                                                : ClientContext.Agent.ParentId == 0L
                                                     ? ClientContext.Agent.AgentId
                                                     : ClientContext.Agent.ParentId;
             var loginAgent = await agentRepos.FindByIdAsync(targetAgentId) ?? throw new NotFoundException();
@@ -942,14 +942,13 @@ namespace Lottery.Core.Services.Agent
                     Commission = 0m
                 }
             };
-            var agentWinlossSummaries = await playerRepos.FindQueryBy(x => playerIds.Contains(x.PlayerId)).Include(x => x.PlayerSession)
-                                   .Join(ticketRepos.FindQueryBy(y => !y.ParentId.HasValue && ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
+            var agentWinlossSummaries = await playerRepos.FindQueryBy(x => playerIds.Contains(x.PlayerId))
+                                   .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
                                    x => x.PlayerId, y => y.PlayerId, (player, ticket) => new
                                    {
                                        player.PlayerId,
                                        player.Username,
-                                       player.PlayerSession.IpAddress,
-                                       player.PlayerSession.Platform,
+                                       ticket.ParentId,
                                        ticket.Stake,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
@@ -972,58 +971,54 @@ namespace Lottery.Core.Services.Agent
                                    .GroupBy(x => new
                                    {
                                        x.PlayerId,
-                                       x.Username,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.Username
                                    })
                                    .Select(x => new AgentWinlossSummaryDto
                                    {
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        RoleId = Role.Player.ToInt(),
-                                       BetCount = x.Count(),
-                                       Point = x.Sum(s => s.Stake),
-                                       Payout = x.Sum(s => s.PlayerPayout),
-                                       WinLose = x.Sum(s => s.PlayerWinLoss),
-                                       DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
+                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
+                                       WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
+                                       DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftPlayerWinLoss),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.AgentWinLoss),
-                                                           Commission = x.Sum(s => s.AgentCommission),
-                                                           Subtotal = x.Sum(s => s.AgentWinLoss) + x.Sum(s => s.AgentCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftAgentWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftAgentCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftAgentWinLoss) + x.Sum(s => s.DraftAgentCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission)
                                                        }
                                                        : null,
                                        MasterWinlose = loginAgent.RoleId < Role.Master.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.MasterWinLoss),
-                                                           Commission = x.Sum(s => s.MasterCommission),
-                                                           Subtotal = x.Sum(s => s.MasterWinLoss) + x.Sum(s => s.MasterCommission),
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
 
-                                                           DraftWinLose = x.Sum(s => s.DraftMasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftMasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftMasterWinLoss) + x.Sum(s => s.DraftMasterCommission)
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission)
                                                        }
                                                        : null,
                                        SupermasterWinlose = loginAgent.RoleId < Role.Supermaster.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.SupermasterWinLoss),
-                                                           Commission = x.Sum(s => s.SupermasterCommission),
-                                                           Subtotal = x.Sum(s => s.SupermasterWinLoss) + x.Sum(s => s.SupermasterCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftSupermasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftSupermasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftSupermasterWinLoss) + x.Sum(s => s.DraftSupermasterCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission)
                                                        }
                                                        : null,
-                                       Company = x.Sum(s => s.MasterWinLoss),
-                                       DraftCompany = x.Sum(s => s.DraftMasterWinLoss),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       Company = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss),
+                                       DraftCompany = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss)
                                    })
                                    .OrderBy(x => x.Username)
                                    .ToListAsync();
@@ -1054,7 +1049,7 @@ namespace Lottery.Core.Services.Agent
 
         private async Task<GetAgentWinLossSummaryResult> GetAgentWinLossOfMaster(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, Data.Entities.Agent loginAgent, DateTime from, DateTime to, List<int> ticketStates)
         {
-            var agentIds = await agentRepos.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
+            var agentIds = await agentRepos.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
             var winLossInfos = new List<WinLoseInfo>
             {
                 new() {
@@ -1066,15 +1061,14 @@ namespace Lottery.Core.Services.Agent
                     Commission = 0m
                 }
             };
-            var agentWinlossSummaries = await agentRepos.FindQueryBy(x => agentIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQueryBy(y => !y.ParentId.HasValue && ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
+            var agentWinlossSummaries = await agentRepos.FindQueryBy(x => agentIds.Contains(x.AgentId))
+                                   .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
                                    x => x.AgentId, y => y.AgentId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
                                        agent.RoleId,
-                                       agent.AgentSession.IpAddress,
-                                       agent.AgentSession.Platform,
+                                       ticket.ParentId,
                                        ticket.Stake,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
@@ -1098,58 +1092,54 @@ namespace Lottery.Core.Services.Agent
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.RoleId
                                    })
                                    .Select(x => new AgentWinlossSummaryDto
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.Count(),
-                                       Point = x.Sum(s => s.Stake),
-                                       Payout = x.Sum(s => s.PlayerPayout),
-                                       WinLose = x.Sum(s => s.PlayerWinLoss),
-                                       DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
+                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
+                                       WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
+                                       DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftPlayerWinLoss),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.AgentWinLoss),
-                                                           Commission = x.Sum(s => s.AgentCommission),
-                                                           Subtotal = x.Sum(s => s.AgentWinLoss) + x.Sum(s => s.AgentCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftAgentWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftAgentCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftAgentWinLoss) + x.Sum(s => s.DraftAgentCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission)
                                                        }
                                                        : null,
                                        MasterWinlose = loginAgent.RoleId < Role.Master.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.MasterWinLoss),
-                                                           Commission = x.Sum(s => s.MasterCommission),
-                                                           Subtotal = x.Sum(s => s.MasterWinLoss) + x.Sum(s => s.MasterCommission),
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
 
-                                                           DraftWinLose = x.Sum(s => s.DraftMasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftMasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftMasterWinLoss) + x.Sum(s => s.DraftMasterCommission)
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission)
                                                        }
                                                        : null,
                                        SupermasterWinlose = loginAgent.RoleId < Role.Supermaster.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.SupermasterWinLoss),
-                                                           Commission = x.Sum(s => s.SupermasterCommission),
-                                                           Subtotal = x.Sum(s => s.SupermasterWinLoss) + x.Sum(s => s.SupermasterCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftSupermasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftSupermasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftSupermasterWinLoss) + x.Sum(s => s.DraftSupermasterCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission)
                                                        }
                                                        : null,
-                                       Company = x.Sum(s => s.SupermasterWinLoss),
-                                       DraftCompany = x.Sum(s => s.DraftSupermasterWinLoss),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       Company = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss),
+                                       DraftCompany = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss)
                                    })
                                    .OrderBy(x => x.Username)
                                    .ToListAsync();
@@ -1189,7 +1179,7 @@ namespace Lottery.Core.Services.Agent
 
         private async Task<GetAgentWinLossSummaryResult> GetAgentWinLossOfSupermaster(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, Data.Entities.Agent loginAgent, DateTime from, DateTime to, List<int> ticketStates)
         {
-            var masterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
+            var masterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
             var winLossInfos = new List<WinLoseInfo>
             {
                 new() {
@@ -1205,16 +1195,15 @@ namespace Lottery.Core.Services.Agent
                     Commission = 0m
                 }
             };
-            var agentWinlossSummaries = await agentRepos.FindQueryBy(x => masterIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQueryBy(y => !y.ParentId.HasValue && ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
+            var agentWinlossSummaries = await agentRepos.FindQueryBy(x => masterIds.Contains(x.AgentId))
+                                   .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
                                    x => x.AgentId, y => y.MasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
                                        agent.RoleId,
+                                       ticket.ParentId,
                                        ticket.Stake,
-                                       agent.AgentSession.IpAddress,
-                                       agent.AgentSession.Platform,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
                                        ticket.DraftPlayerWinLoss,
@@ -1237,58 +1226,54 @@ namespace Lottery.Core.Services.Agent
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.RoleId
                                    })
                                    .Select(x => new AgentWinlossSummaryDto
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.Count(),
-                                       Point = x.Sum(s => s.Stake),
-                                       Payout = x.Sum(s => s.PlayerPayout),
-                                       WinLose = x.Sum(s => s.PlayerWinLoss),
-                                       DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
+                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
+                                       WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
+                                       DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftPlayerWinLoss),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.AgentWinLoss),
-                                                           Commission = x.Sum(s => s.AgentCommission),
-                                                           Subtotal = x.Sum(s => s.AgentWinLoss) + x.Sum(s => s.AgentCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftAgentWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftAgentCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftAgentWinLoss) + x.Sum(s => s.DraftAgentCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission)
                                                        }
                                                        : null,
                                        MasterWinlose = loginAgent.RoleId < Role.Master.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.MasterWinLoss),
-                                                           Commission = x.Sum(s => s.MasterCommission),
-                                                           Subtotal = x.Sum(s => s.MasterWinLoss) + x.Sum(s => s.MasterCommission),
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
 
-                                                           DraftWinLose = x.Sum(s => s.DraftMasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftMasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftMasterWinLoss) + x.Sum(s => s.DraftMasterCommission)
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission)
                                                        }
                                                        : null,
                                        SupermasterWinlose = loginAgent.RoleId < Role.Supermaster.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.SupermasterWinLoss),
-                                                           Commission = x.Sum(s => s.SupermasterCommission),
-                                                           Subtotal = x.Sum(s => s.SupermasterWinLoss) + x.Sum(s => s.SupermasterCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftSupermasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftSupermasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftSupermasterWinLoss) + x.Sum(s => s.DraftSupermasterCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission)
                                                        }
                                                        : null,
-                                       Company = x.Sum(s => s.CompanyWinLoss),
-                                       DraftCompany = x.Sum(s => s.DraftCompanyWinLoss),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       Company = x.Where(f => !f.ParentId.HasValue).Sum(s => s.CompanyWinLoss),
+                                       DraftCompany = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftCompanyWinLoss)
                                    })
                                    .OrderBy(x => x.Username)
                                    .ToListAsync();
@@ -1336,16 +1321,16 @@ namespace Lottery.Core.Services.Agent
 
         private async Task<GetAgentWinLossSummaryResult> GetAgentWinLossOfCompany(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, Data.Entities.Agent loginAgent, DateTime from, DateTime to, List<int> ticketStates)
         {
-            var supermasterIds = await agentRepos.FindQueryBy(x => x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0).Select(x => x.AgentId).ToListAsync();
-            var agentWinlossSummaries = await agentRepos.FindQueryBy(x => supermasterIds.Contains(x.AgentId)).Include(x => x.AgentSession)
-                                   .Join(ticketRepos.FindQueryBy(y => !y.ParentId.HasValue && ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
+            //  !y.ParentId.HasValue &&
+            var supermasterIds = await agentRepos.FindQueryBy(x => x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+            var agentWinlossSummaries = await agentRepos.FindQueryBy(x => supermasterIds.Contains(x.AgentId))
+                                   .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
                                    x => x.AgentId, y => y.SupermasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
                                        agent.Username,
                                        agent.RoleId,
-                                       agent.AgentSession.IpAddress,
-                                       agent.AgentSession.Platform,
+                                       ticket.ParentId,
                                        ticket.Stake,
                                        //   Player
                                        ticket.PlayerPayout,
@@ -1374,58 +1359,54 @@ namespace Lottery.Core.Services.Agent
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.IpAddress,
-                                       x.Platform
+                                       x.RoleId
                                    })
                                    .Select(x => new AgentWinlossSummaryDto
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.Count(),
-                                       Point = x.Sum(s => s.Stake),
-                                       Payout = x.Sum(s => s.PlayerPayout),
-                                       WinLose = x.Sum(s => s.PlayerWinLoss),
-                                       DraftWinLose = x.Sum(s => s.DraftPlayerWinLoss),
+                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
+                                       Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
+                                       WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
+                                       DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftPlayerWinLoss),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.AgentWinLoss),
-                                                           Commission = x.Sum(s => s.AgentCommission),
-                                                           Subtotal = x.Sum(s => s.AgentWinLoss) + x.Sum(s => s.AgentCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftAgentWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftAgentCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftAgentWinLoss) + x.Sum(s => s.DraftAgentCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission)
                                                        }
                                                        : null,
                                        MasterWinlose = loginAgent.RoleId < Role.Master.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.MasterWinLoss),
-                                                           Commission = x.Sum(s => s.MasterCommission),
-                                                           Subtotal = x.Sum(s => s.MasterWinLoss) + x.Sum(s => s.MasterCommission),
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterCommission),
 
-                                                           DraftWinLose = x.Sum(s => s.DraftMasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftMasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftMasterWinLoss) + x.Sum(s => s.DraftMasterCommission)
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission)
                                                        }
                                                        : null,
                                        SupermasterWinlose = loginAgent.RoleId < Role.Supermaster.ToInt()
                                                        ? new WinLoseInfo
                                                        {
-                                                           WinLose = x.Sum(s => s.SupermasterWinLoss),
-                                                           Commission = x.Sum(s => s.SupermasterCommission),
-                                                           Subtotal = x.Sum(s => s.SupermasterWinLoss) + x.Sum(s => s.SupermasterCommission),
-                                                           DraftWinLose = x.Sum(s => s.DraftSupermasterWinLoss),
-                                                           DraftCommission = x.Sum(s => s.DraftSupermasterCommission),
-                                                           DraftSubtotal = x.Sum(s => s.DraftSupermasterWinLoss) + x.Sum(s => s.DraftSupermasterCommission)
+                                                           WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss),
+                                                           Commission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           Subtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterCommission),
+                                                           DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss),
+                                                           DraftCommission = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission),
+                                                           DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftSupermasterCommission)
                                                        }
                                                        : null,
-                                       Company = x.Sum(s => s.CompanyWinLoss),
-                                       DraftCompany = x.Sum(s => s.DraftCompanyWinLoss),
-                                       IpAddress = x.Key.IpAddress,
-                                       Platform = x.Key.Platform
+                                       Company = x.Where(f => !f.ParentId.HasValue).Sum(s => s.CompanyWinLoss),
+                                       DraftCompany = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftCompanyWinLoss)
                                    })
                                    .OrderBy(x => x.Username)
                                    .ToListAsync();
@@ -1517,25 +1498,25 @@ namespace Lottery.Core.Services.Agent
                         {
                             childAgentItem.MaxBet = childAgentItem.MaxPerNumber;
                         }
-                        
+
                     });
 
                     // Update child agent minBuy, actualBuy
-                    updatedChildAgentItems.ForEach(childAgentItem => 
+                    updatedChildAgentItems.ForEach(childAgentItem =>
                     {
                         AgentOdd parentItem = null;
-                        if(item.Agent.RoleId == Role.Supermaster.ToInt())
+                        if (item.Agent.RoleId == Role.Supermaster.ToInt())
                         {
                             if (childAgentItem.Agent.RoleId == Role.Master.ToInt()) parentItem = item;
                             else if (childAgentItem.Agent.RoleId == Role.Agent.ToInt()) parentItem = updatedChildAgentItems.FirstOrDefault(f => f.AgentId == childAgentItem.Agent.MasterId);
                             if (parentItem == null) return;
-                        } 
-                        else if(item.Agent.RoleId == Role.Master.ToInt())
+                        }
+                        else if (item.Agent.RoleId == Role.Master.ToInt())
                         {
                             if (childAgentItem.Agent.RoleId == Role.Agent.ToInt()) parentItem = item;
                             if (parentItem == null) return;
                         }
-                        else if(item.Agent.RoleId == Role.Agent.ToInt())
+                        else if (item.Agent.RoleId == Role.Agent.ToInt())
                         {
                             return;
                         }

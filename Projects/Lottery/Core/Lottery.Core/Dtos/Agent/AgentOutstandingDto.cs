@@ -10,7 +10,5 @@ namespace Lottery.Core.Dtos.Agent
         public long TotalBetCount { get; set; }
         public decimal TotalStake { get; set; }
         public decimal TotalPayout { get; set; }
-        public string IpAddress { get; set; }
-        public string Platform { get; set; }
     }
 }

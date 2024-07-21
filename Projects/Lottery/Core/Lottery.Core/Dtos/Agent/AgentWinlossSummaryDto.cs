@@ -15,9 +15,6 @@
         public WinLoseInfo SupermasterWinlose { get; set; }
         public decimal? Company { get; set; }
         public decimal? DraftCompany { get; set; }
-
-        public string IpAddress { get; set; }
-        public string Platform { get; set; }
     }
 
     public class WinLoseInfo
