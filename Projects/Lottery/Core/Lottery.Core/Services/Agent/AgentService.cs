@@ -528,12 +528,31 @@ namespace Lottery.Core.Services.Agent
             //Init repos
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
+            var ticketRepos = LotteryUow.GetRepository<ITicketRepository>();
 
             var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
             if (clientAgent.ParentId != 0)
             {
                 clientAgent = await agentRepos.FindByIdAsync(clientAgent.ParentId) ?? throw new NotFoundException();
             }
+            var currentDate = ClockService.GetUtcNow().Date;
+
+            IQueryable<Data.Entities.Ticket> ticketQuery;
+            switch (clientAgent.RoleId)
+            {
+                case (int)Role.Supermaster:
+                    ticketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue && tk.SupermasterId == clientAgent.AgentId);
+                    break;
+                case (int)Role.Master:
+                    ticketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue && tk.MasterId == clientAgent.AgentId);
+                    break;
+                case (int)Role.Agent:
+                    ticketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue && tk.AgentId == clientAgent.AgentId);
+                    break;
+                default:
+                    ticketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue);
+                    break;
+            } 
             return new GetAgentDashBoardResult
             {
                 AgentDashBoard = new AgentDashBoardDto
@@ -543,13 +562,13 @@ namespace Lottery.Core.Services.Agent
                         Username = clientAgent.Username,
                         UserRole = ((Role)clientAgent.RoleId).ToString(),
                         Currency = 0m, // TODO: Handle this later
-                        Point = 0, // TODO: Handle this later
-                        YesterdayPoint = 0, // TODO: Handle this later
-                        Cash = 0m, // TODO: Handle this later
-                        YesterdayCash = 0m, // TODO: Handle this later
-                        TodayWinLoss = 0m, // TODO: Handle this later
+                        Point = await ticketQuery.Where(x => x.KickOffTime >= currentDate.Date && x.KickOffTime <= currentDate.AddDays(1).AddTicks(-1)).SumAsync(x => x.Stake),
+                        YesterdayPoint = await ticketQuery.Where(x => x.KickOffTime >= currentDate.AddDays(-1).Date && x.KickOffTime <= currentDate.AddTicks(-1)).SumAsync(x => x.Stake),
+                        Cash = await ticketQuery.Where(x => x.KickOffTime >= currentDate.Date && x.KickOffTime <= currentDate.AddDays(1).AddTicks(-1)).SumAsync(x => x.PlayerPayout),
+                        YesterdayCash = await ticketQuery.Where(x => x.KickOffTime >= currentDate.AddDays(-1).Date && x.KickOffTime <= currentDate.AddTicks(-1)).SumAsync(x => x.PlayerPayout),
+                        TodayWinLoss = await ticketQuery.Where(x => x.KickOffTime >= currentDate.Date && x.KickOffTime <= currentDate.AddDays(1).AddTicks(-1)).SumAsync(x => x.PlayerWinLoss),
                         Today = ClockService.GetUtcNow(),
-                        YesterdayWinLoss = 0m, // TODO: Handle this later
+                        YesterdayWinLoss = await ticketQuery.Where(x => x.KickOffTime >= currentDate.AddDays(-1).Date && x.KickOffTime <= currentDate.AddTicks(-1)).SumAsync(x => x.PlayerWinLoss),
                         Yesterday = ClockService.GetUtcNow().AddDays(-1),
                         TotalGivenOfLowerGrade = (Role)clientAgent.RoleId == Role.Agent
                                                 ? await playerRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId).SumAsync(x => x.Credit)
@@ -558,7 +577,7 @@ namespace Lottery.Core.Services.Agent
                     },
                     Statistics = new StatisticsInfo
                     {
-                        TotalOutstanding = 0m, // TODO: Handle this later
+                        TotalOutstanding = await ticketQuery.Where(x => CommonHelper.OutsTicketState().Contains(x.State)).SumAsync(x => x.PlayerPayout),
                         AgenStateInfos = await GetAgentStateInfo(agentRepos, playerRepos, clientAgent),
                         TotalNewPlayerOfAMonth = await GetTotalNewPlayerOfAMonth(agentRepos, playerRepos, clientAgent)
                     }

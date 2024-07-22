@@ -5,6 +5,7 @@ using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Helpers.Converters.Tickets;
 using Lottery.Core.Models.Ticket;
+using Lottery.Core.Models.Winlose;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.UnitOfWorks;
@@ -56,6 +57,17 @@ public class BroadCasterTicketService : LotteryBaseService<BroadCasterTicketServ
         var listPlayerId = data.Select(f => f.PlayerId).Distinct().ToList();
         var players = await playerRepository.FindQueryBy(f => listPlayerId.Contains(f.PlayerId)).ToListAsync();
         _normalizeTicketService.NormalizePlayer(data, players.ToDictionary(f => f.PlayerId, f => f.Username));
+        return data;
+    }
+
+    public async Task<List<TicketDetailModel>> GetBroadCasterWinloseDetail(WinloseDetailQueryModel model)
+    {
+        var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
+        var completedState = model.SelectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketState();
+        var data = await ticketRepository.FindQueryBy(f => f.BetKindId == model.TargetId && !f.ParentId.HasValue && f.KickOffTime.Date >= model.FromDate.Date && f.KickOffTime.Date <= model.ToDate.Date && completedState.Contains(f.State))
+            .OrderByDescending(f => f.TicketId)
+            .Select(f => f.ToTicketDetailModel()).ToListAsync();
+        _normalizeTicketService.NormalizeTicket(data);
         return data;
     }
 }

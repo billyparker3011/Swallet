@@ -37,19 +37,19 @@ namespace Lottery.Core.Services.BroadCaster
             switch (ClientContext.Agent.RoleId)
             {
                 case (int)Role.Company:
-                    var companyTicketQuery = ticketRepos.FindQueryBy(tk => outsState.Contains(tk.State));
+                    var companyTicketQuery = ticketRepos.FindQueryBy(tk => outsState.Contains(tk.State) && !tk.ParentId.HasValue);
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(companyTicketQuery, betKindRepos, model);
                     break;
                 case (int)Role.Supermaster:
-                    var superMasterTicketQuery = ticketRepos.FindQueryBy(tk => tk.SupermasterId == targetAgentId && outsState.Contains(tk.State));
+                    var superMasterTicketQuery = ticketRepos.FindQueryBy(tk => tk.SupermasterId == targetAgentId && outsState.Contains(tk.State) && !tk.ParentId.HasValue);
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(superMasterTicketQuery, betKindRepos, model);
                     break;
                 case (int)Role.Master:
-                    var masterTicketQuery = ticketRepos.FindQueryBy(tk => tk.MasterId == targetAgentId && outsState.Contains(tk.State));
+                    var masterTicketQuery = ticketRepos.FindQueryBy(tk => tk.MasterId == targetAgentId && outsState.Contains(tk.State) && !tk.ParentId.HasValue);
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(masterTicketQuery, betKindRepos, model);
                     break;
                 case (int)Role.Agent:
-                    var agentTicketQuery = ticketRepos.FindQueryBy(tk => tk.AgentId == targetAgentId && outsState.Contains(tk.State));
+                    var agentTicketQuery = ticketRepos.FindQueryBy(tk => tk.AgentId == targetAgentId && outsState.Contains(tk.State) && !tk.ParentId.HasValue);
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(agentTicketQuery, betKindRepos, model);
                     break;
                 default:
@@ -135,7 +135,7 @@ namespace Lottery.Core.Services.BroadCaster
                                         : ClientContext.Agent.ParentId;
             var loginAgent = await agentRepos.FindByIdAsync(targetAgentId) ?? throw new NotFoundException();
             var ticketStates = selectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketWithoutRefundOrRejectState();
-            var ticketQuery = ticketRepos.FindQueryBy(tk => ticketStates.Contains(tk.State) && tk.KickOffTime >= from.Date && tk.KickOffTime <= to.AddDays(1).AddTicks(-1));
+            var ticketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue && ticketStates.Contains(tk.State) && tk.KickOffTime >= from.Date && tk.KickOffTime <= to.AddDays(1).AddTicks(-1));
             switch (loginAgent.RoleId)
             {
                 case (int)Role.Company:
