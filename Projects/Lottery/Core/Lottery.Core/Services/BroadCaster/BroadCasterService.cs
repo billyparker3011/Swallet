@@ -210,6 +210,11 @@ namespace Lottery.Core.Services.BroadCaster
                                    .ThenBy(x => x.CategoryId)
                                    .ThenBy(x => x.BetKindId)
                                    .ToListAsync();
+            foreach(var item in broadCasterWinlossSummaries)
+            {
+                item.RegionName = EnumCategoryHelper.GetEnumRegionInformation((Region)item.RegionId)?.Name;
+                item.CategoryName = EnumCategoryHelper.GetEnumCategoryInformation((Category)item.CategoryId)?.Name;
+            }
             return new GetBroadCasterWinlossSummaryResult
             {
                 BroadCasterWinlossSummaries = broadCasterWinlossSummaries,
