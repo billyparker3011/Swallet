@@ -12,10 +12,12 @@ namespace Lottery.Ticket.TicketService.Controllers
     public class WinloseController : HnControllerBase
     {
         private readonly IPlayerTicketService _playerTicketService;
+        private readonly IBroadCasterTicketService _broadCasterTicketService;
 
-        public WinloseController(IPlayerTicketService playerTicketService)
+        public WinloseController(IPlayerTicketService playerTicketService, IBroadCasterTicketService broadCasterTicketService)
         {
             _playerTicketService = playerTicketService;
+            _broadCasterTicketService = broadCasterTicketService;
         }
 
         [HttpGet("{playerId:long}/winlose-detail"), LotteryAuthorize(Permission.Report.Reports)]
@@ -23,7 +25,19 @@ namespace Lottery.Ticket.TicketService.Controllers
         {
             return Ok(OkResponse.Create(await _playerTicketService.GetPlayerWinloseDetail(new WinloseDetailQueryModel
             {
-                PlayerId = playerId,
+                TargetId = playerId,
+                FromDate = request.FromDate,
+                ToDate = request.ToDate,
+                SelectedDraft = request.SelectedDraft
+            })));
+        }
+
+        [HttpGet("broad-caster/{betkindId:long}/winlose-detail"), LotteryAuthorize(Permission.Report.Reports)]
+        public async Task<IActionResult> GetBroadCasterWinloseDetail([FromRoute] long betkindId, [FromQuery] WinloseDetailRequest request)
+        {
+            return Ok(OkResponse.Create(await _broadCasterTicketService.GetBroadCasterWinloseDetail(new WinloseDetailQueryModel
+            {
+                TargetId = betkindId,
                 FromDate = request.FromDate,
                 ToDate = request.ToDate,
                 SelectedDraft = request.SelectedDraft

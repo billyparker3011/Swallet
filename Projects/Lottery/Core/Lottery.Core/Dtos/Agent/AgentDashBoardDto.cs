@@ -10,9 +10,9 @@
         public string Username { get; set; }
         public string UserRole { get; set; }
         public decimal? Currency { get; set; }
-        public long Point { get; set; }
+        public decimal Point { get; set; }
         public decimal Cash { get; set; }
-        public long YesterdayPoint { get; set; }
+        public decimal YesterdayPoint { get; set; }
         public decimal YesterdayCash { get; set; }
         public decimal TodayWinLoss { get; set; }
         public DateTime Today { get; set; }

@@ -70,7 +70,7 @@ public class PlayerTicketService : LotteryBaseService<PlayerTicketService>, IPla
     {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var completedState = model.SelectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketState();
-        var data = await ticketRepository.FindQueryBy(f => f.PlayerId == model.PlayerId && !f.ParentId.HasValue && f.KickOffTime.Date >= model.FromDate.Date && f.KickOffTime.Date <= model.ToDate.Date && completedState.Contains(f.State))
+        var data = await ticketRepository.FindQueryBy(f => f.PlayerId == model.TargetId && !f.ParentId.HasValue && f.KickOffTime.Date >= model.FromDate.Date && f.KickOffTime.Date <= model.ToDate.Date && completedState.Contains(f.State))
             .OrderByDescending(f => f.TicketId)
             .Select(f => f.ToTicketDetailModel()).ToListAsync();
         _normalizeTicketService.NormalizeTicket(data);
