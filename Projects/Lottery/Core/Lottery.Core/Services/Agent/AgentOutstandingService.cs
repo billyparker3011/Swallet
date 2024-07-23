@@ -73,7 +73,8 @@ namespace Lottery.Core.Services.Agent
                                        player.Username,
                                        ticket.ParentId,
                                        ticket.Stake,
-                                       ticket.PlayerPayout
+                                       ticket.PlayerPayout,
+                                       ticket.ShowMore
                                    })
                                    .GroupBy(x => new
                                    {
@@ -85,7 +86,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
-                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
@@ -114,7 +115,8 @@ namespace Lottery.Core.Services.Agent
                                        agent.RoleId,
                                        ticket.ParentId,
                                        ticket.Stake,
-                                       ticket.PlayerPayout
+                                       ticket.PlayerPayout,
+                                       ticket.ShowMore
                                    })
                                    .GroupBy(x => new
                                    {
@@ -127,7 +129,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
@@ -156,7 +158,8 @@ namespace Lottery.Core.Services.Agent
                                        agent.RoleId,
                                        ticket.ParentId,
                                        ticket.Stake,
-                                       ticket.PlayerPayout
+                                       ticket.PlayerPayout,
+                                       ticket.ShowMore
                                    })
                                    .GroupBy(x => new
                                    {
@@ -169,7 +172,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
@@ -198,7 +201,8 @@ namespace Lottery.Core.Services.Agent
                                        agent.RoleId,
                                        ticket.ParentId,
                                        ticket.Stake,
-                                       ticket.PlayerPayout
+                                       ticket.PlayerPayout,
+                                       ticket.ShowMore
                                    })
                                    .GroupBy(x => new
                                    {
@@ -211,7 +215,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    }).AsQueryable();

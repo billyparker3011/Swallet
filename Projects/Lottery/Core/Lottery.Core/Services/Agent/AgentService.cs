@@ -552,7 +552,7 @@ namespace Lottery.Core.Services.Agent
                 default:
                     ticketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue);
                     break;
-            } 
+            }
             return new GetAgentDashBoardResult
             {
                 AgentDashBoard = new AgentDashBoardDto
@@ -969,6 +969,7 @@ namespace Lottery.Core.Services.Agent
                                        player.Username,
                                        ticket.ParentId,
                                        ticket.Stake,
+                                       ticket.ShowMore,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
                                        ticket.DraftPlayerWinLoss,
@@ -997,7 +998,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        RoleId = Role.Player.ToInt(),
-                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
@@ -1089,6 +1090,7 @@ namespace Lottery.Core.Services.Agent
                                        agent.RoleId,
                                        ticket.ParentId,
                                        ticket.Stake,
+                                       ticket.ShowMore,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
                                        ticket.DraftPlayerWinLoss,
@@ -1118,7 +1120,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
@@ -1223,6 +1225,7 @@ namespace Lottery.Core.Services.Agent
                                        agent.RoleId,
                                        ticket.ParentId,
                                        ticket.Stake,
+                                       ticket.ShowMore,
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
                                        ticket.DraftPlayerWinLoss,
@@ -1252,7 +1255,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
@@ -1351,6 +1354,7 @@ namespace Lottery.Core.Services.Agent
                                        agent.RoleId,
                                        ticket.ParentId,
                                        ticket.Stake,
+                                       ticket.ShowMore,
                                        //   Player
                                        ticket.PlayerPayout,
                                        ticket.PlayerWinLoss,
@@ -1385,7 +1389,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),

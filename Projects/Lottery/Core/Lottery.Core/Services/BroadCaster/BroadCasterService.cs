@@ -37,19 +37,19 @@ namespace Lottery.Core.Services.BroadCaster
             switch (ClientContext.Agent.RoleId)
             {
                 case (int)Role.Company:
-                    var companyTicketQuery = ticketRepos.FindQueryBy(tk => outsState.Contains(tk.State) && !tk.ParentId.HasValue);
+                    var companyTicketQuery = ticketRepos.FindQueryBy(tk => outsState.Contains(tk.State));
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(companyTicketQuery, betKindRepos, model);
                     break;
                 case (int)Role.Supermaster:
-                    var superMasterTicketQuery = ticketRepos.FindQueryBy(tk => tk.SupermasterId == targetAgentId && outsState.Contains(tk.State) && !tk.ParentId.HasValue);
+                    var superMasterTicketQuery = ticketRepos.FindQueryBy(tk => tk.SupermasterId == targetAgentId && outsState.Contains(tk.State));
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(superMasterTicketQuery, betKindRepos, model);
                     break;
                 case (int)Role.Master:
-                    var masterTicketQuery = ticketRepos.FindQueryBy(tk => tk.MasterId == targetAgentId && outsState.Contains(tk.State) && !tk.ParentId.HasValue);
+                    var masterTicketQuery = ticketRepos.FindQueryBy(tk => tk.MasterId == targetAgentId && outsState.Contains(tk.State));
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(masterTicketQuery, betKindRepos, model);
                     break;
                 case (int)Role.Agent:
-                    var agentTicketQuery = ticketRepos.FindQueryBy(tk => tk.AgentId == targetAgentId && outsState.Contains(tk.State) && !tk.ParentId.HasValue);
+                    var agentTicketQuery = ticketRepos.FindQueryBy(tk => tk.AgentId == targetAgentId && outsState.Contains(tk.State));
                     listBroadCasterOustanding = await GetBroadCasterOutstandings(agentTicketQuery, betKindRepos, model);
                     break;
                 default:
@@ -71,7 +71,7 @@ namespace Lottery.Core.Services.BroadCaster
                  .Join(betKindRepos.FindQuery(),
                  tk => new { tk.RegionId, tk.BetKindId },
                  bk => new { bk.RegionId, BetKindId = bk.Id },
-                 (tk, bk) => new { bk.RegionId, bk.CategoryId, bk.Id, bk.Name, tk.Stake, tk.PlayerPayout, tk.ParentId })
+                 (tk, bk) => new { bk.RegionId, bk.CategoryId, bk.Id, bk.Name, tk.Stake, tk.PlayerPayout, tk.ParentId, tk.ShowMore })
                  .GroupBy(joinedData => new { joinedData.RegionId, joinedData.CategoryId, joinedData.Id, joinedData.Name })
                  .Select(groupedData => new BroadCasterOutstandingDto
                  {
@@ -81,7 +81,7 @@ namespace Lottery.Core.Services.BroadCaster
                      BetKindName = groupedData.Key.Name,
                      TotalStake = groupedData.Where(f => !f.ParentId.HasValue).Sum(x => x.Stake),
                      TotalPayout = groupedData.Where(f => !f.ParentId.HasValue).Sum(x => x.PlayerPayout),
-                     TotalBetCount = groupedData.LongCount(f => f.ParentId.HasValue)
+                     TotalBetCount = groupedData.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue))
                  });
 
             if (model.SortType == SortType.Descending)
@@ -135,27 +135,27 @@ namespace Lottery.Core.Services.BroadCaster
                                         : ClientContext.Agent.ParentId;
             var loginAgent = await agentRepos.FindByIdAsync(targetAgentId) ?? throw new NotFoundException();
             var ticketStates = selectedDraft ? CommonHelper.AllTicketState() : CommonHelper.CompletedTicketWithoutRefundOrRejectState();
-            var ticketQuery = ticketRepos.FindQueryBy(tk => !tk.ParentId.HasValue && ticketStates.Contains(tk.State) && tk.KickOffTime >= from.Date && tk.KickOffTime <= to.AddDays(1).AddTicks(-1));
+            var ticketQuery = ticketRepos.FindQueryBy(tk => ticketStates.Contains(tk.State) && tk.KickOffTime >= from.Date && tk.KickOffTime <= to.AddDays(1).AddTicks(-1));
             switch (loginAgent.RoleId)
             {
                 case (int)Role.Company:
                     var companyTicketQuery = ticketQuery;
-                    return await GetBroadCasterWinlosses(companyTicketQuery, betKindRepos);
+                    return await GetBroadCasterWinloss(companyTicketQuery, betKindRepos);
                 case (int)Role.Supermaster:
                     var superMasterTicketQuery = ticketQuery.Where(x => x.SupermasterId == targetAgentId);
-                    return await GetBroadCasterWinlosses(superMasterTicketQuery, betKindRepos);
+                    return await GetBroadCasterWinloss(superMasterTicketQuery, betKindRepos);
                 case (int)Role.Master:
                     var masterTicketQuery = ticketQuery.Where(x => x.MasterId == targetAgentId);
-                    return await GetBroadCasterWinlosses(masterTicketQuery, betKindRepos);
+                    return await GetBroadCasterWinloss(masterTicketQuery, betKindRepos);
                 case (int)Role.Agent:
                     var agentTicketQuery = ticketQuery.Where(x => x.AgentId == targetAgentId);
-                    return await GetBroadCasterWinlosses(agentTicketQuery, betKindRepos);
+                    return await GetBroadCasterWinloss(agentTicketQuery, betKindRepos);
                 default:
                     return new GetBroadCasterWinlossSummaryResult();
             }
         }
 
-        private async Task<GetBroadCasterWinlossSummaryResult> GetBroadCasterWinlosses(IQueryable<Data.Entities.Ticket> ticketQuery, IBetKindRepository betKindRepos)
+        private async Task<GetBroadCasterWinlossSummaryResult> GetBroadCasterWinloss(IQueryable<Data.Entities.Ticket> ticketQuery, IBetKindRepository betKindRepos)
         {
             var broadCasterWinlossSummaries = await ticketQuery
                                    .Join(betKindRepos.FindQuery(),
@@ -168,6 +168,7 @@ namespace Lottery.Core.Services.BroadCaster
                                        bk.Id,
                                        bk.Name,
                                        tk.Stake,
+                                       tk.ShowMore,
                                        tk.ParentId,
                                        tk.PlayerPayout,
                                        tk.PlayerWinLoss,
@@ -200,7 +201,7 @@ namespace Lottery.Core.Services.BroadCaster
                                        CategoryId = x.Key.CategoryId,
                                        BetKindId = x.Key.Id,
                                        BetKindName = x.Key.Name,
-                                       BetCount = x.LongCount(f => f.ParentId.HasValue),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
@@ -210,7 +211,7 @@ namespace Lottery.Core.Services.BroadCaster
                                    .ThenBy(x => x.CategoryId)
                                    .ThenBy(x => x.BetKindId)
                                    .ToListAsync();
-            foreach(var item in broadCasterWinlossSummaries)
+            foreach (var item in broadCasterWinlossSummaries)
             {
                 item.RegionName = EnumCategoryHelper.GetEnumRegionInformation((Region)item.RegionId)?.Name;
                 item.CategoryName = EnumCategoryHelper.GetEnumCategoryInformation((Category)item.CategoryId)?.Name;
