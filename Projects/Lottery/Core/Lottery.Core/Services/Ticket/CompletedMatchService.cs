@@ -200,7 +200,6 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
 
             item.Times = resultTicket.Times;
             item.MixedTimes = resultTicket.MixedTimes;
-            item.State = resultTicket.State.ToInt();
 
             if (isDraft)
             {
@@ -219,6 +218,8 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             }
             else
             {
+                item.State = resultTicket.State.ToInt();
+
                 item.PlayerWinLoss = resultTicket.PlayerWinLoss;
 
                 item.AgentWinLoss = resultTicket.AgentWinLoss;
@@ -244,7 +245,6 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
 
                 child.Times = subTicket.Times;
                 child.MixedTimes = subTicket.MixedTimes;
-                child.State = subTicket.State.ToInt();
 
                 if (isDraft)
                 {
@@ -263,6 +263,8 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                 }
                 else
                 {
+                    child.State = subTicket.State.ToInt();
+
                     child.PlayerWinLoss = subTicket.PlayerWinLoss;
 
                     child.AgentWinLoss = subTicket.AgentWinLoss;

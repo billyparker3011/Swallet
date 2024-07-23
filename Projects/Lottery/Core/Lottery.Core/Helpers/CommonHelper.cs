@@ -67,7 +67,7 @@ namespace Lottery.Core.Helpers
 
         public static List<int> RecalculateTicketState()
         {
-            return new List<int> { TicketState.Completed.ToInt(), TicketState.Won.ToInt(), TicketState.Draw.ToInt(), TicketState.Lose.ToInt(), TicketState.Running.ToInt(), TicketState.Waiting.ToInt() };
+            return new List<int> { TicketState.Completed.ToInt(), TicketState.Won.ToInt(), TicketState.Draw.ToInt(), TicketState.Lose.ToInt() };
         }
 
         public static List<int> CompletedTicketState()
