@@ -209,39 +209,15 @@ namespace Lottery.Core.Services.Odds
 
         public async Task<MixedOddsTableModel> GetMixedOddsTableByBetKind(int betKindId)
         {
-            //var noOfNumbers = betKindId.GetNoOfNumbers();
             var betKindIds = betKindId.BuildBetKinds();
             var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
             var betKinds = betKindInMemoryRepository.FindBy(f => betKindIds.Contains(f.Id)).ToDictionary(f => f.Id, f => f.Name);
-
-            //var oddsValue = await GetDefaultOddsByBetKind(betKindIds);
-            //var dictOddsValue = new Dictionary<int, List<OddsTableDetailModel>>();
-            //foreach (var betKindItem in betKindIds)
-            //{
-            //    if (!dictOddsValue.TryGetValue(betKindItem, out List<OddsTableDetailModel> listOddsValue))
-            //    {
-            //        listOddsValue = new List<OddsTableDetailModel>();
-            //        dictOddsValue[betKindItem] = listOddsValue;
-            //    }
-
-            //    var oddsByBetKind = oddsValue.FirstOrDefault(f => f.BetKindId == betKindItem);
-            //    if (oddsByBetKind == null) continue;
-            //    for (var i = 0; i < noOfNumbers; i++)
-            //    {
-            //        listOddsValue.Add(new OddsTableDetailModel
-            //        {
-            //            Number = i,
-            //            OriginValue = oddsByBetKind.Buy
-            //        });
-            //    }
-            //}
 
             var runningMatch = await _runningMatchService.GetRunningMatch();
             if (runningMatch == null)
             {
                 return new MixedOddsTableModel
                 {
-                    //Odds = dictOddsValue
                     BetKinds = betKinds
                 };
             }
@@ -249,7 +225,6 @@ namespace Lottery.Core.Services.Odds
             return new MixedOddsTableModel
             {
                 Match = runningMatch,
-                //Odds = dictOddsValue
                 BetKinds = betKinds
             };
         }
