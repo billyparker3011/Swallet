@@ -70,38 +70,51 @@ namespace Lottery.Core.Services.Caching.Player
             }
         }
 
-        public async Task BuildPointsByMatchAndNumbersCache(long playerId, long matchId, Dictionary<int, decimal> pointsByMatchAndNumbers, Dictionary<int, decimal> pointByNumbers)
+        public async Task BuildPointsByMatchBetKindAndNumbersCache(long playerId, long matchId, Dictionary<int, Dictionary<int, decimal>> pointsByBetKindAndNumbers)
         {
-            foreach (var item in pointByNumbers)
+            foreach (var item in pointsByBetKindAndNumbers)
             {
-                var pointsByMatchAndNumberKey = playerId.GetPlayerPointsByMatchAndNumber(matchId, item.Key);
-                if (!pointsByMatchAndNumbers.TryGetValue(item.Key, out decimal oldVal)) oldVal = 0m;
-                var newVal = item.Value + oldVal;
-                await _cacheService.HashSetFieldsAsync(pointsByMatchAndNumberKey.MainKey, new Dictionary<string, string>
+                var betKindId = item.Key;
+                var points = item.Value;
+
+                foreach (var subItem in points)
                 {
-                    { pointsByMatchAndNumberKey.SubKey, newVal.ToString() }
-                }, pointsByMatchAndNumberKey.TimeSpan == TimeSpan.Zero ? null : pointsByMatchAndNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                    var number = subItem.Key;
+
+                    var pointsByMatchAndNumberKey = playerId.GetPlayerPointsByMatchBetKindAndNumber(matchId, betKindId, number);
+                    var vals = await _cacheService.HashGetFieldsAsync(pointsByMatchAndNumberKey.MainKey, new List<string> { pointsByMatchAndNumberKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                    if (!vals.TryGetValue(pointsByMatchAndNumberKey.SubKey, out string currentPoint) || string.IsNullOrEmpty(currentPoint) || !decimal.TryParse(currentPoint, out decimal oldPoints)) oldPoints = 0m;
+
+                    var newPoints = oldPoints + subItem.Value;
+                    await _cacheService.HashSetFieldsAsync(pointsByMatchAndNumberKey.MainKey, new Dictionary<string, string>
+                    {
+                        { pointsByMatchAndNumberKey.SubKey, newPoints.ToString() }
+                    }, pointsByMatchAndNumberKey.TimeSpan == TimeSpan.Zero ? null : pointsByMatchAndNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                }
             }
         }
 
-        public async Task UpdatePointsByMatchAndNumbersCache(Dictionary<long, Dictionary<long, Dictionary<int, decimal>>> points)
+        public async Task UpdatePointsByMatchBetKindNumbersCache(Dictionary<long, Dictionary<long, Dictionary<int, Dictionary<int, decimal>>>> points)
         {
-            //  Key = PlayerId => Key = MatchId => Key = Number
+            //  Key = PlayerId => Key = MatchId => Key = BetKind => Key = Number
             foreach (var itemPoint in points)
             {
                 foreach (var itemMatch in itemPoint.Value)
                 {
-                    foreach (var itemNumber in itemMatch.Value)
+                    foreach (var itemBetKind in itemMatch.Value)
                     {
-                        var pointsByMatchAndNumberKey = itemMatch.Key.GetPlayerPointsByMatchAndNumber(itemMatch.Key, itemNumber.Key);
-                        var currentPoints = await _cacheService.HashGetFieldsAsync(pointsByMatchAndNumberKey.MainKey, new List<string> { pointsByMatchAndNumberKey.SubKey }, CachingConfigs.RedisConnectionForApp);
-                        if (currentPoints == null || currentPoints.Count == 0) continue;
-                        if (!currentPoints.TryGetValue(pointsByMatchAndNumberKey.SubKey, out string sPoints)) continue;
-                        if (!decimal.TryParse(sPoints, out decimal valPoints)) continue;
-                        if (valPoints < itemNumber.Value) continue;
+                        foreach (var itemNumber in itemBetKind.Value)
+                        {
+                            var pointsByMatchBetKindAndNumberKey = itemPoint.Key.GetPlayerPointsByMatchBetKindAndNumber(itemMatch.Key, itemBetKind.Key, itemNumber.Key);
+                            var currentPoints = await _cacheService.HashGetFieldsAsync(pointsByMatchBetKindAndNumberKey.MainKey, new List<string> { pointsByMatchBetKindAndNumberKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                            if (currentPoints == null || currentPoints.Count == 0) continue;
+                            if (!currentPoints.TryGetValue(pointsByMatchBetKindAndNumberKey.SubKey, out string sPoints)) continue;
+                            if (!decimal.TryParse(sPoints, out decimal valPoints)) continue;
 
-                        currentPoints[pointsByMatchAndNumberKey.SubKey] = (valPoints - itemNumber.Value).ToString();
-                        await _cacheService.HashSetFieldsAsync(pointsByMatchAndNumberKey.MainKey, currentPoints, pointsByMatchAndNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                            var newPoint = valPoints < itemNumber.Value ? 0m : valPoints - itemNumber.Value;
+                            currentPoints[pointsByMatchBetKindAndNumberKey.SubKey] = newPoint.ToString();
+                            await _cacheService.HashSetFieldsAsync(pointsByMatchBetKindAndNumberKey.MainKey, currentPoints, pointsByMatchBetKindAndNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                        }
                     }
                 }
             }
@@ -357,12 +370,54 @@ namespace Lottery.Core.Services.Caching.Player
             return dataOdds;
         }
 
-        public async Task<PlayerOutsModel> GetOuts(long playerId, long matchId, List<int> numbers)
+        public async Task<PlayerOutsModel> GetOuts(long playerId, long matchId, int betKindId, List<int> numbers)
         {
             return new PlayerOutsModel
             {
                 OutsByMatch = await GetOutsByMatch(playerId, matchId),
-                PointsByMatchAndNumbers = await GetPointsByMatchAndNumbers(playerId, matchId, numbers)
+                PointsByMatchAndNumbers = await GetPointsByMatchAndNumbers(playerId, matchId, betKindId, numbers)
+            };
+        }
+
+        private async Task<Dictionary<int, decimal>> GetPointsByMatchAndNumbers(long playerId, long matchId, int betKindId, List<int> numbers)
+        {
+            var d = new Dictionary<int, decimal>();
+            foreach (var number in numbers)
+            {
+                var pointsByMatchAndNumberKey = playerId.GetPlayerPointsByMatchBetKindAndNumber(matchId, betKindId, number);
+                var outs = await _cacheService.HashGetFieldsAsync(pointsByMatchAndNumberKey.MainKey, new List<string> { pointsByMatchAndNumberKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+                if (outs.Count == 0) continue;
+                var outsValue = outs.FirstOrDefault().Value;
+                if (string.IsNullOrEmpty(outsValue) || !decimal.TryParse(outsValue, out decimal val)) continue;
+                d[number] = val;
+            }
+            return d;
+        }
+
+        public async Task<MixedPlayerOutsModel> GetMixedOdds(long playerId, long matchId, List<int> betKindIds, List<int> numbers)
+        {
+            return new MixedPlayerOutsModel
+            {
+                OutsByMatch = await GetOutsByMatch(playerId, matchId),
+                PointsByMatchAndNumbers = await GetMixedPointsByMatchAndNumbers(playerId, matchId, betKindIds, numbers)
+            };
+        }
+
+        private async Task<Dictionary<int, Dictionary<int, decimal>>> GetMixedPointsByMatchAndNumbers(long playerId, long matchId, List<int> betKindIds, List<int> numbers)
+        {
+            var d = new Dictionary<int, Dictionary<int, decimal>>();
+            foreach (var betKindId in betKindIds)
+            {
+                d[betKindId] = await GetPointsByMatchAndNumbers(playerId, matchId, betKindId, numbers);
+            }
+            return d;
+        }
+
+        public async Task<PlayerOutsModel> GetOuts(long playerId, long matchId)
+        {
+            return new PlayerOutsModel
+            {
+                OutsByMatch = await GetOutsByMatch(playerId, matchId)
             };
         }
 
@@ -374,29 +429,6 @@ namespace Lottery.Core.Services.Caching.Player
             var outsValue = outs.FirstOrDefault().Value;
             if (string.IsNullOrEmpty(outsValue) || !decimal.TryParse(outsValue, out decimal val)) return 0m;
             return val;
-        }
-
-        private async Task<Dictionary<int, decimal>> GetPointsByMatchAndNumbers(long playerId, long matchId, List<int> numbers)
-        {
-            var d = new Dictionary<int, decimal>();
-            foreach (var number in numbers)
-            {
-                var pointsByMatchAndNumberKey = playerId.GetPlayerPointsByMatchAndNumber(matchId, number);
-                var outs = await _cacheService.HashGetFieldsAsync(pointsByMatchAndNumberKey.MainKey, new List<string> { pointsByMatchAndNumberKey.SubKey }, CachingConfigs.RedisConnectionForApp);
-                if (outs.Count == 0) continue;
-                var outsValue = outs.FirstOrDefault().Value;
-                if (string.IsNullOrEmpty(outsValue) || !decimal.TryParse(outsValue, out decimal val)) continue;
-                d[number] = val;
-            }
-            return d;
-        }
-
-        public async Task<PlayerOutsModel> GetOuts(long playerId, long matchId)
-        {
-            return new PlayerOutsModel
-            {
-                OutsByMatch = await GetOutsByMatch(playerId, matchId)
-            };
         }
     }
 }

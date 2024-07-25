@@ -83,7 +83,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
         if (refreshCreditCache) await _processTicketService.BuildGivenCreditCache(processValidation.Player.PlayerId, givenCredit);
 
         //  Get Outs
-        var outs = await _processTicketService.GetOuts(processValidation.Player.PlayerId, processValidation.Match.MatchId, model.Numbers);
+        var outs = await _processTicketService.GetMixedOdds(processValidation.Player.PlayerId, processValidation.Match.MatchId, listSubBetKindIds, model.Numbers);
 
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var correlationId = Guid.NewGuid();
@@ -92,9 +92,11 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
         var totalPayouts = 0m;
         var tickets = new List<Data.Entities.Ticket>();
         //  Stats
-        var pointByPair = new Dictionary<int, Dictionary<string, decimal>>();
-        var payoutByPair = new Dictionary<int, Dictionary<string, decimal>>();
-        var realPayoutByPair = new Dictionary<int, Dictionary<string, decimal>>();
+        var pointByNumbers = new Dictionary<int, Dictionary<int, decimal>>();   //  Key = BetKindId; Value = Dict<Key = Number; Value = Point>
+
+        var pointByPair = new Dictionary<int, Dictionary<string, decimal>>();   //  Key = BetKindId; Value = Dict<Key = PairNumber; Value = Point>
+        var payoutByPair = new Dictionary<int, Dictionary<string, decimal>>();  //  Key = BetKindId; Value = Dict<Key = PairNumber; Value = Payout>
+        var realPayoutByPair = new Dictionary<int, Dictionary<string, decimal>>();  //  Key = BetKindId; Value = Dict<Key = PairNumber; Value = Real Payout>
         foreach (var item in dictSubBetKindIds)
         {
             var betKindId = item.Key;
@@ -103,8 +105,16 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
             var currentBetKind = betKinds.FirstOrDefault(f => f.Id == betKindId);
             if (currentBetKind == null) continue;
 
+            if (!outs.PointsByMatchAndNumbers.TryGetValue(betKindId, out Dictionary<int, decimal> outsByBetKind)) outsByBetKind = new Dictionary<int, decimal>();
+
             if (!agentPts.TryGetValue(betKindId, out List<AgentPositionTakingModel> positionTakings)) positionTakings = new List<AgentPositionTakingModel>();
             if (!rateOfOddsValue.TryGetValue(betKindId, out decimal rateValue)) rateValue = 0m;
+
+            if (!pointByNumbers.TryGetValue(betKindId, out Dictionary<int, decimal> valPointByNumbers))
+            {
+                valPointByNumbers = new Dictionary<int, decimal>();
+                pointByNumbers[betKindId] = valPointByNumbers;
+            }
 
             if (!pointByPair.TryGetValue(betKindId, out Dictionary<string, decimal> valPointByPair))
             {
@@ -139,8 +149,10 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
                 var ticket = CreateSingleTicket(correlationId, processValidation, currentBetKind, pointByBetKind, playerOddsValue, normalizedNumbers, positionTakings);
                 foreach (var number in numbers)
                 {
-                    if (!outs.PointsByMatchAndNumbers.TryGetValue(number, out decimal outsByMatchAndNumberValue)) outsByMatchAndNumberValue = 0m;
+                    if (!outsByBetKind.TryGetValue(number, out decimal outsByMatchAndNumberValue)) outsByMatchAndNumberValue = 0m;
                     if ((outsByMatchAndNumberValue + ticket.Stake) > betSetting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid);
+
+                    valPointByNumbers[number] = ticket.Stake;
                 }
 
                 valPointByPair[normalizedNumbers] = pointByBetKind;
@@ -165,8 +177,9 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
                 }
                 foreach (var number in dictTotalPointsByNumbers)
                 {
-                    if (!outs.PointsByMatchAndNumbers.TryGetValue(number.Key, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
+                    if (!outsByBetKind.TryGetValue(number.Key, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
                     if ((pointsByMatchAndNumberValue + number.Value) > betSetting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid);
+                    valPointByNumbers[number.Key] = number.Value;
                 }
 
                 var ticket = CreateParentTicket(correlationId, processValidation, betKindId, currentBetKind, playerOddsValue, normalizedNumbers, positionTakings);
@@ -204,7 +217,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
         await LotteryUow.SaveChangesAsync();
 
         await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPayouts);
-
+        await _processTicketService.BuildPointsByMatchBetKindAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, pointByNumbers);
         if (enableStats)
         {
             await _processTicketService.BuildMixedStatsByMatch(processValidation.Match.MatchId, pointByPair, payoutByPair, realPayoutByPair);

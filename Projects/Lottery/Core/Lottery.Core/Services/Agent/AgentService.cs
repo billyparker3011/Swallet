@@ -954,13 +954,6 @@ namespace Lottery.Core.Services.Agent
         private async Task<GetAgentWinLossSummaryResult> GetAgentWinLossOfAgent(IPlayerRepository playerRepos, ITicketRepository ticketRepos, long targetAgentId, Data.Entities.Agent loginAgent, DateTime from, DateTime to, List<int> ticketStates)
         {
             var playerIds = await playerRepos.FindQueryBy(x => x.AgentId == targetAgentId).Select(x => x.PlayerId).ToListAsync();
-            var winLossInfos = new List<WinLoseInfo>
-            {
-                new() {
-                    WinLose = 0m,
-                    Commission = 0m
-                }
-            };
             var agentWinlossSummaries = await playerRepos.FindQueryBy(x => playerIds.Contains(x.PlayerId))
                                    .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
                                    x => x.PlayerId, y => y.PlayerId, (player, ticket) => new
@@ -998,12 +991,12 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        RoleId = Role.Player.ToInt(),
-                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
                                        DraftWinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftPlayerWinLoss),
-                                       AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
+                                       AgentWinlose = loginAgent.RoleId <= Role.Agent.ToInt()
                                                        ? new WinLoseInfo
                                                        {
                                                            WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.AgentWinLoss),
@@ -1070,17 +1063,6 @@ namespace Lottery.Core.Services.Agent
         private async Task<GetAgentWinLossSummaryResult> GetAgentWinLossOfMaster(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, Data.Entities.Agent loginAgent, DateTime from, DateTime to, List<int> ticketStates)
         {
             var agentIds = await agentRepos.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
-            var winLossInfos = new List<WinLoseInfo>
-            {
-                new() {
-                    WinLose = 0m,
-                    Commission = 0m
-                },
-                new() {
-                    WinLose = 0m,
-                    Commission = 0m
-                }
-            };
             var agentWinlossSummaries = await agentRepos.FindQueryBy(x => agentIds.Contains(x.AgentId))
                                    .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
                                    x => x.AgentId, y => y.AgentId, (agent, ticket) => new
@@ -1120,7 +1102,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
@@ -1136,7 +1118,7 @@ namespace Lottery.Core.Services.Agent
                                                            DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftAgentCommission)
                                                        }
                                                        : null,
-                                       MasterWinlose = loginAgent.RoleId < Role.Master.ToInt()
+                                       MasterWinlose = loginAgent.RoleId <= Role.Master.ToInt()
                                                        ? new WinLoseInfo
                                                        {
                                                            WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.MasterWinLoss),
@@ -1201,21 +1183,6 @@ namespace Lottery.Core.Services.Agent
         private async Task<GetAgentWinLossSummaryResult> GetAgentWinLossOfSupermaster(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, Data.Entities.Agent loginAgent, DateTime from, DateTime to, List<int> ticketStates)
         {
             var masterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
-            var winLossInfos = new List<WinLoseInfo>
-            {
-                new() {
-                    WinLose = 0m,
-                    Commission = 0m
-                },
-                new() {
-                    WinLose = 0m,
-                    Commission = 0m
-                },
-                new() {
-                    WinLose = 0m,
-                    Commission = 0m
-                }
-            };
             var agentWinlossSummaries = await agentRepos.FindQueryBy(x => masterIds.Contains(x.AgentId))
                                    .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
                                    x => x.AgentId, y => y.MasterId, (agent, ticket) => new
@@ -1255,7 +1222,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
@@ -1283,7 +1250,7 @@ namespace Lottery.Core.Services.Agent
                                                            DraftSubtotal = x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterWinLoss) + x.Where(f => !f.ParentId.HasValue).Sum(s => s.DraftMasterCommission)
                                                        }
                                                        : null,
-                                       SupermasterWinlose = loginAgent.RoleId < Role.Supermaster.ToInt()
+                                       SupermasterWinlose = loginAgent.RoleId <= Role.Supermaster.ToInt()
                                                        ? new WinLoseInfo
                                                        {
                                                            WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.SupermasterWinLoss),
@@ -1343,7 +1310,6 @@ namespace Lottery.Core.Services.Agent
 
         private async Task<GetAgentWinLossSummaryResult> GetAgentWinLossOfCompany(IAgentRepository agentRepos, ITicketRepository ticketRepos, long targetAgentId, Data.Entities.Agent loginAgent, DateTime from, DateTime to, List<int> ticketStates)
         {
-            //  !y.ParentId.HasValue &&
             var supermasterIds = await agentRepos.FindQueryBy(x => x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
             var agentWinlossSummaries = await agentRepos.FindQueryBy(x => supermasterIds.Contains(x.AgentId))
                                    .Join(ticketRepos.FindQueryBy(y => ticketStates.Contains(y.State) && y.KickOffTime >= from.Date && y.KickOffTime <= to.AddDays(1).AddTicks(-1)),
@@ -1389,7 +1355,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),

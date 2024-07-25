@@ -64,7 +64,7 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
         if (refreshCreditCache) await _processTicketService.BuildGivenCreditCache(processValidation.Player.PlayerId, givenCredit);
 
         //  Get Outs
-        var outs = await _processTicketService.GetOuts(processValidation.Player.PlayerId, processValidation.Match.MatchId, model.Numbers.Select(f => f.Number).ToList());
+        var outs = await _processTicketService.GetOuts(processValidation.Player.PlayerId, processValidation.Match.MatchId, originBetKindId, model.Numbers.Select(f => f.Number).ToList());
 
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var ticket = new Data.Entities.Ticket
@@ -298,7 +298,11 @@ public class ProcessLiveService : LotteryBaseService<ProcessLiveService>, IProce
         await LotteryUow.SaveChangesAsync();
 
         await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPlayerPayout);
-        await _processTicketService.BuildPointsByMatchAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.PointsByMatchAndNumbers, pointByNumbers);
+        await _processTicketService.BuildPointsByMatchBetKindAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, new Dictionary<int, Dictionary<int, decimal>>
+        {
+            { originBetKindId, pointByNumbers }
+        });
+
         if (enableStats) await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, processValidation.BetKind.Id, pointByNumbers, payoutByNumbers, realPayoutByNumbers);
 
         return (ticket, childTickets);

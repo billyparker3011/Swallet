@@ -86,7 +86,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
-                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
@@ -129,7 +129,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
@@ -172,7 +172,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    })
@@ -215,7 +215,7 @@ namespace Lottery.Core.Services.Agent
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = (Role)x.Key.RoleId,
-                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       TotalBetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        TotalStake = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        TotalPayout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout)
                                    }).AsQueryable();

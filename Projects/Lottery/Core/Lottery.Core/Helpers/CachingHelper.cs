@@ -10,12 +10,12 @@ namespace Lottery.Core.Helpers
             return string.Format(CachingConfigs.SessionKeyByRole, roleId, targetId);
         }
 
-        public static KeyOfRedisHash GetPlayerPointsByMatchAndNumber(this long playerId, long matchId, int number)
+        public static KeyOfRedisHash GetPlayerPointsByMatchBetKindAndNumber(this long playerId, long matchId, int betKindId, int number)
         {
             return new KeyOfRedisHash
             {
-                MainKey = string.Format(CachingConfigs.PlayerPointsByMatchAndNumberKey, playerId / CachingConfigs.HashStructureMaxLength, matchId, number),
-                SubKey = string.Format(CachingConfigs.PlayerPointsByMatchAndNumberValueOfKey, playerId % CachingConfigs.HashStructureMaxLength),
+                MainKey = string.Format(CachingConfigs.PlayerPointsByMatchBetKindAndNumberKey, playerId / CachingConfigs.HashStructureMaxLength, matchId, betKindId, number),
+                SubKey = string.Format(CachingConfigs.PlayerPointsByMatchBetKindAndNumberValueOfKey, playerId % CachingConfigs.HashStructureMaxLength),
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }

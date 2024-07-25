@@ -10,8 +10,8 @@
         public const string SessionKeyByRole = "session.{0}.{1}";   //  {0} = RoleId, {1} = AgentId/PlayerId
 
         //  Begin: Player Points By Match & Number
-        public const string PlayerPointsByMatchAndNumberKey = "points.player.{0}.{1}.{2}"; //  <PlayerId / 1000>, <MatchId>, <Number>
-        public const string PlayerPointsByMatchAndNumberValueOfKey = "points.{0}"; //  <PlayerId % 1000>
+        public const string PlayerPointsByMatchBetKindAndNumberKey = "points.player.{0}.{1}.{2}.{3}"; //  <PlayerId / 1000>, <MatchId>, <BetKindId>, <Number>
+        public const string PlayerPointsByMatchBetKindAndNumberValueOfKey = "points.{0}"; //  <PlayerId % 1000>
         //  End: Player Points By Match & Number
 
         //  Begin: Player Outs

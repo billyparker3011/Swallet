@@ -201,7 +201,7 @@ namespace Lottery.Core.Services.BroadCaster
                                        CategoryId = x.Key.CategoryId,
                                        BetKindId = x.Key.Id,
                                        BetKindName = x.Key.Name,
-                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
+                                       BetCount = x.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue)),
                                        Point = x.Where(f => !f.ParentId.HasValue).Sum(s => s.Stake),
                                        Payout = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerPayout),
                                        WinLose = x.Where(f => !f.ParentId.HasValue).Sum(s => s.PlayerWinLoss),
