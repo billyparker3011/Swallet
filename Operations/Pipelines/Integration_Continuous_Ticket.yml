@@ -16,5 +16,13 @@ name: $(date:yyMMdd)$(rev:.rr)
 pool:
   name: Development Environment Agent Pool
 
+variables:
+- ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+  - template: templates/variables/Production.yaml
+- ${{ elseif eq(variables['Build.SourceBranchName'], 'test') }}:
+  - template: templates/variables/Testing.yaml
+- ${{ else }}:
+  - template: templates/variables/Development.yaml
+
 stages:
 - template: templates/stages/Publish_Artifacts_Ticket.yaml

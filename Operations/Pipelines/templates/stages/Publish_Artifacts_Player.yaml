@@ -3,10 +3,3 @@ stages:
   displayName: "Publish Artifacts"
   jobs:
   - template: ../jobs/Publish_Docker_Artifacts_Player.yaml
-  variables:
-  ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
-  - template: templates/variables/Production.yaml
-  ${{ elseif eq(variables['Build.SourceBranchName'], 'test') }}:
-  - template: templates/variables/Testing.yaml
-  ${{ else }}:
-  - template: templates/variables/Development.yaml
