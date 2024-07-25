@@ -1,12 +1,9 @@
 trigger:
-  tags:
-    include:
-    - '*'
   branches:
     include:
     - main
     - develop
-    - feature/*
+    - test
   paths:
     exclude:
     - "Operations/*"
@@ -16,22 +13,8 @@ trigger:
 
 name: $(date:yyMMdd)$(rev:.rr)
 
-parameters:
-- name: Environment
-  type: string
-  default: Development
-  values:
-  - Development
-  - Testing
-  - Production
-
 pool:
   name: Development Environment Agent Pool
 
-variables:
-- template: templates/variables/${{ parameters.Environment }}.yaml
-
 stages:
 - template: templates/stages/Publish_Artifacts_Odd.yaml
-  parameters:
-    Environment: ${{ parameters.Environment }}

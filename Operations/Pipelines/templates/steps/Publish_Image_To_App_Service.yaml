@@ -1,6 +1,6 @@
 steps:
 - task: Bash@3
-  condition: ne('${{ parameters.Environment }}', 'Production')
+  condition: ne(variables.environment, 'prod')
   displayName: "Publish $(application) to App Service"
   inputs:
     targetType: 'inline'
