@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\..\Core\HnMicro.Core\HnMicro.Core.csproj" />
     <ProjectReference Include="..\..\..\..\..\Core\HnMicro.Framework\HnMicro.Framework.csproj" />
+    <ProjectReference Include="..\..\..\..\..\Modules\LoggerService\HnMicro.Modules.LoggerService\HnMicro.Modules.LoggerService.csproj" />
     <ProjectReference Include="..\..\..\Core\Lottery.Core\Lottery.Core.csproj" />
     <ProjectReference Include="..\..\..\Core\Lottery.Data\Lottery.Data.csproj" />
   </ItemGroup>

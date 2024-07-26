@@ -1,4 +1,5 @@
-﻿using Lottery.Player.OddsService.Hubs;
+﻿using HnMicro.Modules.LoggerService.Helpers;
+using Lottery.Player.OddsService.Hubs;
 using Lottery.Player.OddsService.Services.Initial;
 using Lottery.Player.OddsService.Services.PubSub;
 
@@ -12,6 +13,7 @@ namespace Lottery.Player.OddsService.Helpers
             builder.Services.AddSingleton<IOddsHubHandler, OddsHubHandler>();
             builder.Services.AddSingleton<ISubscribeMatchAndOddsService, SubscribeMatchAndOddsService>();
             builder.Services.AddHostedService<InitialOddsService>();
+            builder.BuildClientLoggerService();
         }
     }
 }

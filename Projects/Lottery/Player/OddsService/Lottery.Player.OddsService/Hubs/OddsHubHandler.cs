@@ -1,12 +1,16 @@
-﻿using HnMicro.Framework.Exceptions;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
+using HnMicro.Modules.LoggerService.Services;
+using Lottery.Core.Enums;
 using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.Models.Match;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Odds;
 using Lottery.Core.Services.Odds;
 using Lottery.Player.OddsService.InMemory.UserOnline;
+using Lottery.Player.OddsService.Models;
 using Lottery.Player.OddsService.Models.Messages;
 using Lottery.Player.OddsService.Services.Token;
 using Microsoft.AspNetCore.SignalR;
@@ -35,7 +39,7 @@ namespace Lottery.Player.OddsService.Hubs
             var player = _readTokenService.ReadToken(connectionInformation.AccessToken) ?? throw new BadRequestException();
             var userOnlineRepository = _unitOfWork.GetRepository<IUserOnlineInMemoryRepository>();
             var time = _clockService.GetUtcNow();
-            userOnlineRepository.Add(new Models.UserOnline
+            var userOnline = new Models.UserOnline
             {
                 ConnectionId = connectionInformation.ConnectionId,
                 RoleId = player.RoleId,
@@ -46,10 +50,34 @@ namespace Lottery.Player.OddsService.Hubs
                 SupermasterId = player.SupermasterId,
                 BetKindId = connectionInformation.BetKindId,
                 PongTime = time
-            });
+            };
+            userOnlineRepository.Add(userOnline);
+
+            await LogConnection(userOnline);
 
             var oddsMessages = await GetInitialOdds(player.PlayerId, connectionInformation.BetKindId);
             await UpdateOddsByConnectionId(connectionInformation.ConnectionId, oddsMessages);
+        }
+
+        private async Task LogConnection(UserOnline userOnline)
+        {
+            try
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var loggerService = scope.ServiceProvider.GetService<ILoggerService>();
+                await loggerService.Error(new HnMicro.Framework.Logger.Models.LogRequestModel
+                {
+                    CategoryName = nameof(OddsHubHandler),
+                    Message = $"{userOnline.ConnectionId} = {userOnline.PlayerId} = {userOnline.ConnectionTime}.",
+                    RoleId = Role.Player.ToInt(),
+                    CreatedBy = userOnline.PlayerId
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
         }
 
         private async Task UpdateOddsByConnectionId(string connectionId, List<OddsByNumberMessage> oddsMessages)
