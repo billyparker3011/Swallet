@@ -53,25 +53,31 @@ namespace Lottery.Player.OddsService.Hubs
             };
             userOnlineRepository.Add(userOnline);
 
-            await LogConnection(userOnline);
+            await LogConnection(userOnlineRepository, userOnline);
 
             var oddsMessages = await GetInitialOdds(player.PlayerId, connectionInformation.BetKindId);
             await UpdateOddsByConnectionId(connectionInformation.ConnectionId, oddsMessages);
         }
 
-        private async Task LogConnection(UserOnline userOnline)
+        private async Task LogConnection(IUserOnlineInMemoryRepository userOnlineRepository, UserOnline userOnline)
         {
             try
             {
+                var allUsers = userOnlineRepository.GetAll().ToList();
+
                 using var scope = _serviceProvider.CreateScope();
                 var loggerService = scope.ServiceProvider.GetService<ILoggerService>();
-                await loggerService.Error(new HnMicro.Framework.Logger.Models.LogRequestModel
+                foreach (var user in allUsers)
                 {
-                    CategoryName = nameof(OddsHubHandler),
-                    Message = $"{userOnline.ConnectionId} = {userOnline.PlayerId} = {userOnline.ConnectionTime}.",
-                    RoleId = Role.Player.ToInt(),
-                    CreatedBy = userOnline.PlayerId
-                });
+                    await loggerService.Error(new HnMicro.Framework.Logger.Models.LogRequestModel
+                    {
+                        CategoryName = nameof(OddsHubHandler),
+                        Message = $"{user.ConnectionId} = {user.PlayerId} = {user.ConnectionTime}.",
+                        Stacktrace = $"{user.ConnectionId == userOnline.ConnectionId}",
+                        RoleId = Role.Player.ToInt(),
+                        CreatedBy = user.PlayerId
+                    });
+                }
             }
             catch (Exception ex)
             {
