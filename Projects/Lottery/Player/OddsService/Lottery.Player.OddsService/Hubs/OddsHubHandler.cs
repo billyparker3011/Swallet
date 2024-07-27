@@ -165,7 +165,7 @@ namespace Lottery.Player.OddsService.Hubs
 
             using var scope = _serviceProvider.CreateScope();
             var oddsService = scope.ServiceProvider.GetService<IOddsService>();
-            var playerIds = players.Select(f => f.PlayerId).ToList();
+            var playerIds = players.Select(f => f.PlayerId).Distinct().ToList();
             var dictOdds = await oddsService.GetLiveOdds(playerIds, liveBetKindId, model.MatchId, model.RegionId, model.ChannelId);
             foreach (var itemPlayer in players)
             {
