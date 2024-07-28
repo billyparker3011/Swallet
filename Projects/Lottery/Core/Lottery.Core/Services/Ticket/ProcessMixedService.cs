@@ -142,11 +142,30 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
             if (!subBetKinds.TryGetValue(betKindId, out BetSettingModel betSetting)) continue;
             if (pointByBetKind < betSetting.MinBet || pointByBetKind > betSetting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
 
+            //  Agent Odds
+            if (!agentOddsValue.AgentOdds.TryGetValue(betKindId, out decimal agentOdds)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            if (!agentOddsValue.MasterOdds.TryGetValue(betKindId, out decimal masterOdds)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            if (!agentOddsValue.SupermasterOdds.TryGetValue(betKindId, out decimal supermasterOdds)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            if (!agentOddsValue.CompanyOdds.TryGetValue(betKindId, out decimal companyOdds)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+
             playerOddsValue += rateValue;
 
             if (subsets.Count == 1)
             {
                 var ticket = CreateSingleTicket(correlationId, processValidation, currentBetKind, pointByBetKind, playerOddsValue, normalizedNumbers, positionTakings);
+
+                ticket.AgentOdds = agentOdds;
+                ticket.AgentPayout = pointByBetKind * agentOdds;
+
+                ticket.MasterOdds = masterOdds;
+                ticket.MasterPayout = pointByBetKind * masterOdds;
+
+                ticket.SupermasterOdds = supermasterOdds;
+                ticket.SupermasterPayout = pointByBetKind * supermasterOdds;
+
+                ticket.CompanyOdds = companyOdds;
+                ticket.CompanyPayout = pointByBetKind * companyOdds;
+
                 foreach (var number in numbers)
                 {
                     if (!outsByBetKind.TryGetValue(number, out decimal outsByMatchAndNumberValue)) outsByMatchAndNumberValue = 0m;
@@ -190,17 +209,30 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
                     var normalizedSubsetNumbers = JoinNumbers(subsetNumbers, noOfNumbers);
                     var childTicketItem = CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, normalizedSubsetNumbers, positionTakings);
 
+                    childTicketItem.AgentOdds = agentOdds;
+                    childTicketItem.AgentPayout = pointByBetKind * agentOdds;
+
+                    childTicketItem.MasterOdds = masterOdds;
+                    childTicketItem.MasterPayout = pointByBetKind * masterOdds;
+
+                    childTicketItem.SupermasterOdds = supermasterOdds;
+                    childTicketItem.SupermasterPayout = pointByBetKind * supermasterOdds;
+
+                    childTicketItem.CompanyOdds = companyOdds;
+                    childTicketItem.CompanyPayout = pointByBetKind * companyOdds;
+
                     valPointByPair[normalizedSubsetNumbers] = pointByBetKind;
                     valPayoutByPair[normalizedSubsetNumbers] = childTicketItem.PlayerPayout;
                     valRealPayoutByPair[normalizedSubsetNumbers] = _ticketProcessor.GetRealPayoutForCompany(childTicketItem.PlayerPayout, childTicketItem.SupermasterPt);
 
                     childTickets.Add(childTicketItem);
                 }
-                var subTotalPoints = childTickets.Sum(f => f.Stake);
-                var subTotalPayouts = childTickets.Sum(f => f.PlayerPayout);
-
-                ticket.Stake = subTotalPoints;
-                ticket.PlayerPayout = subTotalPayouts;
+                ticket.Stake = childTickets.Sum(f => f.Stake);
+                ticket.PlayerPayout = childTickets.Sum(f => f.PlayerPayout);
+                ticket.AgentPayout = childTickets.Sum(f => f.AgentPayout);
+                ticket.MasterPayout = childTickets.Sum(f => f.MasterPayout);
+                ticket.SupermasterPayout = childTickets.Sum(f => f.SupermasterPayout);
+                ticket.CompanyPayout = childTickets.Sum(f => f.CompanyPayout);
 
                 totalPayouts += ticket.PlayerPayout;
 
@@ -370,6 +402,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
 
     private Data.Entities.Ticket CreateSingleTicket(Guid correlationId, ProcessValidationTicketModel processValidation, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
     {
+        //  PT
         var agentPt = 0m;
         var agentPostionTaking = positionTakings.Find(f => f.AgentId == processValidation.Player.AgentId);
         if (agentPostionTaking != null) agentPt = agentPostionTaking.PositionTaking;
