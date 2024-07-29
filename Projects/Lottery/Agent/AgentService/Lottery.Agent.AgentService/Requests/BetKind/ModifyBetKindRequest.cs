@@ -4,6 +4,6 @@ namespace Lottery.Agent.AgentService.Requests.BetKind
 {
     public class ModifyBetKindRequest
     {
-        public List<BetKindModel> ModifiedBetKinds { get; set; }
+        public List<BetKindSettingModel> ModifiedBetKinds { get; set; }
     }
 }

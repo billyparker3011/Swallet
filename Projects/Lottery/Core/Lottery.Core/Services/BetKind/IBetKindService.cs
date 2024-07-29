@@ -7,7 +7,7 @@ namespace Lottery.Core.Services.BetKind
     public interface IBetKindService : IScopedDependency
     {
         GetFilterDataDto GetFilterDatas();
-        Task<List<BetKindModel>> GetBetKinds(int? regionId, int? categoryId);
-        Task UpdateBetKinds(List<BetKindModel> updatedItems);
+        Task<List<BetKindSettingModel>> GetBetKinds(int? regionId, int? categoryId);
+        Task UpdateBetKinds(List<BetKindSettingModel> updatedItems);
     }
 }
