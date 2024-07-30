@@ -8,11 +8,14 @@ using Lottery.Core.Helpers.Converters.BetKinds;
 using Lottery.Core.InMemory.Category;
 using Lottery.Core.InMemory.Region;
 using Lottery.Core.Models.BetKind;
+using Lottery.Core.Models.Setting;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BetKind;
+using Lottery.Core.Repositories.Player;
 using Lottery.Core.Services.Agent;
 using Lottery.Core.Services.Pubs;
 using Lottery.Core.UnitOfWorks;
+using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -89,7 +92,11 @@ namespace Lottery.Core.Services.BetKind
         public async Task UpdateBetKinds(List<BetKindSettingModel> updatedItems)
         {
             var betKindRepos = LotteryUow.GetRepository<IBetKindRepository>();
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var agentBetSettingRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
+            var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
+            var playerBetSettingRepos = LotteryUow.GetRepository<IPlayerOddsRepository>();
+
             var requestedBetKindIds = updatedItems.Select(x => x.Id);
             var requestedBetKinds = await betKindRepos.FindQueryBy(x => requestedBetKindIds.Contains(x.Id)).ToListAsync();
             var updatedBetKindIds = new List<int>();
@@ -108,12 +115,45 @@ namespace Lottery.Core.Services.BetKind
 
             // Update buy setting of company
             var targetCompanyBetSettings = await agentBetSettingRepos.FindQuery().Include(x => x.Agent).Where(x => x.Agent.ParentId == 0L && x.Agent.RoleId == Role.Company.ToInt() && requestedBetKindIds.Contains(x.BetKindId)).ToListAsync();
+
+            var childAgentIds = await agentRepos.FindQueryBy(x => x.RoleId > Role.Company.ToInt() && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+            var childPlayerIds = await playerRepos.FindQuery().Select(x => x.PlayerId).ToListAsync();
+            var existedChildAgentBetSettings = await agentBetSettingRepos.FindQuery().Include(x => x.Agent).Where(x => childAgentIds.Contains(x.AgentId) && requestedBetKindIds.Contains(x.BetKindId)).ToListAsync();
+            var existedChildPlayerBetSettings = await playerBetSettingRepos.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && requestedBetKindIds.Contains(x.BetKindId)).ToListAsync();
             targetCompanyBetSettings.ForEach(bs =>
             {
+                var updatedChildAgentItems = existedChildAgentBetSettings.Where(x => x.BetKindId == bs.BetKindId).OrderBy(x => x.Agent.RoleId).ThenBy(x => x.AgentId).ToList();
+                var updatedChildPlayerItems = existedChildPlayerBetSettings.Where(x => x.BetKindId == bs.BetKindId).ToList();
                 var updatedItem = updatedItems.FirstOrDefault(x => x.Id == bs.BetKindId);
                 if (updatedItem != null)
                 {
+                    var oldBuyValue = bs.Buy;
                     bs.Buy = updatedItem.ActualBuy;
+
+                    // Update child agent minBuy, actualBuy
+                    updatedChildAgentItems.ForEach(childAgentItem =>
+                    {
+                        AgentOdd parentItem = null;
+                        if (childAgentItem.Agent.RoleId == Role.Supermaster.ToInt()) parentItem = bs;
+                        else if (childAgentItem.Agent.RoleId == Role.Master.ToInt()) parentItem = updatedChildAgentItems.FirstOrDefault(f => f.AgentId == childAgentItem.Agent.SupermasterId);
+                        else if (childAgentItem.Agent.RoleId == Role.Agent.ToInt()) parentItem = updatedChildAgentItems.FirstOrDefault(f => f.AgentId == childAgentItem.Agent.MasterId);
+                        if (parentItem == null) return;
+
+                        childAgentItem.MinBuy = parentItem.Buy;
+                        if (childAgentItem.MinBuy > childAgentItem.Buy)
+                        {
+                            childAgentItem.Buy = childAgentItem.MinBuy;
+                        }
+                    });
+
+                    // Update Child Player MinBuy, ActualBuy
+                    updatedChildPlayerItems.ForEach(childPlayerItem =>
+                    {
+                        var parentAgentItem = updatedChildAgentItems.FirstOrDefault(x => x.AgentId == childPlayerItem.Player.AgentId);
+                        if (parentAgentItem == null) return;
+
+                        childPlayerItem.Buy = parentAgentItem.Buy > childPlayerItem.Buy ? parentAgentItem.Buy : childPlayerItem.Buy;
+                    });
                 }
             });
             await LotteryUow.SaveChangesAsync();
