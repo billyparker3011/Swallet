@@ -29,10 +29,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Scripts\ChangeMienNam18AToMienTrung.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\UpdateAndRemoveSomeBetKinds.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\CreateSupermasterMasterAgentPlayer.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Scripts\CreatePTForCompany.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\ChangeMienNam18BToMienNam.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Scripts\UpdateReplaceByIdWhenLive.sql">

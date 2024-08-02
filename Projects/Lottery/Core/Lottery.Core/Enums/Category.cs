@@ -19,16 +19,10 @@ namespace Lottery.Core.Enums
         Central18A18B = 11,
 
         //  Mien Nam
-        [EnumCategoryDescription("Southern_18A_Category", "Miền Nam 18A", Region.Southern, 5)]
-        Southern18A = 20,
-
-        [EnumCategoryDescription("Southern_18B_Category", "Miền Nam 18B", Region.Southern, 5)]
-        Southern18B = 21,
-
-        [EnumCategoryDescription("Southern_18C_Category", "Miền Nam 18C", Region.Southern, 5)]
-        Southern18C = 22,
+        [EnumCategoryDescription("Southern_Category", "Miền Nam", Region.Southern, 5)]
+        Southern = 20,
 
         [EnumCategoryDescription("Southern_18A_18B_Category", "Miền Nam 18A+B", Region.Southern, 6)]
-        Southern18A18B = 23
+        Southern18A18B = 21
     }
 }

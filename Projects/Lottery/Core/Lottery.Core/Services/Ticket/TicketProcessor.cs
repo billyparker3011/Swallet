@@ -90,4 +90,10 @@ public class TicketProcessor : ITicketProcessor
     {
         return (1 - supermasterPt) * playerPayout;
     }
+
+    public int ValidV2(ProcessTicketV2Model model, int betKindId, List<ProcessValidationTicketDetailV2Model> metadata)
+    {
+        var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);
+        return handler == null ? throw new HnMicroException() : handler.ValidV2(model, metadata);
+    }
 }

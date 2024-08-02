@@ -45,6 +45,7 @@
             public const int NoOfSelectedNumbersExceed512 = -16;
             public const int NumberIsLessThan = -17;
             public const int NumbersWasSuspended = -18;
+            public const int CannotFindMatch = -19;
         }
 
         public static class Match

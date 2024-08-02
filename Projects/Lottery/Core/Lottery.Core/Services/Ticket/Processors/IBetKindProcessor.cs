@@ -18,4 +18,6 @@ public interface IBetKindProcessor
     Dictionary<int, int> GetSubBetKindIds();
     int Valid(ProcessTicketModel model, TicketMetadataModel metadata);
     int ValidMixed(ProcessMixedTicketModel model, TicketMetadataModel metadata);
+
+    int ValidV2(ProcessTicketV2Model model, List<ProcessValidationTicketDetailV2Model> metadata);
 }

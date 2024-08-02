@@ -32,18 +32,26 @@ namespace Lottery.Core.Services.Player
         {
             _handlers[Category.FirstNorthern] = BuildSubNavigationForFirstNorthern;
             _handlers[Category.SecondNorthern] = BuildSubNavigationForSecondNorthern;
-            _handlers[Category.Southern18A] = BuildSubNavigationForSouthern;
-            _handlers[Category.Southern18A18B] = BuildSubNavigationForSouthern18A18B;
-        }
-
-        private List<SubNavigationModel> BuildSubNavigationForSouthern18A18B(List<BetKindModel> betKinds, MatchModel matchModel)
-        {
-            return new List<SubNavigationModel>();
+            _handlers[Category.Central] = BuildSubNavigationForCentral;
+            _handlers[Category.Southern] = BuildSubNavigationForSouthern;
         }
 
         private List<SubNavigationModel> BuildSubNavigationForSouthern(List<BetKindModel> betKinds, MatchModel matchModel)
         {
-            var categoryId = Category.Southern18A;
+            var categoryId = Category.Southern;
+
+            var categoryInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ICategoryInMemoryRepository>();
+            var category = categoryInMemoryRepository.FindById(categoryId);
+            if (category == null) return new List<SubNavigationModel>();
+
+            var subCategoryInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ISubCategoryInMemoryRepository>();
+            var subCategories = subCategoryInMemoryRepository.FindBy(f => f.Category == categoryId).OrderBy(f => f.OrderBy).ToList();
+            return CreateSubNavigation(category, subCategories, betKinds, matchModel);
+        }
+
+        private List<SubNavigationModel> BuildSubNavigationForCentral(List<BetKindModel> betKinds, MatchModel matchModel)
+        {
+            var categoryId = Category.Central;
 
             var categoryInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ICategoryInMemoryRepository>();
             var category = categoryInMemoryRepository.FindById(categoryId);
@@ -91,7 +99,11 @@ namespace Lottery.Core.Services.Player
                     SubCategoryId = f.Id.ToInt(),
                     Children = new List<SubNavigationDetailModel>()
                 };
-
+                if (f.SubBetKinds.Count == 0)
+                {
+                    itemSubNavigation.BetKindId = f.BetKind.ToInt();
+                    itemSubNavigation.Correlations = BuildCorrelationBetKinds(f.BetKind, betKinds);
+                }
                 foreach (var itemBetKind in f.SubBetKinds)
                 {
                     var itemBetKindModel = betKinds.Find(f1 => f1.Id == itemBetKind.ToInt());
@@ -150,7 +162,7 @@ namespace Lottery.Core.Services.Player
 
         public List<Category> GetDisplayCategory()
         {
-            return new() { Category.FirstNorthern, Category.SecondNorthern, Category.Southern18A, Category.Southern18A18B };
+            return new() { Category.FirstNorthern, Category.SecondNorthern, Category.Central, Category.Southern };
         }
     }
 }

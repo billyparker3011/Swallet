@@ -345,4 +345,308 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
         }
         return (ticket, childTickets);
     }
+
+    public async Task<(Data.Entities.Ticket, List<Data.Entities.Ticket>)> ProcessV2(ProcessTicketDetailV2Model model, ProcessValidationTicketV2Model processValidation)
+    {
+        var noOfNumbers = model.BetKindId.GetNoOfNumbers();
+        var enableStats = _ticketProcessor.EnableStats(model.BetKindId);
+
+        var metadataDetail = processValidation.Details.FirstOrDefault(f => f.BetKind != null && f.BetKind.Id == model.BetKindId) ?? throw new NotFoundException();
+
+        //  Get Player OddsValue, MinBet, MaxBet, MaxPerMatch
+        (var setting, var refreshSettingCache) = await _playerSettingService.GetBetSettings(processValidation.Player.PlayerId, model.BetKindId);
+        if (setting == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotReadBetSetting);
+        if (refreshSettingCache) await _playerSettingService.BuildSettingByBetKindCache(processValidation.Player.PlayerId, model.BetKindId, setting);
+
+        //  Get rate of OddsValue from Company
+        var rateOfOddsValue = await _processOddsService.GetRateOfOddsValue(processValidation.Match.MatchId, new List<int> { model.BetKindId }, noOfNumbers);
+        if (!rateOfOddsValue.TryGetValue(model.BetKindId, out Dictionary<int, decimal> rateOfOddsValueByBetKind)) rateOfOddsValueByBetKind = new Dictionary<int, decimal>();
+
+        //  Player Odds by Match, BetKind and Numbers
+        var dictPlayerOdds = await _processTicketService.GetMatchPlayerOddsByBetKindAndNumbers(processValidation.Player.PlayerId, setting.OddsValue, processValidation.Match.MatchId, model.BetKindId, model.Numbers.Select(f => f.Number).ToList(), noOfNumbers);
+
+        //  Get Company Odds, Agent Odds
+        var agentOddsValue = await _processTicketService.GetAgentOdds(model.BetKindId, processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId, noOfNumbers) ?? throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotReadAgentOdds);
+
+        //  Get agent position taking
+        var agentPts = await _agentPositionTakingService.GetAgentPositionTakingByAgentIds(new List<int> { model.BetKindId }, new List<long> { processValidation.Player.SupermasterId, processValidation.Player.MasterId, processValidation.Player.AgentId });
+        if (!agentPts.TryGetValue(model.BetKindId, out List<AgentPositionTakingModel> positionTaking)) positionTaking = new List<AgentPositionTakingModel>();
+
+        //  Get Credit
+        (var givenCredit, var refreshCreditCache) = await _processTicketService.GetGivenCredit(processValidation.Player.PlayerId);
+        if (refreshCreditCache) await _processTicketService.BuildGivenCreditCache(processValidation.Player.PlayerId, givenCredit);
+
+        //  Get Outs
+        var outs = await _processTicketService.GetOuts(processValidation.Player.PlayerId, processValidation.Match.MatchId, model.BetKindId, model.Numbers.Select(f => f.Number).ToList());
+
+        var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
+        var ticket = new Data.Entities.Ticket
+        {
+            PlayerId = processValidation.Player.PlayerId,
+            AgentId = processValidation.Player.AgentId,
+            MasterId = processValidation.Player.MasterId,
+            SupermasterId = processValidation.Player.SupermasterId,
+            BetKindId = model.BetKindId,
+            SportKindId = SportKind.Lottery.ToInt(),
+            MatchId = processValidation.Match.MatchId,
+            KickOffTime = processValidation.Match.KickoffTime,
+            RegionId = metadataDetail.BetKind.RegionId,
+            ChannelId = metadataDetail.Channel.Id,
+            ChoosenNumbers = string.Empty,
+
+            RewardRate = metadataDetail.BetKind.Award,
+            Stake = 0m,
+            PlayerOdds = 0m,
+            PlayerPayout = 0m,
+            PlayerWinLoss = 0m,
+            DraftPlayerWinLoss = 0m,
+
+            AgentOdds = 0m,
+            AgentPayout = 0m,
+            AgentWinLoss = 0m,
+            AgentCommission = 0m,
+            AgentPt = 0m,
+            DraftAgentWinLoss = 0m,
+            DraftAgentCommission = 0m,
+
+            MasterOdds = 0m,
+            MasterPayout = 0m,
+            MasterWinLoss = 0m,
+            MasterCommission = 0m,
+            MasterPt = 0m,
+            DraftMasterWinLoss = 0m,
+            DraftMasterCommission = 0m,
+
+            SupermasterOdds = 0m,
+            SupermasterPayout = 0m,
+            SupermasterWinLoss = 0m,
+            SupermasterCommission = 0m,
+            SupermasterPt = 0m,
+            DraftSupermasterWinLoss = 0m,
+            DraftSupermasterCommission = 0m,
+
+            CompanyOdds = 0m,
+            CompanyPayout = 0m,
+            CompanyWinLoss = 0m,
+            DraftCompanyWinLoss = 0m,
+
+            State = TicketState.Waiting.ToInt(),
+            IsLive = metadataDetail.Metadata.IsLive,
+            Prize = metadataDetail.Metadata.Prize,
+            Position = metadataDetail.Metadata.Position,
+
+            IpAddress = processValidation.ClientInformation.IpAddress,
+            UserAgent = processValidation.ClientInformation.UserAgent,
+            Platform = processValidation.ClientInformation.Platform,
+            CreatedAt = ClockService.GetUtcNow()
+        };
+
+        //  Set PT
+        var agentPostionTaking = positionTaking.Find(f => f.AgentId == ticket.AgentId);
+        if (agentPostionTaking != null) ticket.AgentPt = agentPostionTaking.PositionTaking;
+
+        var masterPostionTaking = positionTaking.Find(f => f.AgentId == ticket.MasterId);
+        if (masterPostionTaking != null) ticket.MasterPt = masterPostionTaking.PositionTaking;
+
+        var supermasterPostionTaking = positionTaking.Find(f => f.AgentId == ticket.SupermasterId);
+        if (supermasterPostionTaking != null) ticket.SupermasterPt = supermasterPostionTaking.PositionTaking;
+
+        var totalStake = 0m;
+        var totalPlayerPayout = 0m;
+        var totalAgentPayout = 0m;
+        var totalMasterPayout = 0m;
+        var totalSupermasterPayout = 0m;
+        var totalCompanyPayout = 0m;
+        var childTickets = new List<Data.Entities.Ticket>();
+        var pointByNumbers = new Dictionary<int, decimal>();
+        var payoutByNumbers = new Dictionary<int, decimal>();
+        var oddsValueByNumbers = new Dictionary<int, decimal>();
+        var realPayoutByNumbers = new Dictionary<int, decimal>();
+        if (model.Numbers.Count == 1)
+        {
+            var thisNumber = model.Numbers.First();
+            ticket.ChoosenNumbers = thisNumber.Number.NormalizeNumber(noOfNumbers);
+            ticket.ShowMore = false;
+
+            //  Rate of odds value
+            if (!rateOfOddsValueByBetKind.TryGetValue(thisNumber.Number, out decimal rateValue)) rateValue = 0m;
+
+            //  Player
+            if (!dictPlayerOdds.TryGetValue(thisNumber.Number, out decimal playerOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            ticket.PlayerOdds = playerOddsValue + rateValue;
+            ticket.PlayerPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, thisNumber.Point, ticket.PlayerOdds.Value);
+
+            //  Agent
+            if (!agentOddsValue.AgentOdds.TryGetValue(thisNumber.Number, out decimal aOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            ticket.AgentOdds = aOddsValue;
+            ticket.AgentPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, thisNumber.Point, aOddsValue);
+
+            //  Master
+            if (!agentOddsValue.MasterOdds.TryGetValue(thisNumber.Number, out decimal mOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            ticket.MasterOdds = mOddsValue;
+            ticket.MasterPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, thisNumber.Point, mOddsValue);
+
+            //  Supermaster
+            if (!agentOddsValue.SupermasterOdds.TryGetValue(thisNumber.Number, out decimal sOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            ticket.SupermasterOdds = sOddsValue;
+            ticket.SupermasterPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, thisNumber.Point, sOddsValue);
+
+            //  Company
+            if (!agentOddsValue.CompanyOdds.TryGetValue(thisNumber.Number, out decimal cOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+            ticket.CompanyOdds = cOddsValue;
+            ticket.CompanyPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, thisNumber.Point, cOddsValue);
+
+            ticket.Stake = thisNumber.Point;
+
+            totalStake += ticket.Stake;
+            totalPlayerPayout += ticket.PlayerPayout;
+            totalAgentPayout += ticket.AgentPayout;
+            totalMasterPayout += ticket.MasterPayout;
+            totalSupermasterPayout += ticket.SupermasterPayout;
+            totalCompanyPayout += ticket.CompanyPayout;
+
+            pointByNumbers[thisNumber.Number] = ticket.Stake;
+            payoutByNumbers[thisNumber.Number] = ticket.PlayerPayout;
+            oddsValueByNumbers[thisNumber.Number] = ticket.PlayerOdds.Value;
+            realPayoutByNumbers[thisNumber.Number] = _ticketProcessor.GetRealPayoutForCompany(ticket.PlayerPayout, ticket.SupermasterPt);
+
+            if (thisNumber.Point < setting.MinBet || thisNumber.Point > setting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
+            if (!outs.PointsByMatchAndNumbers.TryGetValue(thisNumber.Number, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
+            if ((pointsByMatchAndNumberValue + totalStake) > setting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid, thisNumber.Number.NormalizeNumber());
+            if ((outs.OutsByMatch + totalPlayerPayout) > givenCredit) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.GivenCreditIsInvalid);
+        }
+        else
+        {
+            var numbers = model.Numbers.OrderBy(f => f.Number).ToList();
+            var normalizedNumbers = new List<string>();
+            foreach (var item in numbers)
+            {
+                if (item.Point < setting.MinBet || item.Point > setting.MaxBet) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PointIsInvalid);
+                //  Rate of odds value
+                if (!rateOfOddsValueByBetKind.TryGetValue(item.Number, out decimal rateValue)) rateValue = 0m;
+                //  Player
+                if (!dictPlayerOdds.TryGetValue(item.Number, out decimal playerOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+                //  Agent
+                if (!agentOddsValue.AgentOdds.TryGetValue(item.Number, out decimal aOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+                //  Master
+                if (!agentOddsValue.MasterOdds.TryGetValue(item.Number, out decimal mOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+                //  Supermaster
+                if (!agentOddsValue.SupermasterOdds.TryGetValue(item.Number, out decimal sOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+                //  Company
+                if (!agentOddsValue.CompanyOdds.TryGetValue(item.Number, out decimal cOddsValue)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindOddsOfNumber);
+
+                var normalizeNumber = item.Number.NormalizeNumber(noOfNumbers);
+
+                var playerPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, item.Point, playerOddsValue + rateValue);
+                var agentPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, item.Point, aOddsValue);
+                var masterPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, item.Point, mOddsValue);
+                var supermasterPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, item.Point, sOddsValue);
+                var companyPayout = _ticketProcessor.GetPayoutByNumber(metadataDetail.BetKind, item.Point, cOddsValue);
+
+                pointByNumbers[item.Number] = item.Point;
+                payoutByNumbers[item.Number] = playerPayout;
+                oddsValueByNumbers[item.Number] = playerOddsValue + rateValue;
+                realPayoutByNumbers[item.Number] = _ticketProcessor.GetRealPayoutForCompany(playerPayout, ticket.SupermasterPt);
+
+                totalStake += item.Point;
+                totalPlayerPayout += playerPayout;
+                totalAgentPayout += agentPayout;
+                totalMasterPayout += masterPayout;
+                totalSupermasterPayout += supermasterPayout;
+                totalCompanyPayout += companyPayout;
+
+                if (!outs.PointsByMatchAndNumbers.TryGetValue(item.Number, out decimal pointsByMatchAndNumberValue)) pointsByMatchAndNumberValue = 0m;
+                if ((pointsByMatchAndNumberValue + item.Point) > setting.MaxPerNumber) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MaxPerNumberIsInvalid, normalizeNumber);
+
+                normalizedNumbers.Add(normalizeNumber);
+
+                childTickets.Add(new Data.Entities.Ticket
+                {
+                    PlayerId = processValidation.Player.PlayerId,
+                    AgentId = processValidation.Player.AgentId,
+                    MasterId = processValidation.Player.MasterId,
+                    SupermasterId = processValidation.Player.SupermasterId,
+                    BetKindId = ticket.BetKindId,
+                    SportKindId = ticket.SportKindId,
+                    MatchId = ticket.MatchId,
+                    KickOffTime = ticket.KickOffTime,
+                    RegionId = ticket.RegionId,
+                    ChannelId = ticket.ChannelId,
+                    ChoosenNumbers = normalizeNumber,
+                    RewardRate = ticket.RewardRate,
+                    Stake = item.Point,
+
+                    PlayerOdds = playerOddsValue + rateValue,
+                    PlayerPayout = playerPayout,
+                    PlayerWinLoss = ticket.PlayerWinLoss,
+                    DraftPlayerWinLoss = ticket.DraftPlayerWinLoss,
+
+                    AgentOdds = aOddsValue,
+                    AgentPayout = agentPayout,
+                    AgentWinLoss = ticket.AgentWinLoss,
+                    AgentPt = ticket.AgentPt,
+                    DraftAgentWinLoss = ticket.DraftAgentWinLoss,
+
+                    MasterOdds = mOddsValue,
+                    MasterPayout = masterPayout,
+                    MasterWinLoss = ticket.MasterWinLoss,
+                    MasterPt = ticket.MasterPt,
+                    DraftMasterWinLoss = ticket.DraftMasterWinLoss,
+
+                    SupermasterOdds = sOddsValue,
+                    SupermasterPayout = supermasterPayout,
+                    SupermasterWinLoss = ticket.SupermasterWinLoss,
+                    SupermasterPt = ticket.SupermasterPt,
+                    DraftSupermasterWinLoss = ticket.DraftSupermasterWinLoss,
+
+                    CompanyOdds = cOddsValue,
+                    CompanyPayout = companyPayout,
+                    CompanyWinLoss = ticket.CompanyWinLoss,
+                    DraftCompanyWinLoss = ticket.DraftCompanyWinLoss,
+
+                    State = ticket.State,
+                    CreatedAt = ticket.CreatedAt,
+
+                    IsLive = ticket.IsLive,
+                    Prize = ticket.Prize,
+
+                    Parent = ticket
+                });
+            }
+
+            ticket.ChoosenNumbers = string.Join(", ", normalizedNumbers);
+            ticket.Stake = totalStake;
+            ticket.PlayerOdds = _ticketProcessor.GetPlayerOdds(model.BetKindId, oddsValueByNumbers);
+            ticket.PlayerPayout = totalPlayerPayout;
+            ticket.AgentPayout = totalAgentPayout;
+            ticket.MasterPayout = totalMasterPayout;
+            ticket.SupermasterPayout = totalSupermasterPayout;
+            ticket.CompanyPayout = totalCompanyPayout;
+            ticket.ShowMore = true;
+
+            if ((outs.OutsByMatch + totalPlayerPayout) > givenCredit) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.GivenCreditIsInvalid);
+        }
+
+        ticketRepository.Add(ticket);
+        if (childTickets.Count > 0) ticketRepository.AddRange(childTickets);
+
+        await LotteryUow.SaveChangesAsync();
+
+        await _processTicketService.BuildOutsByMatchCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, outs.OutsByMatch + totalPlayerPayout);
+        await _processTicketService.BuildPointsByMatchBetKindAndNumbersCache(processValidation.Player.PlayerId, processValidation.Match.MatchId, new Dictionary<int, Dictionary<int, decimal>>
+        {
+            { model.BetKindId, pointByNumbers }
+        });
+        if (enableStats)
+        {
+            await _processTicketService.BuildStatsByMatchBetKindAndNumbers(processValidation.Match.MatchId, model.BetKindId, pointByNumbers, payoutByNumbers, realPayoutByNumbers);
+            await _publishCommonService.PublishCompanyPayouts(new Models.Payouts.CompanyPayoutModel
+            {
+                MatchId = processValidation.Match.MatchId,
+                BetKindId = model.BetKindId,
+                Payouts = realPayoutByNumbers
+            });
+        }
+        return (ticket, childTickets);
+    }
 }

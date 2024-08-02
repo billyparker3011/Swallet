@@ -41,6 +41,7 @@
             public const string NumbersAreDuplicate = "Numbers are duplicate.";
             public const string NumberIsGreaterThanOrEqualToZero_LessThanOrEqual99 = "Number is greater than or equals to 0, less than or equals to 99.";
             public const string PointIsGreaterThanToZero = "Point is greater than 0.";
+            public const string ChannelIdIsBlank = "Channnel is required.";
         }
 
         public static class Odd

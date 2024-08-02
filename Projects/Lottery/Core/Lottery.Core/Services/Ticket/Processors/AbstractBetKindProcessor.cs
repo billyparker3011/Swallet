@@ -155,4 +155,9 @@ public abstract class AbstractBetKindProcessor : IBetKindProcessor
     {
         return 0;
     }
+
+    public virtual int ValidV2(ProcessTicketV2Model model, List<ProcessValidationTicketDetailV2Model> metadata)
+    {
+        return 0;
+    }
 }

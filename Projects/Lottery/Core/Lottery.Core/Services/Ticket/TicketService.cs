@@ -196,4 +196,108 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             });
         }
     }
+
+    public async Task ProcessV2(ProcessTicketV2Model model)
+    {
+        var processValidation = await InternalProcessV2(model);
+        foreach (var item in model.Details)
+        {
+            var errCode = _ticketProcessor.ValidV2(model, item.BetKindId, processValidation.Details);
+            if (errCode < 0) throw new BadRequestException(errCode);
+
+            if (item.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt() ||
+                item.BetKindId == Enums.BetKind.Central_2D18LoLive.ToInt() ||
+                item.BetKindId == Enums.BetKind.Southern_2D18LoLive.ToInt())
+            {
+                (var ticket1, var childTickets1) = await _processLiveService.ProcessV2(item, processValidation);
+                AddToAcceptedScanService(ticket1, childTickets1);
+                continue;
+            }
+
+            (var ticket2, var childTickets2) = await _processNoneLiveService.ProcessV2(item, processValidation);
+            AddToAcceptedScanService(ticket2, childTickets2);
+        }
+    }
+
+    private async Task<ProcessValidationTicketV2Model> InternalProcessV2(ProcessTicketV2Model model)
+    {
+        //  Check auth
+        var clientInformation = ClientContext.GetClientInformation();
+        var player = ClientContext.Player;
+        if (clientInformation == null || player == null || player.PlayerId <= 0L) throw new UnauthorizedException();
+
+        //  Player information
+        //  TODO Convert to cache
+        var playerInfo = await _playerService.GetPlayer(player.PlayerId) ?? throw new UnauthorizedException();
+        if (playerInfo.Lock) throw new UnauthorizedException();
+        if (playerInfo.State.IsSuspended() || (playerInfo.ParentState != null && playerInfo.ParentState.Value.IsSuspended())) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PlayerIsSuspended);
+        if (playerInfo.State.IsClosed() || (playerInfo.ParentState != null && playerInfo.ParentState.Value.IsClosed())) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PlayerIsClosed);
+
+        //  Check MatchId
+        var match = await _runningMatchService.GetRunningMatch() ?? throw new NotFoundException();
+        if (match.MatchId != model.MatchId) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.CannotFindMatch);
+        if (match.State != MatchState.Running.ToInt()) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MatchClosedOrSuspended);
+
+        //  BetKind
+        var betKindRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
+
+        //  Channel
+        var channelRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
+
+        var rs = new ProcessValidationTicketV2Model
+        {
+            ClientInformation = clientInformation,
+            Player = ClientContext.Player,
+            Match = match,
+            Details = new List<ProcessValidationTicketDetailV2Model>()
+        };
+
+        foreach (var item in model.Details)
+        {
+            var noOfNumbers = item.BetKindId.GetNoOfNumbers();
+            var numbers = item.Numbers.Select(f => f.Number).ToList();
+            if (numbers.Any(f => f > noOfNumbers)) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumberIsLessThan, noOfNumbers.ToString());
+
+            //  Check BetKindId
+            var betKind = betKindRepository.FindById(item.BetKindId) ?? throw new NotFoundException();
+            if (!betKind.Enabled) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.TheBetKindDoesNotAllowProcessing);
+            if (!match.MatchResult.TryGetValue(betKind.RegionId, out List<ResultByRegionModel> matchResultDetail)) throw new NotFoundException();
+
+            //  Checking Numbers was suspended
+            var suspendedNumbers = await _numberService.GetSuspendedNumbersByMatchAndBetKind(match.MatchId, item.BetKindId);
+            if (suspendedNumbers.Count > 0 && numbers.Any(suspendedNumbers.Contains))
+            {
+                var normalizeSuspendedNumbers = string.Join(", ", suspendedNumbers.Select(f => f.NormalizeNumber(noOfNumbers))).Trim();
+                throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumbersWasSuspended, normalizeSuspendedNumbers);
+            }
+
+            var resultByChannel = matchResultDetail.FirstOrDefault(f => f.ChannelId == item.ChannelId) ?? throw new NotFoundException();
+            if (!resultByChannel.EnabledProcessTicket) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.ChannelIsClosed);
+
+            var channel = channelRepository.FindById(item.ChannelId) ?? throw new NotFoundException();
+
+            var ticketMetadata = new TicketMetadataModel
+            {
+                IsLive = resultByChannel.IsLive
+            };
+            if (ticketMetadata.IsLive)
+            {
+                var results = resultByChannel.Prize.SelectMany(f => f.Results).OrderBy(f => f.Position).ToList();
+                (var currentPrize, var currentPosition) = _runningMatchService.GetCurrentPrize(betKind.RegionId, resultByChannel.Prize);
+                if (currentPrize == null || currentPosition == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PrizeOrPostionIsInvalid);
+
+                ticketMetadata.Prize = currentPrize.Prize;
+                ticketMetadata.Position = currentPosition.Position;
+                ticketMetadata.AllowProcessTicket = currentPosition.AllowProcessTicket;
+            }
+
+            rs.Details.Add(new ProcessValidationTicketDetailV2Model
+            {
+                BetKind = betKind,
+                Channel = channel,
+                Metadata = ticketMetadata
+            });
+        }
+        return rs;
+    }
 }

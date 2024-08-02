@@ -18,4 +18,6 @@ public interface ITicketProcessor : ISingletonDependency
     RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(int betKindId, RefundRejectTicketByNumbersModel model);
     RefundRejectTicketResultModel RefundRejectTicket(int betKindId, RefundRejectTicketModel model);
     decimal GetRealPayoutForCompany(decimal playerPayout, decimal supermasterPt);
+
+    int ValidV2(ProcessTicketV2Model model, int betKindId, List<ProcessValidationTicketDetailV2Model> metadata);
 }

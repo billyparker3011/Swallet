@@ -6,5 +6,6 @@
         public string Name { get; set; }
         public int? BetKindId { get; set; }
         public List<SubNavigationDetailModel> Children { get; set; }
+        public List<CorrelationBetKindModel> Correlations { get; set; }
     }
 }

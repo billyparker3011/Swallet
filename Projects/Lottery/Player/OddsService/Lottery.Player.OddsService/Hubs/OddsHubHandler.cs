@@ -53,7 +53,7 @@ namespace Lottery.Player.OddsService.Hubs
             };
             userOnlineRepository.Add(userOnline);
 
-            await LogConnection(userOnlineRepository, userOnline);
+            //await LogConnection(userOnlineRepository, userOnline);
 
             var oddsMessages = await GetInitialOdds(player.PlayerId, connectionInformation.BetKindId);
             await UpdateOddsByConnectionId(connectionInformation.ConnectionId, oddsMessages);

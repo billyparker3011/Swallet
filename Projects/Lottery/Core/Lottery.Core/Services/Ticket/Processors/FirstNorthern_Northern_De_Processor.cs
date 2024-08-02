@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
@@ -37,6 +38,21 @@ public class FirstNorthern_Northern_De_Processor : AbstractBetKindProcessor
         var setting = settingInMemoryRepository.FindByKey(key);
         var valSetting = setting == null || string.IsNullOrEmpty(setting.ValueSetting) ? ValidationPrizeSettingModel.CreateForBetKindEquals1() : Newtonsoft.Json.JsonConvert.DeserializeObject<ValidationPrizeSettingModel>(setting.ValueSetting);
         return metadata.Prize.HasValue && metadata.Prize.Value > valSetting.Prize ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
+    }
+
+    public override int ValidV2(ProcessTicketV2Model model, List<ProcessValidationTicketDetailV2Model> metadata)
+    {
+        var metadataItem = metadata.FirstOrDefault(f => f.BetKind != null && f.BetKind.Id == BetKindId) ?? throw new NotFoundException();
+        if (metadataItem.Metadata == null) throw new NotFoundException();
+        if (!metadataItem.Metadata.IsLive) return 0;
+
+        using var scope = ServiceProvider.CreateScope();
+        var inMemoryUow = scope.ServiceProvider.GetService<IInMemoryUnitOfWork>();
+        var settingInMemoryRepository = inMemoryUow.GetRepository<ISettingInMemoryRepository>();
+        var key = $"{nameof(ValidationPrizeSettingModel)}|{BetKindId}";
+        var setting = settingInMemoryRepository.FindByKey(key);
+        var valSetting = setting == null || string.IsNullOrEmpty(setting.ValueSetting) ? ValidationPrizeSettingModel.CreateForBetKindEquals1() : Newtonsoft.Json.JsonConvert.DeserializeObject<ValidationPrizeSettingModel>(setting.ValueSetting);
+        return metadataItem.Metadata.Prize.HasValue && metadataItem.Metadata.Prize.Value > valSetting.Prize ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)

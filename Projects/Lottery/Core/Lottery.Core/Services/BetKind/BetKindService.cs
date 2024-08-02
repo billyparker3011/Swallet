@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Contexts;
@@ -8,18 +9,15 @@ using Lottery.Core.Helpers.Converters.BetKinds;
 using Lottery.Core.InMemory.Category;
 using Lottery.Core.InMemory.Region;
 using Lottery.Core.Models.BetKind;
-using Lottery.Core.Models.Setting;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Player;
-using Lottery.Core.Services.Agent;
 using Lottery.Core.Services.Pubs;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 
 namespace Lottery.Core.Services.BetKind
 {
@@ -79,7 +77,6 @@ namespace Lottery.Core.Services.BetKind
 
         public GetFilterDataDto GetFilterDatas()
         {
-            //Init repos
             var regionInMemory = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
             var categoryInMemory = _inMemoryUnitOfWork.GetRepository<ICategoryInMemoryRepository>();
             return new GetFilterDataDto
@@ -87,6 +84,14 @@ namespace Lottery.Core.Services.BetKind
                 Regions = regionInMemory.GetAll(),
                 Categories = categoryInMemory.GetAll()
             };
+        }
+
+        public Enums.BetKind GetReplacedBetKind(Enums.BetKind betKind)
+        {
+            if (betKind.Is(Enums.BetKind.FirstNorthern_Northern_LoLive)) return Enums.BetKind.FirstNorthern_Northern_Lo;
+            if (betKind.Is(Enums.BetKind.Central_2D18LoLive)) return Enums.BetKind.Central_2D18Lo;
+            if (betKind.Is(Enums.BetKind.Southern_2D18LoLive)) return Enums.BetKind.Southern_2D18Lo;
+            throw new NotFoundException();
         }
 
         public async Task UpdateBetKinds(List<BetKindSettingModel> updatedItems)

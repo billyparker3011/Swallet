@@ -275,10 +275,18 @@ namespace Lottery.Core.Services.Odds
             var noOfNumbers = betKindId.GetNoOfNumbers();
 
             var runningMatch = await _runningMatchService.GetRunningMatch();
-            var playerOdds = await GetOddsByListBetKind(playerId, betKindIds);    //  TODO: Need to read from cache
+            //  TODO: Need to read from cache
+            var playerOdds = await GetOddsByListBetKind(playerId, betKindIds);
 
-            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds);
-            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()) return await BuildInitialOddsLoLive(runningMatch, noOfNumbers, betKindIds, playerOdds);
+            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt()
+                || betKindId == Enums.BetKind.Central_LoXien.ToInt()
+                || betKindId == Enums.BetKind.Central_Mixed_LoXien.ToInt()
+                || betKindId == Enums.BetKind.Southern_LoXien.ToInt()
+                || betKindId == Enums.BetKind.Southern_Mixed_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds);
+
+            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()
+                || betKindId == Enums.BetKind.Central_2D18LoLive.ToInt()
+                || betKindId == Enums.BetKind.Southern_2D18LoLive.ToInt()) return await BuildInitialOddsLoLive(runningMatch, noOfNumbers, betKindIds, playerOdds);
 
             return await BuildInitialOdds(runningMatch, noOfNumbers, betKindId, betKindIds, playerOdds);
         }

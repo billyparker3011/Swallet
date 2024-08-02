@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Models.BetKind;
@@ -23,6 +24,15 @@ public class FirstNorthern_Northern_DeTruot_Processor : AbstractBetKindProcessor
     {
         if (model.Numbers.Count < _nOOfNumbers) return ErrorCodeHelper.ProcessTicket.FirstNorthern_Northern_DeTruot_MustChooseAtLeast10;
         return metadata.IsLive ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
+    }
+
+    public override int ValidV2(ProcessTicketV2Model model, List<ProcessValidationTicketDetailV2Model> metadata)
+    {
+        var metadataItem = metadata.FirstOrDefault(f => f.BetKind != null && f.BetKind.Id == BetKindId) ?? throw new NotFoundException();
+        if (metadataItem.Metadata == null) throw new NotFoundException();
+        var betKindDetail = model.Details.FirstOrDefault(f => f.BetKindId == BetKindId) ?? throw new NotFoundException();
+        if (betKindDetail.Numbers.Count < _nOOfNumbers) return ErrorCodeHelper.ProcessTicket.FirstNorthern_Northern_DeTruot_MustChooseAtLeast10;
+        return metadataItem.Metadata.IsLive ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
     }
 
     public override decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null)

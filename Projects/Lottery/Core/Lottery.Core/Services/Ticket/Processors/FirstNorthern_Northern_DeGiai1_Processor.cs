@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Models.MatchResult;
@@ -28,6 +29,16 @@ public class FirstNorthern_Northern_DeGiai1_Processor : AbstractBetKindProcessor
         if (metadata.Prize < _prize) return 0;
         else if (metadata.Prize > _prize) return ErrorCodeHelper.ProcessTicket.NotAccepted;
         return !metadata.AllowProcessTicket ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
+    }
+
+    public override int ValidV2(ProcessTicketV2Model model, List<ProcessValidationTicketDetailV2Model> metadata)
+    {
+        var metadataItem = metadata.FirstOrDefault(f => f.BetKind != null && f.BetKind.Id == BetKindId) ?? throw new NotFoundException();
+        if (metadataItem.Metadata == null) throw new NotFoundException();
+        if (!metadataItem.Metadata.IsLive) return 0;
+        if (metadataItem.Metadata.Prize < _prize) return 0;
+        else if (metadataItem.Metadata.Prize > _prize) return ErrorCodeHelper.ProcessTicket.NotAccepted;
+        return !metadataItem.Metadata.AllowProcessTicket ? ErrorCodeHelper.ProcessTicket.NotAccepted : 0;
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)

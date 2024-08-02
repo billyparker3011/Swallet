@@ -44,6 +44,28 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok();
         }
 
+        [HttpPost("process-v2")]
+        public async Task<IActionResult> ProcessV2([FromBody] ProcessTicketV2Request request)
+        {
+            await _ticketService.ProcessV2(new ProcessTicketV2Model
+            {
+                MatchId = request.MatchId,
+                DontAskWhenOddsChange = request.DontAskWhenOddsChange,
+                Details = request.Details.Select(f => new ProcessTicketDetailV2Model
+                {
+                    BetKindId = f.BetKindId,
+                    ChannelId = f.ChannelId,
+                    Numbers = f.Numbers.Select(f1 => new NumberDetailModel
+                    {
+                        Number = f1.Number,
+                        Odd = f1.Odd,
+                        Point = f1.Point
+                    }).ToList()
+                }).ToList()
+            });
+            return Ok();
+        }
+
         [HttpPost("process-mixed")]
         public async Task<IActionResult> ProcessMixed([FromBody] ProcessMixedTicketRequest request)
         {

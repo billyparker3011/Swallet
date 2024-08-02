@@ -4,6 +4,7 @@ If NOT EXISTS (Select Top 1 1 From AgentOdds Where AgentId = @agentId)
 Begin
 	Insert Into AgentOdds (AgentId, BetKindId, Buy, MinBuy, MaxBuy, MinBet, MaxBet, MaxPerNumber, CreatedAt, CreatedBy) 
 	Values 
+		-- Mien Bac 1
 		(@agentId, 1, 705, 705, 805, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 2, 21680, 21680, 22820, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 3, 21700, 21700, 22820, 1, 1000, 1000000, GETDATE(), 0),
@@ -18,7 +19,7 @@ Begin
 		(@agentId, 12, 710, 710, 810, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 13, 710, 710, 810, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 14, 710, 710, 810, 1, 1000, 1000000, GETDATE(), 0),
-	
+		-- Mien Bac 2
 		(@agentId, 15, 755, 755, 775, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 16, 755, 755, 775, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 17, 754, 754, 774, 1, 1000, 1000000, GETDATE(), 0),
@@ -31,7 +32,7 @@ Begin
 		(@agentId, 24, 755, 755, 780, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 25, 755, 755, 780, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 26, 755, 755, 780, 1, 1000, 1000000, GETDATE(), 0),
-	
+
 		(@agentId, 27, 755, 755, 1000, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 28, 755, 755, 1000, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 29, 753, 753, 998, 1, 1000, 1000000, GETDATE(), 0),
