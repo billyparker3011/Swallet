@@ -39,6 +39,12 @@ namespace Lottery.Core.Helpers
             if (betKindId == BetKind.SecondNorthern_Northern_2DDuoi.ToInt())
                 return new List<int> { BetKind.SecondNorthern_Northern_2DDau.ToInt(), betKindId };
 
+            if (betKindId == BetKind.SecondNorthern_Northern_3DDau.ToInt())
+                return new List<int> { BetKind.SecondNorthern_Northern_3DDuoi.ToInt(), betKindId };
+
+            if (betKindId == BetKind.SecondNorthern_Northern_3DDuoi.ToInt())
+                return new List<int> { BetKind.SecondNorthern_Northern_3DDau.ToInt(), betKindId };
+
             //  Central
             if (betKindId == BetKind.Central_2D18LoLive.ToInt())
                 return new List<int> { BetKind.Central_2D18Lo.ToInt(), betKindId };
@@ -55,6 +61,12 @@ namespace Lottery.Core.Helpers
             if (betKindId == BetKind.Central_2DDuoi.ToInt())
                 return new List<int> { BetKind.Central_2DDau.ToInt(), betKindId };
 
+            if (betKindId == BetKind.Central_3DDau.ToInt())
+                return new List<int> { BetKind.Central_3DDuoi.ToInt(), betKindId };
+
+            if (betKindId == BetKind.Central_3DDuoi.ToInt())
+                return new List<int> { BetKind.Central_3DDau.ToInt(), betKindId };
+
             //  Southern
             if (betKindId == BetKind.Southern_2D18LoLive.ToInt())
                 return new List<int> { BetKind.Southern_2D18Lo.ToInt(), betKindId };
@@ -70,6 +82,12 @@ namespace Lottery.Core.Helpers
 
             if (betKindId == BetKind.Southern_2DDuoi.ToInt())
                 return new List<int> { BetKind.Southern_2DDau.ToInt(), betKindId };
+
+            if (betKindId == BetKind.Southern_3DDau.ToInt())
+                return new List<int> { BetKind.Southern_3DDuoi.ToInt(), betKindId };
+
+            if (betKindId == BetKind.Southern_3DDuoi.ToInt())
+                return new List<int> { BetKind.Southern_3DDau.ToInt(), betKindId };
 
             return new List<int> { betKindId };
         }

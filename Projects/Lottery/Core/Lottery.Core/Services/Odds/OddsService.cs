@@ -278,55 +278,65 @@ namespace Lottery.Core.Services.Odds
             //  TODO: Need to read from cache
             var playerOdds = await GetOddsByListBetKind(playerId, betKindIds);
 
-            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt()
-                || betKindId == Enums.BetKind.Central_LoXien.ToInt()
-                || betKindId == Enums.BetKind.Central_Mixed_LoXien.ToInt()
-                || betKindId == Enums.BetKind.Southern_LoXien.ToInt()
-                || betKindId == Enums.BetKind.Southern_Mixed_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds);
+            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.FirstNorthern_Northern_Xien2, Enums.BetKind.FirstNorthern_Northern_Xien3, Enums.BetKind.FirstNorthern_Northern_Xien4);
 
-            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()
-                || betKindId == Enums.BetKind.Central_2D18LoLive.ToInt()
-                || betKindId == Enums.BetKind.Southern_2D18LoLive.ToInt()) return await BuildInitialOddsLoLive(runningMatch, noOfNumbers, betKindIds, playerOdds);
+            if (betKindId == Enums.BetKind.Central_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.Central_Xien2, Enums.BetKind.Central_Xien3, Enums.BetKind.Central_Xien4);
 
-            return await BuildInitialOdds(runningMatch, noOfNumbers, betKindId, betKindIds, playerOdds);
+            if (betKindId == Enums.BetKind.Central_Mixed_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.Central_Mixed_Xien2, Enums.BetKind.Central_Mixed_Xien3, Enums.BetKind.Central_Mixed_Xien4);
+
+            if (betKindId == Enums.BetKind.Southern_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.Southern_Xien2, Enums.BetKind.Southern_Xien3, Enums.BetKind.Southern_Xien4);
+
+            if (betKindId == Enums.BetKind.Southern_Mixed_LoXien.ToInt()) return await BuildInitialOddsXien(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.Southern_Mixed_Xien2, Enums.BetKind.Southern_Mixed_Xien3, Enums.BetKind.Southern_Mixed_Xien4);
+
+            if (betKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt()) return await BuildInitialOddsLoLive(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.FirstNorthern_Northern_Lo, Enums.BetKind.FirstNorthern_Northern_LoLive);
+
+            if (betKindId == Enums.BetKind.Central_2D18LoLive.ToInt()) return await BuildInitialOddsLoLive(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.Central_2D18Lo, Enums.BetKind.Central_2D18LoLive);
+
+            if (betKindId == Enums.BetKind.Southern_2D18LoLive.ToInt()) return await BuildInitialOddsLoLive(runningMatch, noOfNumbers, betKindIds, playerOdds, Enums.BetKind.Southern_2D18Lo, Enums.BetKind.Southern_2D18LoLive);
+
+            return await BuildInitialOdds(runningMatch, noOfNumbers, betKindIds, playerOdds);
         }
 
-        private async Task<List<OddsByNumberModel>> BuildInitialOdds(MatchModel runningMatch, int noOfNumbers, int betKindId, List<int> betKindIds, List<PlayerOddsModel> playerOdds)
+        private async Task<List<OddsByNumberModel>> BuildInitialOdds(MatchModel runningMatch, int noOfNumbers, List<int> betKindIds, List<PlayerOddsModel> playerOdds)
         {
             var rateOfOddsValue = runningMatch != null ? await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds, noOfNumbers) : new Dictionary<int, Dictionary<int, decimal>>();
             var odds = new List<OddsByNumberModel>();
             for (var i = 0; i < noOfNumbers; i++)
             {
-                var currentOdds = playerOdds.FirstOrDefault();
-                var rateValue = _normalizeValueService.GetRateValue(betKindId, i, rateOfOddsValue);
-                odds.Add(new OddsByNumberModel
+                var itemOddsByNumber = new OddsByNumberModel
                 {
                     Number = i,
-                    BetKinds = new List<OddsByBetKindModel>
+                    BetKinds = new List<OddsByBetKindModel>()
+                };
+
+                foreach (var itemBetKind in betKindIds)
+                {
+                    var betKindOdds = playerOdds.FirstOrDefault(f => f.BetKindId == itemBetKind);
+                    var rateValue = _normalizeValueService.GetRateValue(itemBetKind, i, rateOfOddsValue);
+                    itemOddsByNumber.BetKinds.Add(new OddsByBetKindModel
                     {
-                        new OddsByBetKindModel
-                        {
-                            Id = betKindId,
-                            Buy = currentOdds == null ? 0m : _normalizeValueService.Normalize(currentOdds.Buy),
-                            TotalRate = currentOdds == null ? 0m : _normalizeValueService.Normalize(rateValue)
-                        }
-                    }
-                });
+                        Id = itemBetKind,
+                        Buy = betKindOdds == null ? 0m : _normalizeValueService.Normalize(betKindOdds.Buy),
+                        TotalRate = betKindOdds == null ? 0m : _normalizeValueService.Normalize(rateValue)
+                    });
+                }
+
+                odds.Add(itemOddsByNumber);
             }
             return odds;
         }
 
-        private async Task<List<OddsByNumberModel>> BuildInitialOddsLoLive(MatchModel runningMatch, int noOfNumbers, List<int> betKindIds, List<PlayerOddsModel> playerOdds)
+        private async Task<List<OddsByNumberModel>> BuildInitialOddsLoLive(MatchModel runningMatch, int noOfNumbers, List<int> betKindIds, List<PlayerOddsModel> playerOdds, Enums.BetKind noneLive, Enums.BetKind live)
         {
             var rateOfOddsValue = runningMatch != null ? await _processOddsService.GetRateOfOddsValue(runningMatch.MatchId, betKindIds, noOfNumbers) : new Dictionary<int, Dictionary<int, decimal>>();
             var odds = new List<OddsByNumberModel>();
             for (var i = 0; i < noOfNumbers; i++)
             {
-                var playerOddsForLo = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Lo.ToInt());
-                var playerOddsForLoLive = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt());
+                var playerOddsForLo = playerOdds.FirstOrDefault(f => f.BetKindId == noneLive.ToInt());
+                var playerOddsForLoLive = playerOdds.FirstOrDefault(f => f.BetKindId == live.ToInt());
                 if (playerOddsForLo == null || playerOddsForLoLive == null) throw new BadRequestException();
 
-                var rateValueOfLo = _normalizeValueService.GetRateValue(Enums.BetKind.FirstNorthern_Northern_Lo.ToInt(), i, rateOfOddsValue);
+                var rateValueOfLo = _normalizeValueService.GetRateValue(noneLive.ToInt(), i, rateOfOddsValue);
 
                 var buyLo = _normalizeValueService.Normalize(playerOddsForLo.Buy) + _normalizeValueService.Normalize(rateValueOfLo);
                 var buyLoLive = _normalizeValueService.Normalize(playerOddsForLoLive.Buy);
@@ -334,7 +344,7 @@ namespace Lottery.Core.Services.Odds
                 var startBuyLoLive = buyLo;
                 if (startBuyLoLive < buyLoLive) startBuyLoLive = buyLoLive;
 
-                if (runningMatch != null) startBuyLoLive = _normalizeValueService.Normalize(_runningMatchService.GetLiveOdds(Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt(), runningMatch, startBuyLoLive));
+                if (runningMatch != null) startBuyLoLive = _normalizeValueService.Normalize(_runningMatchService.GetLiveOdds(live.ToInt(), runningMatch, startBuyLoLive));
 
                 odds.Add(new OddsByNumberModel
                 {
@@ -343,7 +353,7 @@ namespace Lottery.Core.Services.Odds
                     {
                         new OddsByBetKindModel
                         {
-                            Id = Enums.BetKind.FirstNorthern_Northern_LoLive.ToInt(),
+                            Id = live.ToInt(),
                             Buy = startBuyLoLive,
                             TotalRate = 0m
                         }
@@ -353,19 +363,19 @@ namespace Lottery.Core.Services.Odds
             return odds;
         }
 
-        private async Task<List<OddsByNumberModel>> BuildInitialOddsXien(MatchModel runningMatch, int noOfNumbers, List<int> betKindIds, List<PlayerOddsModel> playerOdds)
+        private async Task<List<OddsByNumberModel>> BuildInitialOddsXien(MatchModel runningMatch, int noOfNumbers, List<int> betKindIds, List<PlayerOddsModel> playerOdds, Enums.BetKind xien2, Enums.BetKind xien3, Enums.BetKind xien4)
         {
             var rateOfOddsValue = runningMatch != null ? await _processOddsService.GetMixedRateOfOddsValue(runningMatch.MatchId, betKindIds) : new Dictionary<int, decimal>();
-            if (!rateOfOddsValue.TryGetValue(Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt(), out decimal rateValueOfXien2)) rateValueOfXien2 = 0m;
-            if (!rateOfOddsValue.TryGetValue(Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt(), out decimal rateValueOfXien3)) rateValueOfXien3 = 0m;
-            if (!rateOfOddsValue.TryGetValue(Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt(), out decimal rateValueOfXien4)) rateValueOfXien4 = 0m;
+            if (!rateOfOddsValue.TryGetValue(xien2.ToInt(), out decimal rateValueOfXien2)) rateValueOfXien2 = 0m;
+            if (!rateOfOddsValue.TryGetValue(xien3.ToInt(), out decimal rateValueOfXien3)) rateValueOfXien3 = 0m;
+            if (!rateOfOddsValue.TryGetValue(xien4.ToInt(), out decimal rateValueOfXien4)) rateValueOfXien4 = 0m;
 
             var odds = new List<OddsByNumberModel>();
             for (var i = 0; i < noOfNumbers; i++)
             {
-                var xien2 = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt());
-                var xien3 = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt());
-                var xien4 = playerOdds.FirstOrDefault(f => f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt());
+                var xien2Val = playerOdds.FirstOrDefault(f => f.BetKindId == xien2.ToInt());
+                var xien3Val = playerOdds.FirstOrDefault(f => f.BetKindId == xien3.ToInt());
+                var xien4Val = playerOdds.FirstOrDefault(f => f.BetKindId == xien4.ToInt());
 
                 odds.Add(new OddsByNumberModel
                 {
@@ -374,21 +384,21 @@ namespace Lottery.Core.Services.Odds
                         {
                             new OddsByBetKindModel
                             {
-                                Id = Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt(),
-                                Buy = xien2 == null ? 0m : _normalizeValueService.Normalize(xien2.Buy),
-                                TotalRate = xien2 == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien2)
+                                Id = xien2.ToInt(),
+                                Buy = xien2Val == null ? 0m : _normalizeValueService.Normalize(xien2Val.Buy),
+                                TotalRate = xien2Val == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien2)
                             },
                             new OddsByBetKindModel
                             {
-                                Id = Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt(),
-                                Buy = xien3 == null ? 0m : _normalizeValueService.Normalize(xien3.Buy),
-                                TotalRate = xien3 == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien3)
+                                Id = xien3.ToInt(),
+                                Buy = xien3Val == null ? 0m : _normalizeValueService.Normalize(xien3Val.Buy),
+                                TotalRate = xien3Val == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien3)
                             },
                             new OddsByBetKindModel
                             {
-                                Id = Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt(),
-                                Buy = xien4 == null ? 0m : _normalizeValueService.Normalize(xien4.Buy),
-                                TotalRate = xien4 == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien4)
+                                Id = xien4.ToInt(),
+                                Buy = xien4Val == null ? 0m : _normalizeValueService.Normalize(xien4Val.Buy),
+                                TotalRate = xien4Val == null ? 0m : _normalizeValueService.Normalize(rateValueOfXien4)
                             }
                         }
                 });
