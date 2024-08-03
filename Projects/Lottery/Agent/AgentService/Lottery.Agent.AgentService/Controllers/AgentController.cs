@@ -20,29 +20,43 @@ namespace Lottery.Agent.AgentService.Controllers
         private readonly IAgentService _agentService;
         private readonly IAgentBetSettingService _agentBetSettingService;
         private readonly IAgentPositionTakingService _agentPositionTakingService;
-        private readonly INormalizePlayerService _normalizePlayerService;
+        private readonly INormalizeDataService _normalizeDataService;
 
         public AgentController(IAgentService agentService, IAgentBetSettingService agentBetSettingService,
             IAgentPositionTakingService agentPositionTakingService,
-            INormalizePlayerService normalizePlayerService)
+            INormalizeDataService normalizePlayerService)
         {
             _agentService = agentService;
             _agentBetSettingService = agentBetSettingService;
             _agentPositionTakingService = agentPositionTakingService;
-            _normalizePlayerService = normalizePlayerService;
+            _normalizeDataService = normalizePlayerService;
         }
 
         [HttpGet("delete-supermaster"), LotteryAuthorize(Permission.MemberInformation.FullControl)]
         public async Task<IActionResult> DeleteSupermaster([FromQuery] long supermasterId)
         {
-            await _normalizePlayerService.DeleteSupermaster(supermasterId);
+            await _normalizeDataService.DeleteSupermaster(supermasterId);
             return Ok();
         }
 
-        [HttpGet("normalize-players"), LotteryAuthorize(Permission.Management.DefaultBetSetting)]
+        [HttpGet("normalize-agents"), LotteryAuthorize(Permission.MemberInformation.FullControl)]
+        public async Task<IActionResult> NormalizeAgents()
+        {
+            await _normalizeDataService.NormalizeAgents();
+            return Ok();
+        }
+
+        [HttpGet("normalize-players"), LotteryAuthorize(Permission.MemberInformation.FullControl)]
+        public async Task<IActionResult> NormalizePlayers()
+        {
+            await _normalizeDataService.NormalizePlayers();
+            return Ok();
+        }
+
+        [HttpGet("normalize-players-by-supermasters"), LotteryAuthorize(Permission.MemberInformation.FullControl)]
         public async Task<IActionResult> NormalizePlayerBySupermaster([FromQuery] List<long> supermasterIds)
         {
-            await _normalizePlayerService.NormalizePlayerBySupermaster(supermasterIds);
+            await _normalizeDataService.NormalizePlayerBySupermaster(supermasterIds);
             return Ok();
         }
 

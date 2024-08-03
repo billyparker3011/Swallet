@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
@@ -18,12 +19,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Lottery.Core.Services.Agent
 {
-    public class NormalizePlayerService : LotteryBaseService<NormalizePlayerService>, INormalizePlayerService
+    public class NormalizeDataService : LotteryBaseService<NormalizeDataService>, INormalizeDataService
     {
         private readonly IRedisCacheService _cacheService;
         private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
 
-        public NormalizePlayerService(ILogger<NormalizePlayerService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
+        public NormalizeDataService(ILogger<NormalizeDataService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
             IRedisCacheService cacheService,
             IInMemoryUnitOfWork inMemoryUnitOfWork) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
@@ -33,6 +34,8 @@ namespace Lottery.Core.Services.Agent
 
         public async Task DeleteSupermaster(long supermasterId)
         {
+            if (ClientContext.Agent.RoleId != 0) return;
+
             var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
             var betKinds = betKindInMemoryRepository.GetAll().ToList();
 
@@ -123,8 +126,53 @@ namespace Lottery.Core.Services.Agent
             await LotteryUow.SaveChangesAsync();
         }
 
+        public async Task NormalizeAgents()
+        {
+            if (ClientContext.Agent.RoleId != 0) return;
+
+            var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
+            var agentOddsRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
+
+            var company = await agentRepository.FindQueryBy(f => f.RoleId == 0 && f.ParentId == 0L).FirstOrDefaultAsync();
+            if (company == null) throw new NotFoundException();
+
+            var agents = await agentRepository.FindQueryBy(f => f.ParentId == 0L && f.RoleId > 0).ToListAsync();
+            var agentIds = agents.Select(f => f.AgentId).ToList();
+
+            var companyOdds = await agentOddsRepository.FindQueryBy(f => f.AgentId == company.AgentId).ToListAsync();
+            var agentOdds = await agentOddsRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+
+            foreach (var agentId in agentIds)
+            {
+                foreach (var oddItem in companyOdds)
+                {
+                    var agentOdd = agentOdds.FirstOrDefault(f => f.AgentId == agentId && f.BetKindId == oddItem.BetKindId);
+                    if (agentOdd != null) continue;
+
+                    agentOdd = new Data.Entities.AgentOdd
+                    {
+                        AgentId = agentId,
+                        BetKindId = oddItem.BetKindId,
+                        Buy = oddItem.Buy,
+                        MinBuy = oddItem.MinBuy,
+                        MaxBuy = oddItem.MaxBuy,
+                        MinBet = oddItem.MinBet,
+                        MaxBet = oddItem.MaxBet,
+                        MaxPerNumber = oddItem.MaxPerNumber,
+                        CreatedAt = oddItem.CreatedAt,
+                        CreatedBy = oddItem.CreatedBy
+                    };
+                    agentOddsRepository.Add(agentOdd);
+                }
+            }
+
+            await LotteryUow.SaveChangesAsync();
+        }
+
         public async Task NormalizePlayerBySupermaster(List<long> supermasterIds)
         {
+            if (ClientContext.Agent.RoleId != 0) return;
+
             var agentOddsRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
             var betSettings = await agentOddsRepository.FindQueryBy(f => f.AgentId == (ClientContext.Agent.ParentId == 0L ? ClientContext.Agent.AgentId : ClientContext.Agent.ParentId)).ToListAsync();
 
@@ -189,6 +237,73 @@ namespace Lottery.Core.Services.Agent
                 {
                     { minBetKey.SubKey, item.MinBet.ToString() }
                 }, minBetKey.TimeSpan == TimeSpan.Zero ? null : minBetKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+            }
+        }
+
+        public async Task NormalizePlayers()
+        {
+            if (ClientContext.Agent.RoleId != 0) return;
+
+            var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
+            var agentOddsRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
+
+            var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
+            var playerOddsRepository = LotteryUow.GetRepository<IPlayerOddsRepository>();
+
+            var agents = await agentRepository.FindQueryBy(f => f.ParentId == 0L && f.RoleId == Role.Agent.ToInt()).ToListAsync();
+            var agentIds = agents.Select(f => f.AgentId).ToList();
+            var agentOdds = await agentOddsRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+
+            var players = await playerRepository.FindQueryBy(f => true).ToListAsync();
+            var playerIds = players.Select(f => f.PlayerId).ToList();
+            var playerOdds = await playerOddsRepository.FindQueryBy(f => true).ToListAsync();
+
+            var updatedPlayerOdds = new List<Data.Entities.PlayerOdd>();
+
+            foreach (var player in players)
+            {
+                var agentOddsOfPlayer = agentOdds.Where(f => f.AgentId == player.AgentId).ToList();
+                foreach (var item in agentOddsOfPlayer)
+                {
+                    var playerOdd = playerOdds.FirstOrDefault(f => f.PlayerId == player.PlayerId && f.BetKindId == item.BetKindId);
+                    if (playerOdd != null) continue;
+
+                    playerOdd = new Data.Entities.PlayerOdd
+                    {
+                        PlayerId = player.PlayerId,
+                        BetKindId = item.BetKindId,
+                        Buy = item.Buy,
+                        MinBet = item.MinBet,
+                        MaxBet = item.MaxBet,
+                        MaxPerNumber = item.MaxPerNumber,
+                        CreatedAt = item.CreatedAt,
+                        CreatedBy = item.CreatedBy
+                    };
+                    playerOddsRepository.Add(playerOdd);
+                    updatedPlayerOdds.Add(playerOdd);
+                }
+            }
+            await LotteryUow.SaveChangesAsync();
+
+            foreach (var item in updatedPlayerOdds)
+            {
+                var minBetKey = item.PlayerId.GetMinBetPlayer(item.BetKindId);
+                await _cacheService.HashSetAsync(minBetKey.MainKey, new Dictionary<string, string>
+                {
+                    { minBetKey.SubKey, item.MinBet.ToString() }
+                }, minBetKey.TimeSpan == TimeSpan.Zero ? null : minBetKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+
+                var maxBetKey = item.PlayerId.GetMaxBetPlayer(item.BetKindId);
+                await _cacheService.HashSetAsync(maxBetKey.MainKey, new Dictionary<string, string>
+                {
+                    { maxBetKey.SubKey, item.MaxBet.ToString() }
+                }, maxBetKey.TimeSpan == TimeSpan.Zero ? null : maxBetKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+
+                var maxPerNumberKey = item.PlayerId.GetMaxPerNumberPlayer(item.BetKindId);
+                await _cacheService.HashSetAsync(maxPerNumberKey.MainKey, new Dictionary<string, string>
+                {
+                    { maxPerNumberKey.SubKey, item.MaxPerNumber.ToString() }
+                }, maxPerNumberKey.TimeSpan == TimeSpan.Zero ? null : maxPerNumberKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
             }
         }
     }
