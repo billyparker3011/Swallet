@@ -37,6 +37,14 @@
 - Miền Bắc: Gồm 20 số (các số có ít nhất 4 chữ số) => Số tiền x 20.
 - Miền Trung + Nam: Gồm 16 số (các số có ít nhất 4 chữ số) => Số tiền x 16.
 
+10. 2D 7D
+- Chỉ có ở Miền Trung + Name: Cược 2 số cuối giải 5, 6, 7, 8 và Đặc biệt (có 7 lô)
+- Số tiền x 7.
+
+11. 3D 7D
+- Chỉ có ở Miền Trung + Name: Cược 3 số cuối giải 5, 6, 7 và Đặc biệt (có 6 lô)
+- Số tiền x 6.
+
 Note:
 - Phức hợp: cách tạo ra một dãy số dựa trên tiêu chí Tài (số từ 5 - 9); Xỉu (số từ 0 - 4); Chẵn (Số chia hết cho 2); Lẻ (Số ko chia hết cho 2).
 - Đơn thức: cách tạo ra dãy số dựa trên việc gõ trực tiếp.

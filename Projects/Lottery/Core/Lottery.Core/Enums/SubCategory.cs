@@ -13,7 +13,7 @@ namespace Lottery.Core.Enums
         #endregion
 
         #region For Second Northern
-        [EnumSubCategoryDescription("2D", 1, Category.SecondNorthern, BetKind.None, new[] { BetKind.SecondNorthern_Northern_2DDau, BetKind.SecondNorthern_Northern_2D27Lo })]
+        [EnumSubCategoryDescription("2D", 1, Category.SecondNorthern, BetKind.None, new[] { BetKind.SecondNorthern_Northern_2DDau, BetKind.SecondNorthern_Northern_2DDuoi })]
         D2 = 3,
 
         [EnumSubCategoryDescription("3D", 2, Category.SecondNorthern, BetKind.None, new[] { BetKind.SecondNorthern_Northern_3DDau, BetKind.SecondNorthern_Northern_3DDuoi, BetKind.SecondNorthern_Northern_3D23Lo })]

@@ -5,6 +5,7 @@
         public string Name { get; set; }
         public int BetKindId { get; set; }
         public int? ReplacedById { get; set; }
+        public int RegionId { get; set; }
         public bool Display { get; set; }
         public bool Enabled { get; set; }
         public int? NoOfRemainingNumbers { get; set; }

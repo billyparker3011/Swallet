@@ -97,6 +97,7 @@ namespace Lottery.Core.Services.Player
                 {
                     Name = f.Name,
                     SubCategoryId = f.Id.ToInt(),
+                    RegionId = category.Region.ToInt(),
                     Children = new List<SubNavigationDetailModel>()
                 };
                 if (f.SubBetKinds.Count == 0)
@@ -131,6 +132,7 @@ namespace Lottery.Core.Services.Player
                         BetKindId = itemBetKindModel.Id,
                         ReplacedById = replacedById,
                         Name = itemBetKindModel.Name,
+                        RegionId = itemBetKindModel.RegionId,
                         Display = displayLive,
                         Enabled = itemBetKindModel.Enabled,
                         NoOfRemainingNumbers = noOfRemainingNumbers,
