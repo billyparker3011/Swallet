@@ -20,4 +20,5 @@ public interface ITicketProcessor : ISingletonDependency
     decimal GetRealPayoutForCompany(decimal playerPayout, decimal supermasterPt);
 
     int ValidV2(ProcessTicketV2Model model, int betKindId, List<ProcessValidationTicketDetailV2Model> metadata);
+    int ValidMixedV2(ProcessMixedTicketV2Model model, TicketMetadataModel metadata);
 }

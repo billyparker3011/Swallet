@@ -79,6 +79,20 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok();
         }
 
+        [HttpPost("process-mixed-v2")]
+        public async Task<IActionResult> ProcessMixedV2([FromBody] ProcessMixedTicketV2Request request)
+        {
+            await _ticketService.ProcessMixedV2(new ProcessMixedTicketV2Model
+            {
+                BetKindId = request.BetKindId,
+                MatchId = request.MatchId,
+                Numbers = request.Numbers,
+                Points = request.Points,
+                ChannelIds = request.ChannelIds
+            });
+            return Ok();
+        }
+
         [HttpGet("running-tickets")]
         public async Task<IActionResult> RunningTickets()
         {

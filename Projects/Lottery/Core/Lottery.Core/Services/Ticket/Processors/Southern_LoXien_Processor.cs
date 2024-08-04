@@ -5,20 +5,20 @@ using Lottery.Core.Models.Ticket.Process;
 
 namespace Lottery.Core.Services.Ticket.Processors;
 
-public class FirstNorthern_Northern_LoXien_Processor : AbstractBetKindProcessor
+public class Southern_LoXien_Processor : AbstractBetKindProcessor
 {
     private readonly Dictionary<int, int> _subBetKindIds = new()
     {
-        { Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt(), 2 },
-        { Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt(), 3 },
-        { Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt(), 4 }
+        { Enums.BetKind.Southern_Xien2.ToInt(), 2 },
+        { Enums.BetKind.Southern_Xien3.ToInt(), 3 },
+        { Enums.BetKind.Southern_Xien4.ToInt(), 4 }
     };
 
-    public FirstNorthern_Northern_LoXien_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    public Southern_LoXien_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
     }
 
-    public override int BetKindId { get; set; } = Enums.BetKind.FirstNorthern_Northern_LoXien.ToInt();
+    public override int BetKindId { get; set; } = Enums.BetKind.Southern_LoXien.ToInt();
 
     public override bool EnableStats()
     {

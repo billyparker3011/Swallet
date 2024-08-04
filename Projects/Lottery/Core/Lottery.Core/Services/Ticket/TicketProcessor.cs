@@ -96,4 +96,10 @@ public class TicketProcessor : ITicketProcessor
         var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);
         return handler == null ? throw new HnMicroException() : handler.ValidV2(model, metadata);
     }
+
+    public int ValidMixedV2(ProcessMixedTicketV2Model model, TicketMetadataModel metadata)
+    {
+        var handler = _handlers.FirstOrDefault(f => f.BetKindId == model.BetKindId);
+        return handler == null ? throw new HnMicroException() : handler.ValidMixedV2(model, metadata);
+    }
 }

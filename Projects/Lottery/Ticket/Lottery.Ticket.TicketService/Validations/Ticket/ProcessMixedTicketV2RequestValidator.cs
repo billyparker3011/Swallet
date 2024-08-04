@@ -3,9 +3,9 @@ using Lottery.Ticket.TicketService.Requests.Ticket;
 
 namespace Lottery.Ticket.TicketService.Validations.Ticket;
 
-public class ProcessMixedTicketRequestValidator : AbstractValidator<ProcessMixedTicketRequest>
+public class ProcessMixedTicketV2RequestValidator : AbstractValidator<ProcessMixedTicketV2Request>
 {
-    public ProcessMixedTicketRequestValidator()
+    public ProcessMixedTicketV2RequestValidator()
     {
         RuleFor(f => f.BetKindId)
             .NotNull().WithMessage(Core.Localizations.Messages.Ticket.BetKindIdIsBlank)
@@ -14,6 +14,9 @@ public class ProcessMixedTicketRequestValidator : AbstractValidator<ProcessMixed
         RuleFor(f => f.MatchId)
             .NotNull().WithMessage(Core.Localizations.Messages.Ticket.MatchIdIsBlank)
             .NotEmpty().WithMessage(Core.Localizations.Messages.Ticket.MatchIdIsBlank);
+
+        RuleFor(f => f.ChannelIds)
+            .NotNull().WithMessage(Core.Localizations.Messages.Ticket.ChannelIdIsBlank);
 
         RuleFor(f => f.Numbers)
             .NotNull().WithMessage(Core.Localizations.Messages.Ticket.NumbersAreBlank)

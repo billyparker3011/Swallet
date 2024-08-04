@@ -160,4 +160,9 @@ public abstract class AbstractBetKindProcessor : IBetKindProcessor
     {
         return 0;
     }
+
+    public virtual int ValidMixedV2(ProcessMixedTicketV2Model model, TicketMetadataModel metadata)
+    {
+        return 0;
+    }
 }

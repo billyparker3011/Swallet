@@ -17,7 +17,7 @@ public interface IBetKindProcessor
     decimal? GetPlayerOdds(Dictionary<int, decimal> oddsValueByNumbers);
     Dictionary<int, int> GetSubBetKindIds();
     int Valid(ProcessTicketModel model, TicketMetadataModel metadata);
-    int ValidMixed(ProcessMixedTicketModel model, TicketMetadataModel metadata);
-
     int ValidV2(ProcessTicketV2Model model, List<ProcessValidationTicketDetailV2Model> metadata);
+    int ValidMixed(ProcessMixedTicketModel model, TicketMetadataModel metadata);
+    int ValidMixedV2(ProcessMixedTicketV2Model model, TicketMetadataModel metadata);
 }
