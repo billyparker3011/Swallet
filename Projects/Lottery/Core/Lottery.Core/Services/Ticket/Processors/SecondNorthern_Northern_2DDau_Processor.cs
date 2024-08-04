@@ -11,7 +11,7 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public class SecondNorthern_Northern_2DDau_Processor : AbstractBetKindProcessor
 {
-    private const int _resultPrize = 8;
+    private const int _startedPrize = 8;
 
     public SecondNorthern_Northern_2DDau_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
@@ -38,7 +38,7 @@ public class SecondNorthern_Northern_2DDau_Processor : AbstractBetKindProcessor
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
-        var rs = result.Where(f => f.Prize == _resultPrize).SelectMany(f => f.Results).Select(f => f.Result).ToList();
+        var rs = result.Where(f => f.Prize == _startedPrize).SelectMany(f => f.Results).Select(f => f.Result).ToList();
         var endOfResults = new List<string>();
         rs.ForEach(f =>
         {
