@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Scopes;
+using Lottery.Core.Dtos.CockFight;
 
 namespace Lottery.Core.Services.CockFight
 {
@@ -6,5 +7,6 @@ namespace Lottery.Core.Services.CockFight
     {
         Task CreateCockFightPlayer();
         Task LoginCockFightPlayer();
+        Task<LoginPlayerInformationDto> GetCockFightUrl();
     }
 }

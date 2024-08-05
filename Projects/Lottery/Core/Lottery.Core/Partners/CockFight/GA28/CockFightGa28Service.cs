@@ -11,7 +11,6 @@ using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -112,8 +111,14 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var playerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.MemberRefId == objectData.Member.Member_ref_id && x.IsInitial).FirstOrDefaultAsync();
             if (playerMapping is null) return;
             // Update redis cache
+            var entryDatas = new Dictionary<string, string>
+            {
+                { nameof(Ga28LoginPlayerDataReturnModel.Token), objectData.Token },
+                { nameof(Ga28LoginPlayerDataReturnModel.Game_client_url), objectData.Game_client_url },
+                { nameof(Ga28LoginPlayerDataReturnModel.Member), Newtonsoft.Json.JsonConvert.SerializeObject(objectData.Member ?? new MemberInfo())}
+            };
             var loginPlayerInfoKey = playerMapping.PlayerId.GetLoginPlayerInfoKeyByTokenMemberRefIdAccountId();
-            await _redisCacheService.SetAddAsync(loginPlayerInfoKey.MainKey, objectData, loginPlayerInfoKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+            await _redisCacheService.SetAddAsync(loginPlayerInfoKey.MainKey, entryDatas, loginPlayerInfoKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
         }
     }
 }

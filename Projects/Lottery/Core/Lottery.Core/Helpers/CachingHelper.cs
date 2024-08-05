@@ -180,7 +180,7 @@ namespace Lottery.Core.Helpers
         {
             return new KeyOfRedisHash
             {
-                MainKey = string.Format(CachingConfigs.LoginPlayerInfoByMemberRefIdAccountIdToken, playerId),
+                MainKey = string.Format(CachingConfigs.LoginCockFightPlayerInfoByPlayerId, playerId),
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }

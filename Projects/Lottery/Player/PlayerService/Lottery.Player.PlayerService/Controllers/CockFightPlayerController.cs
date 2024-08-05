@@ -1,5 +1,6 @@
 using HnMicro.Framework.Controllers;
 using Lottery.Core.Services.CockFight;
+using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lottery.Player.PlayerService.Controllers
@@ -25,6 +26,12 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             await _cockFightService.LoginCockFightPlayer();
             return Ok();
+        }
+
+        [HttpGet("get-url")]
+        public async Task<IActionResult> GetCockFightUrl()
+        {
+            return Ok(OkResponse.Create(await _cockFightService.GetCockFightUrl()));
         }
     }
 }

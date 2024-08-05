@@ -72,7 +72,7 @@
         //  End: Suspend Numbers
 
         // Begin: Login Player Info
-        public const string LoginPlayerInfoByMemberRefIdAccountIdToken = "cockfight-login-player.{0}"; // <PlayerId>
+        public const string LoginCockFightPlayerInfoByPlayerId = "cockfight-login-player.{0}"; // <PlayerId>
         // End: Login Player Info
     }
 }
