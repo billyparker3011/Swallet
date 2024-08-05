@@ -83,3 +83,10 @@ Begin
 		(@agentId, 71, 755, 755, 780, 1, 1000, 1000000, GETDATE(), 0),
 		(@agentId, 72, 755, 755, 780, 1, 1000, 1000000, GETDATE(), 0);
 End
+
+If NOT EXISTS (Select Top 1 1 From CockFightAgentBetSettings Where AgentId = @agentId)
+Begin
+	Insert Into CockFightAgentBetSettings (AgentId, BetKindId, MainLimitAmountPerFight, DrawLimitAmountPerFight, LimitNumTicketPerFight, CreatedAt, CreatedBy) 
+	Values 
+		(@agentId, 1, 1000, 1000, 5, GETDATE(), 0)
+End

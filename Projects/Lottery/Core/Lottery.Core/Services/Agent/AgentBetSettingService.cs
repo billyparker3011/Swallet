@@ -64,6 +64,7 @@ namespace Lottery.Core.Services.Agent
                                                             ActualMaxBet = x.MaxBet,
                                                             DefaultMaxPerNumber = x.MaxPerNumber,
                                                             ActualMaxPerNumber = x.MaxPerNumber,
+                                                            IsDisabled = x.BetKind.IsLive
                                                         })
                                                         .ToListAsync();
             foreach(var setting in agentBetSettings)
@@ -123,7 +124,7 @@ namespace Lottery.Core.Services.Agent
                                                             ActualMaxBet = x.MaxBet,
                                                             DefaultMaxPerNumber = x.MaxPerNumber,
                                                             ActualMaxPerNumber = x.MaxPerNumber,
-                                                            IsDisabled = x.BetKindId == 9
+                                                            IsDisabled = x.BetKind.IsLive
                                                         })
                                                         .ToListAsync();
             foreach(var item in agentBetSettings)

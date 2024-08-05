@@ -13,5 +13,11 @@ namespace HnMicro.Module.Caching.ByRedis.Helpers
             builder.Services.AddSingleton(builder.Configuration.GetSection(RedisConfigurationOption.AppSettingName).Get<RedisConfigurationOption>());
             builder.Services.AddSingleton<IRedisCacheService, RedisCacheService>();
         }
+
+        public static void AddRedis(this IServiceCollection serviceCollection, IConfigurationRoot configurationRoot)
+        {
+            serviceCollection.AddSingleton(configurationRoot.GetSection(RedisConfigurationOption.AppSettingName).Get<RedisConfigurationOption>());
+            serviceCollection.AddSingleton<IRedisCacheService, RedisCacheService>();
+        }
     }
 }

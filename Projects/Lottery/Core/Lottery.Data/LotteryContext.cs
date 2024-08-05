@@ -36,6 +36,16 @@ namespace Lottery.Data
 
         public virtual DbSet<Setting> Settings { get; set; }
 
+        public virtual DbSet<BookieSetting> BookieSettings { get; set; }
+        #region Cock Fight Partner
+        public virtual DbSet<CockFightAgentBetSetting> CockFightAgentBetSettings { get; set; }
+        public virtual DbSet<CockFightAgentPostionTaking> CockFightAgentPostionTakings { get; set; }
+        public virtual DbSet<CockFightBetKind> CockFightBetKinds { get; set; }
+        public virtual DbSet<CockFightPlayerBetSetting> CockFightPlayerBetSettings { get; set; }
+        public virtual DbSet<CockFightPlayerMapping> CockFightPlayerMappings { get; set; }
+        public virtual DbSet<CockFightTicket> CockFightTickets { get; set; }
+        #endregion
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Core\HnMicro.Core\HnMicro.Core.csproj" />
     <ProjectReference Include="..\..\..\..\Modules\Caching\HnMicro.Module.Caching.ByRedis\HnMicro.Module.Caching.ByRedis.csproj" />
     <ProjectReference Include="..\..\..\..\Modules\HnMicro.Modules.EntityFrameworkCore\HnMicro.Modules.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\..\..\..\Modules\HnMicro.Modules.InMemory\HnMicro.Modules.InMemory.csproj" />

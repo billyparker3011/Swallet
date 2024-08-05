@@ -63,5 +63,12 @@
             public const int NorthernResultDoesntMatchPrize = -4;
             public const int NorthernResultIsBadFormat = -5;
         }
+
+        public static class CockFight
+        {
+            public const int PlayerHasNotBeenInitiatedYet = -100;
+            public const int BookieSettingIsNotBeingInitiated = -101;
+            public const int PartnerAccountIdHasNotBeenProvided = -102;
+        }
     }
 }

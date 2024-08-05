@@ -1,10 +1,19 @@
 ﻿using HnMicro.Core.Helpers;
 using Lottery.Core.Enums;
+using Newtonsoft.Json;
 
 namespace Lottery.Core.Helpers
 {
     public static class CommonHelper
     {
+        public static JsonSerializerSettings CreateJsonSerializerSettings()
+        {
+            return new JsonSerializerSettings
+            {
+                TypeNameHandling = TypeNameHandling.All
+            };
+        }
+
         public static bool IsSuspended(this UserState state)
         {
             return state == UserState.Suspended;

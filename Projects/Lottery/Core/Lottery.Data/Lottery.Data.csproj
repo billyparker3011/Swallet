@@ -44,6 +44,18 @@
     <None Update="Scripts\CreatePTForCompany.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Scripts\InitBookieSettings.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\MigratePlayerCockFightBetSettings.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\MigrateAgentCockFightBetSettings.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\InitCockFightBetKinds.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\ChangeMienNam18BToMienNam.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

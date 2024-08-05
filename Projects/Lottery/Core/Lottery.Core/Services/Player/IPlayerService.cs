@@ -21,5 +21,6 @@ namespace Lottery.Core.Services.Player
         Task<GetAgentBetSettingsResult> GetDetailPlayerBetSettings(long playerId);
 
         Task<PlayerModel> GetPlayer(long playerId);
+        Task CreateCockFightPlayer(CreatePlayerModel model);
     }
 }

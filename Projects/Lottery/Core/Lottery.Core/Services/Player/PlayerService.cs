@@ -450,5 +450,10 @@ namespace Lottery.Core.Services.Player
                 ParentState = player.ParentState.HasValue ? player.ParentState.Value.ToEnum<UserState>() : null
             };
         }
+
+        public Task CreateCockFightPlayer(CreatePlayerModel model)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
