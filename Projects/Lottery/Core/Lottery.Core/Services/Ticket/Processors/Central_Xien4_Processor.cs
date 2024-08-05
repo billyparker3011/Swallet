@@ -10,9 +10,6 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public class Central_Xien4_Processor : AbstractBetKindProcessor
 {
-    private const int _startedPrize = 1;
-    private const int _endPrize = 9;
-
     public Central_Xien4_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
     }
@@ -33,7 +30,7 @@ public class Central_Xien4_Processor : AbstractBetKindProcessor
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
-        var rs = result.Where(f => f.Prize >= _startedPrize && f.Prize <= _endPrize).SelectMany(f => f.Results).Select(f => f.Result).ToList();
+        var rs = result.SelectMany(f => f.Results).Select(f => f.Result).ToList();
         var endOfResults = new List<string>();
         rs.ForEach(f =>
         {

@@ -12,6 +12,7 @@ public interface IBetKindProcessor
     RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(RefundRejectTicketByNumbersModel model);
     RefundRejectTicketResultModel RefundRejectTicket(RefundRejectTicketModel model);
     CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result);
+    CompletedTicketResultModel Completed(CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results);
     bool EnableStats();
     decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null);
     decimal? GetPlayerOdds(Dictionary<int, decimal> oddsValueByNumbers);

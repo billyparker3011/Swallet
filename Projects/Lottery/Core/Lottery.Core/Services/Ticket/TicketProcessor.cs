@@ -1,6 +1,7 @@
 ﻿using HnMicro.Core.Helpers;
 using HnMicro.Framework.Exceptions;
 using Lottery.Core.Models.BetKind;
+using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
 using Lottery.Core.Services.Ticket.Processors;
@@ -33,7 +34,7 @@ public class TicketProcessor : ITicketProcessor
         return handler.RefundRejectTicket(model);
     }
 
-    public CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, List<Models.MatchResult.PrizeMatchResultModel> result)
+    public CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
         var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);
         if (handler == null) return null;
@@ -101,5 +102,12 @@ public class TicketProcessor : ITicketProcessor
     {
         var handler = _handlers.FirstOrDefault(f => f.BetKindId == model.BetKindId);
         return handler == null ? throw new HnMicroException() : handler.ValidMixedV2(model, metadata);
+    }
+
+    public CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results)
+    {
+        var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKindId);
+        if (handler == null) return null;
+        return handler.Completed(ticket, results);
     }
 }

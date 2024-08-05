@@ -110,7 +110,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                     _ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId &&
                                                 _recalculateStates.Contains(f.State) &&
                                                 (!itemMatch.RegionId.HasValue || (itemMatch.RegionId.HasValue && itemMatch.RegionId.Value == f.RegionId)) &&
-                                                (!itemMatch.ChannelId.HasValue || (itemMatch.ChannelId.HasValue && itemMatch.ChannelId.Value == f.ChannelId))
+                                                (!itemMatch.ChannelId.HasValue || (itemMatch.ChannelId.HasValue && itemMatch.ChannelId.Value == f.ChannelId) || f.ChannelId == -1)
                     )
                 );
             }
@@ -120,7 +120,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                     _ticketsByMatch.Where(f => f.MatchId == itemMatch.MatchId &&
                                                 _outsStates.Contains(f.State) &&
                                                 (!itemMatch.RegionId.HasValue || (itemMatch.RegionId.HasValue && itemMatch.RegionId.Value == f.RegionId)) &&
-                                                (!itemMatch.ChannelId.HasValue || (itemMatch.ChannelId.HasValue && itemMatch.ChannelId.Value == f.ChannelId))
+                                                (!itemMatch.ChannelId.HasValue || (itemMatch.ChannelId.HasValue && itemMatch.ChannelId.Value == f.ChannelId) || f.ChannelId == -1)
                     )
                 );
             }

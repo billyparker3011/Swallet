@@ -8,13 +8,13 @@ using Lottery.Core.Models.Ticket.Process;
 
 namespace Lottery.Core.Services.Ticket.Processors;
 
-public class Central_Xien2_Processor : AbstractBetKindProcessor
+public class Southern_Mixed_Xien2_Processor : AbstractBetKindProcessor
 {
-    public Central_Xien2_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
+    public Southern_Mixed_Xien2_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
     }
 
-    public override int BetKindId { get; set; } = Enums.BetKind.Central_Xien2.ToInt();
+    public override int BetKindId { get; set; } = Enums.BetKind.Southern_Mixed_Xien2.ToInt();
 
     public override int Valid(ProcessTicketModel model, TicketMetadataModel metadata)
     {
@@ -121,6 +121,167 @@ public class Central_Xien2_Processor : AbstractBetKindProcessor
                     //  Won
                     child.State = TicketState.Won;
                     playerWinlose = item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
+                }
+                else
+                {
+                    //  Lose
+                    child.State = TicketState.Lose;
+                    playerWinlose = -1 * item.PlayerPayout;
+                }
+                child.PlayerWinLoss = playerWinlose;
+
+                child.AgentWinLoss = -1 * playerWinlose * item.AgentPt;
+                var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
+                if (agentComm < 0m) agentComm = 0m;
+                child.AgentCommission = agentComm * item.Stake;
+
+                child.MasterWinLoss = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
+                var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
+                if (masterComm < 0m) masterComm = 0m;
+                child.MasterCommission = masterComm * item.Stake;
+
+                child.SupermasterWinLoss = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
+                var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
+                if (supermasterComm < 0m) supermasterComm = 0m;
+                child.SupermasterCommission = supermasterComm * item.Stake;
+
+                child.CompanyWinLoss = -1 * (1 - item.SupermasterPt) * playerWinlose;
+                dataResult.Children.Add(child);
+
+                totalPlayerWinLose += playerWinlose;
+                totalAgentWinLose += child.AgentWinLoss;
+                totalAgentCommission += child.AgentCommission;
+                totalMasterWinLose += child.MasterWinLoss;
+                totalMasterCommission += child.MasterCommission;
+                totalSupermasterWinLose += child.SupermasterWinLoss;
+                totalSupermasterCommission += child.SupermasterCommission;
+                totalCompanyWinLose += child.CompanyWinLoss;
+            }
+        }
+        dataResult.State = totalPlayerWinLose > 0 ? TicketState.Won : TicketState.Lose;
+        dataResult.PlayerWinLoss = totalPlayerWinLose;
+        dataResult.AgentWinLoss = totalAgentWinLose;
+        dataResult.AgentCommission = totalAgentCommission;
+        dataResult.MasterWinLoss = totalMasterWinLose;
+        dataResult.MasterCommission = totalMasterCommission;
+        dataResult.SupermasterWinLoss = totalSupermasterWinLose;
+        dataResult.SupermasterCommission = totalSupermasterCommission;
+        dataResult.CompanyWinLoss = totalCompanyWinLose;
+        return dataResult;
+    }
+
+    private bool CheckOnPairChannels(string choosenNumbers, Dictionary<int, List<PrizeMatchResultModel>> results, out int times)
+    {
+        times = 0;
+
+        var listNumbers = choosenNumbers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        if (listNumbers.Length != 2) return false;
+
+        var subsets = new List<List<int>>();
+        results.Keys.ToArray().GenerateCombination(2, subsets);
+        foreach (var set in subsets)
+        {
+            var ok = true;
+            foreach (var channelId in set)
+            {
+                if (!results.TryGetValue(channelId, out List<PrizeMatchResultModel> resultByChannel))
+                {
+                    ok = false;
+                    break;
+                }
+
+                var rs = resultByChannel.SelectMany(f => f.Results).Select(f => f.Result).ToList();
+                var endOfResults = new List<string>();
+                rs.ForEach(f =>
+                {
+                    if (!f.GetEndOfResult(out string val)) return;
+                    endOfResults.Add(val);
+                });
+                var groupEndOfResults = endOfResults.GroupBy(f => f).Select(f => new { f.Key, Count = f.Count() }).ToList();
+
+                var firstNumber = listNumbers[0].Trim();
+                var timesOfFirstNumber = groupEndOfResults.FirstOrDefault(f => f.Key == firstNumber);
+
+                var secondNumber = listNumbers[1].Trim();
+                var timesOfSecondNumber = groupEndOfResults.FirstOrDefault(f => f.Key == secondNumber);
+                if (timesOfFirstNumber != null && timesOfSecondNumber != null) continue;
+
+                ok = false;
+                break;
+            }
+            if (!ok) continue;
+            times++;
+        }
+        return times > 0;
+    }
+
+    public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results)
+    {
+        var dataResult = new CompletedTicketResultModel
+        {
+            TicketId = ticket.TicketId
+        };
+
+        var totalPlayerWinLose = 0m;
+        var totalAgentWinLose = 0m;
+        var totalAgentCommission = 0m;
+        var totalMasterWinLose = 0m;
+        var totalMasterCommission = 0m;
+        var totalSupermasterWinLose = 0m;
+        var totalSupermasterCommission = 0m;
+        var totalCompanyWinLose = 0m;
+        if (ticket.Children.Count == 0)
+        {
+            var choosenNumbers = string.IsNullOrEmpty(ticket.ChoosenNumbers) ? string.Empty : ticket.ChoosenNumbers.Trim();
+            if (string.IsNullOrEmpty(choosenNumbers)) return null;
+
+            var isWon = CheckOnPairChannels(choosenNumbers, results, out int times);
+            if (isWon)
+            {
+                //  Won
+                totalPlayerWinLose = times * ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
+            }
+            else
+            {
+                //  Lose
+                totalPlayerWinLose = -1 * ticket.PlayerPayout;
+            }
+
+            totalAgentWinLose = -1 * totalPlayerWinLose * ticket.AgentPt;
+            var agentComm = (ticket.PlayerOdds ?? 0m) - (ticket.AgentOdds ?? 0m);
+            if (agentComm < 0m) agentComm = 0m;
+            totalAgentCommission = agentComm * ticket.Stake;
+
+            totalMasterWinLose = -1 * (ticket.MasterPt - ticket.AgentPt) * totalPlayerWinLose;
+            var masterComm = (ticket.AgentOdds ?? 0m) - (ticket.MasterOdds ?? 0m);
+            if (masterComm < 0m) masterComm = 0m;
+            totalMasterCommission = masterComm * ticket.Stake;
+
+            totalSupermasterWinLose = -1 * (ticket.SupermasterPt - ticket.MasterPt) * totalPlayerWinLose;
+            var supermasterComm = (ticket.MasterOdds ?? 0m) - (ticket.SupermasterOdds ?? 0m);
+            if (supermasterComm < 0m) supermasterComm = 0m;
+            totalSupermasterCommission = supermasterComm * ticket.Stake;
+
+            totalCompanyWinLose = -1 * (1 - ticket.SupermasterPt) * totalPlayerWinLose;
+        }
+        else
+        {
+            foreach (var item in ticket.Children)
+            {
+                var choosenNumbers = string.IsNullOrEmpty(item.ChoosenNumbers) ? string.Empty : item.ChoosenNumbers.Trim();
+                if (string.IsNullOrEmpty(choosenNumbers)) continue;
+
+                var child = new CompletedChildrenTicketResultModel
+                {
+                    TicketId = item.TicketId
+                };
+                var isWon = CheckOnPairChannels(choosenNumbers, results, out int times);
+                var playerWinlose = 0m;
+                if (isWon)
+                {
+                    //  Won
+                    child.State = TicketState.Won;
+                    playerWinlose = times * item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
                 }
                 else
                 {

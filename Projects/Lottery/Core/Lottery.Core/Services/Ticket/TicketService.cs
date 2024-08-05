@@ -133,10 +133,6 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
         if (match.State != MatchState.Running.ToInt()) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.MatchClosedOrSuspended);
         if (!match.MatchResult.TryGetValue(betKind.RegionId, out List<ResultByRegionModel> matchResultDetail)) throw new NotFoundException();
 
-        //  Channel
-        var channelRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
-        var channel = channelRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickoffTime.DayOfWeek) ?? throw new NotFoundException();
-
         //  Checking Numbers was suspended
         var suspendedNumbers = await _numberService.GetSuspendedNumbersByMatchAndBetKind(match.MatchId, betKindId);
         if (suspendedNumbers.Count > 0 && numbers.Any(suspendedNumbers.Contains))
@@ -145,23 +141,36 @@ public class TicketService : LotteryBaseService<TicketService>, ITicketService
             throw new BadRequestException(ErrorCodeHelper.ProcessTicket.NumbersWasSuspended, normalizeSuspendedNumbers);
         }
 
-        //  MatchResult
-        var resultByChannel = matchResultDetail.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
-        if (!resultByChannel.EnabledProcessTicket) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.ChannelIsClosed);
+        var ticketMetadata = new TicketMetadataModel();
+        Models.Channel.ChannelModel channel = null;
+        var mixedChannels = betKindId.IsMixedChannels();
 
-        var ticketMetadata = new TicketMetadataModel
+        if (mixedChannels)
         {
-            IsLive = resultByChannel.IsLive
-        };
-        if (ticketMetadata.IsLive)
+            ticketMetadata.IsLive = matchResultDetail.Any(f => f.IsLive);
+            ticketMetadata.AllowProcessTicket = matchResultDetail.Count(f => f.EnabledProcessTicket) == matchResultDetail.Count;
+        }
+        else
         {
-            var results = resultByChannel.Prize.SelectMany(f => f.Results).OrderBy(f => f.Position).ToList();
-            (var currentPrize, var currentPosition) = _runningMatchService.GetCurrentPrize(betKind.RegionId, resultByChannel.Prize);
-            if (currentPrize == null || currentPosition == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PrizeOrPostionIsInvalid);
+            //  Channel
+            var channelRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
+            channel = channelRepository.FindByRegionAndDayOfWeek(betKind.RegionId, match.KickoffTime.DayOfWeek) ?? throw new NotFoundException();
 
-            ticketMetadata.Prize = currentPrize.Prize;
-            ticketMetadata.Position = currentPosition.Position;
-            ticketMetadata.AllowProcessTicket = currentPosition.AllowProcessTicket;
+            //  MatchResult
+            var resultByChannel = matchResultDetail.FirstOrDefault(f => f.ChannelId == channel.Id) ?? throw new NotFoundException();
+            if (!resultByChannel.EnabledProcessTicket) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.ChannelIsClosed);
+
+            ticketMetadata.IsLive = resultByChannel.IsLive;
+            if (resultByChannel.IsLive)
+            {
+                var results = resultByChannel.Prize.SelectMany(f => f.Results).OrderBy(f => f.Position).ToList();
+                (var currentPrize, var currentPosition) = _runningMatchService.GetCurrentPrize(betKind.RegionId, resultByChannel.Prize);
+                if (currentPrize == null || currentPosition == null) throw new BadRequestException(ErrorCodeHelper.ProcessTicket.PrizeOrPostionIsInvalid);
+
+                ticketMetadata.Prize = currentPrize.Prize;
+                ticketMetadata.Position = currentPosition.Position;
+                ticketMetadata.AllowProcessTicket = currentPosition.AllowProcessTicket;
+            }
         }
 
         return new ProcessValidationTicketModel

@@ -126,6 +126,11 @@ public abstract class AbstractBetKindProcessor : IBetKindProcessor
         return null;
     }
 
+    public virtual CompletedTicketResultModel Completed(CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results)
+    {
+        return null;
+    }
+
     public virtual bool EnableStats()
     {
         return false;

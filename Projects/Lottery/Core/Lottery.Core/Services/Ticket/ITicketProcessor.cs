@@ -12,6 +12,7 @@ public interface ITicketProcessor : ISingletonDependency
     int ValidMixed(ProcessMixedTicketModel model, TicketMetadataModel metadata);
     bool EnableStats(int betKindId);
     CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, List<PrizeMatchResultModel> result);
+    CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results);
     Dictionary<int, int> GetSubBetKindIds(int betKindId);
     decimal GetPayoutByNumber(BetKindModel betKind, int point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null);
     decimal? GetPlayerOdds(int betKindId, Dictionary<int, decimal> oddsValueByNumbers);

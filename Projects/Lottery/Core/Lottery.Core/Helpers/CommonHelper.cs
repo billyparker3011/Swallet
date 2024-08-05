@@ -33,6 +33,12 @@ namespace Lottery.Core.Helpers
                 || betKindId == BetKind.Southern_Mixed_LoXien.ToInt();
         }
 
+        public static bool IsMixedChannels(this int betKindId)
+        {
+            return betKindId == BetKind.Central_Mixed_LoXien.ToInt()
+                || betKindId == BetKind.Southern_Mixed_LoXien.ToInt();
+        }
+
         public static List<int> BuildBetKinds(this int betKindId)
         {
             //  Northern
