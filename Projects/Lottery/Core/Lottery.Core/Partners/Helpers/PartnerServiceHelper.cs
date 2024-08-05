@@ -17,7 +17,7 @@ namespace Lottery.Core.Partners.Helpers
             serviceCollection.AddScoped<ILotteryUow, LotteryUow>();
             serviceCollection.AddRedis(configurationRoot);
             serviceCollection.AddSingleton<IPartnerSubscribeService, PartnerSubscribeService>();
-            serviceCollection.AddTransient<IPartnerPublish, PartnerPublish>();
+            serviceCollection.AddTransient<IPartnerPublishService, PartnerPublishService>();
         }
     }
 }

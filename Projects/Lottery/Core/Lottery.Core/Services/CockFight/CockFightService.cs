@@ -1,7 +1,6 @@
 ﻿using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Lottery.Core.Contexts;
-using Lottery.Core.Dtos.CockFight;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
 using Lottery.Core.Partners.Models.Tests;
@@ -13,11 +12,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Lottery.Core.Services.Audit
+namespace Lottery.Core.Services.CockFight
 {
     public class CockFightService : LotteryBaseService<CockFightService>, ICockFightService
     {
-        private readonly IPartnerPublish _partnerPublish;
+        private readonly IPartnerPublishService _partnerPublishService;
+
         public CockFightService(
             ILogger<CockFightService> logger,
             IServiceProvider serviceProvider,
@@ -25,10 +25,10 @@ namespace Lottery.Core.Services.Audit
             IClockService clockService,
             ILotteryClientContext clientContext,
             ILotteryUow lotteryUow,
-            IPartnerPublish partnerPublish) 
+            IPartnerPublishService partnerPublishService)
             : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
-            _partnerPublish = partnerPublish;
+            _partnerPublishService = partnerPublishService;
         }
 
         public async Task CreateCockFightPlayer()
@@ -45,11 +45,11 @@ namespace Lottery.Core.Services.Audit
             // Create CockFight player
             bool isSuccessCreatedPlayer = true;
             var generatedMemberRefId = Guid.NewGuid().ToString();
-            if(cockFightPlayerMapping == null || !cockFightPlayerMapping.IsInitial)
+            if (cockFightPlayerMapping == null || !cockFightPlayerMapping.IsInitial)
             {
                 try
                 {
-                    await _partnerPublish.Publish(new Ga28CreateMemberModel
+                    await _partnerPublishService.Publish(new Ga28CreateMemberModel
                     {
                         Partner = PartnerType.GA28,
                         PlayerId = ClientContext.Player.PlayerId,
@@ -81,7 +81,7 @@ namespace Lottery.Core.Services.Audit
             var playerBetSetting = await cockFightPlayerBetSetting.FindBetSettingByPlayerId(ClientContext.Player.PlayerId);
             try
             {
-                await _partnerPublish.Publish(new Ga28SyncUpBetSettingModel
+                await _partnerPublishService.Publish(new Ga28SyncUpBetSettingModel
                 {
                     Partner = PartnerType.GA28,
                     MainLimitAmountPerFight = playerBetSetting?.MainLimitAmountPerFight,
@@ -113,7 +113,7 @@ namespace Lottery.Core.Services.Audit
 
             try
             {
-                await _partnerPublish.Publish(new Ga28LoginPlayerModel
+                await _partnerPublishService.Publish(new Ga28LoginPlayerModel
                 {
                     Partner = PartnerType.GA28,
                     AccountId = accountId,

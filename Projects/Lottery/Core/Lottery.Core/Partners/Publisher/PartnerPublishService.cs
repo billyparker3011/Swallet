@@ -1,16 +1,15 @@
-﻿using HnMicro.Core.Helpers;
-using HnMicro.Module.Caching.ByRedis.Services;
+﻿using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Helpers;
 using Lottery.Core.Partners.Models;
 using Newtonsoft.Json;
 
 namespace Lottery.Core.Partners.Publish
 {
-    public class PartnerPublish : IPartnerPublish
+    public class PartnerPublishService : IPartnerPublishService
     {
         private readonly IRedisCacheService _redisCacheService;
 
-        public PartnerPublish(IRedisCacheService redisCacheService)
+        public PartnerPublishService(IRedisCacheService redisCacheService)
         {
             _redisCacheService = redisCacheService;
         }
@@ -28,7 +27,6 @@ namespace Lottery.Core.Partners.Publish
                 default:
                     return;
             }
-            
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using HnMicro.Core.Scopes;
 
-namespace Lottery.Core.Services.Audit
+namespace Lottery.Core.Services.CockFight
 {
     public interface ICockFightService : IScopedDependency
     {
