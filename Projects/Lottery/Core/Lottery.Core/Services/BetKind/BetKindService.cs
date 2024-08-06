@@ -6,6 +6,7 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.BetKind;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers.Converters.BetKinds;
+using Lottery.Core.Helpers.Converters.Odds;
 using Lottery.Core.InMemory.Category;
 using Lottery.Core.InMemory.Region;
 using Lottery.Core.Models.BetKind;
@@ -163,9 +164,13 @@ namespace Lottery.Core.Services.BetKind
             });
             await LotteryUow.SaveChangesAsync();
 
-            //  We have some col doesn't change. We need to load again...
+            //  Reload betkind
             var publishedBetKinds = await betKindRepos.FindQueryBy(f => updatedBetKindIds.Contains(f.Id)).Select(f => f.ToBetKindModel()).ToListAsync();
             await _publishCommonService.PublishBetKind(publishedBetKinds);
+
+            //  Reload default Bet Setting of Company
+            var defaultBetSettings = await agentBetSettingRepos.FindDefaultOdds();
+            await _publishCommonService.PublishDefaultOdds(defaultBetSettings.Select(f => f.ToOddsModel()).ToList());
         }
     }
 }
