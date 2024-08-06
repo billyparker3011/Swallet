@@ -132,37 +132,78 @@ namespace Lottery.Core.Services.Agent
 
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
             var agentOddsRepository = LotteryUow.GetRepository<IAgentOddsRepository>();
+            var agentPositionTakingRepository = LotteryUow.GetRepository<IAgentPositionTakingRepository>();
 
-            var company = await agentRepository.FindQueryBy(f => f.RoleId == 0 && f.ParentId == 0L).FirstOrDefaultAsync();
-            if (company == null) throw new NotFoundException();
-
+            var company = await agentRepository.FindQueryBy(f => f.RoleId == 0 && f.ParentId == 0L).FirstOrDefaultAsync() ?? throw new NotFoundException();
             var agents = await agentRepository.FindQueryBy(f => f.ParentId == 0L && f.RoleId > 0).ToListAsync();
             var agentIds = agents.Select(f => f.AgentId).ToList();
 
             var companyOdds = await agentOddsRepository.FindQueryBy(f => f.AgentId == company.AgentId).ToListAsync();
+
             var agentOdds = await agentOddsRepository.FindQueryBy(f => agentIds.Contains(f.AgentId)).ToListAsync();
+            var agentPositionTakings = await agentPositionTakingRepository.FindQueryBy(f => f.AgentId == company.AgentId || agentIds.Contains(f.AgentId)).ToListAsync();
+
+            //  Position taking for company
+            foreach (var oddItem in companyOdds)
+            {
+                var companyPositionTaking = agentPositionTakings.FirstOrDefault(f => f.AgentId == oddItem.AgentId && f.BetKindId == oddItem.BetKindId);
+                if (companyPositionTaking == null)
+                {
+                    companyPositionTaking = new Data.Entities.AgentPositionTaking
+                    {
+                        AgentId = oddItem.AgentId,
+                        BetKindId = oddItem.BetKindId,
+                        PositionTaking = 0.85m,
+                        CreatedAt = oddItem.CreatedAt,
+                        CreatedBy = oddItem.CreatedBy
+                    };
+                    agentPositionTakingRepository.Add(companyPositionTaking);
+                }
+                else
+                {
+                    companyPositionTaking.PositionTaking = 0.85m;
+                    companyPositionTaking.UpdatedAt = oddItem.CreatedAt;
+                    companyPositionTaking.UpdatedBy = oddItem.CreatedBy;
+                    agentPositionTakingRepository.Update(companyPositionTaking);
+                }
+            }
 
             foreach (var agentId in agentIds)
             {
                 foreach (var oddItem in companyOdds)
                 {
                     var agentOdd = agentOdds.FirstOrDefault(f => f.AgentId == agentId && f.BetKindId == oddItem.BetKindId);
-                    if (agentOdd != null) continue;
-
-                    agentOdd = new Data.Entities.AgentOdd
+                    if (agentOdd == null)
                     {
-                        AgentId = agentId,
-                        BetKindId = oddItem.BetKindId,
-                        Buy = oddItem.Buy,
-                        MinBuy = oddItem.MinBuy,
-                        MaxBuy = oddItem.MaxBuy,
-                        MinBet = oddItem.MinBet,
-                        MaxBet = oddItem.MaxBet,
-                        MaxPerNumber = oddItem.MaxPerNumber,
-                        CreatedAt = oddItem.CreatedAt,
-                        CreatedBy = oddItem.CreatedBy
-                    };
-                    agentOddsRepository.Add(agentOdd);
+                        agentOdd = new Data.Entities.AgentOdd
+                        {
+                            AgentId = agentId,
+                            BetKindId = oddItem.BetKindId,
+                            Buy = oddItem.Buy,
+                            MinBuy = oddItem.MinBuy,
+                            MaxBuy = oddItem.MaxBuy,
+                            MinBet = oddItem.MinBet,
+                            MaxBet = oddItem.MaxBet,
+                            MaxPerNumber = oddItem.MaxPerNumber,
+                            CreatedAt = oddItem.CreatedAt,
+                            CreatedBy = oddItem.CreatedBy
+                        };
+                        agentOddsRepository.Add(agentOdd);
+                    }
+
+                    var agentPositionTaking = agentPositionTakings.FirstOrDefault(f => f.AgentId == agentId && f.BetKindId == oddItem.BetKindId);
+                    if (agentPositionTaking == null)
+                    {
+                        agentPositionTaking = new Data.Entities.AgentPositionTaking
+                        {
+                            AgentId = agentId,
+                            BetKindId = oddItem.BetKindId,
+                            PositionTaking = 0.85m,
+                            CreatedAt = oddItem.CreatedAt,
+                            CreatedBy = oddItem.CreatedBy
+                        };
+                        agentPositionTakingRepository.Add(agentPositionTaking);
+                    }
                 }
             }
 
