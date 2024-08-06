@@ -1,6 +1,6 @@
 using HnMicro.Framework.Controllers;
-using Lottery.Core.Services.CockFight;
 using HnMicro.Framework.Responses;
+using Lottery.Core.Services.CockFight;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lottery.Player.PlayerService.Controllers

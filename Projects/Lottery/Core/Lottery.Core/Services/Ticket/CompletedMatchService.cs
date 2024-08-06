@@ -7,6 +7,7 @@ using Lottery.Core.Options;
 using Lottery.Core.Repositories.MatchResult;
 using Lottery.Core.Repositories.Ticket;
 using Lottery.Core.UnitOfWorks;
+using Lottery.Data.Entities;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -132,75 +133,29 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
         {
             if (_refundRejectTicketStates.Contains(item.State)) continue;
 
-            var matchResult = _matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
-            if (matchResult == null || string.IsNullOrEmpty(matchResult.Results)) continue;
-            var result = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(matchResult.Results);
-
-            var matchInQueue = _matches.FirstOrDefault(f => f.MatchId == item.MatchId);
-            var isDraft = matchInQueue != null && matchInQueue.IsDraft;
-
             var children = tickets.Where(f => f.ParentId == item.TicketId).ToList();
-            var resultTicket = _processor.CompletedTicket(item.BetKindId, new CompletedTicketModel
+
+            CompletedTicketResultModel resultTicket = null;
+            if (item.ChannelId == -1)
             {
-                TicketId = item.TicketId,
-                ChoosenNumbers = item.ChoosenNumbers,
-                Stake = item.Stake,
+                var results = GetResultsByChannels(item.MatchId, item.RegionId, _matchResults);
+                resultTicket = GetTicketsByAllChannels(item, children, results);
+            }
+            else
+            {
+                var matchResult = _matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
+                if (matchResult == null || string.IsNullOrEmpty(matchResult.Results)) continue;
+                var results = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(matchResult.Results);
+                resultTicket = GetTicketsByChannel(item, children, results);
+            }
 
-                Prize = item.Prize,
-                Position = item.Position,
-
-                PlayerOdds = item.PlayerOdds,
-                PlayerPayout = item.PlayerPayout,
-
-                AgentOdds = item.AgentOdds,
-                AgentPayout = item.AgentPayout,
-                AgentPt = item.AgentPt,
-
-                MasterOdds = item.MasterOdds,
-                MasterPayout = item.MasterPayout,
-                MasterPt = item.MasterPt,
-
-                SupermasterOdds = item.SupermasterOdds,
-                SupermasterPayout = item.SupermasterPayout,
-                SupermasterPt = item.SupermasterPt,
-
-                CompanyOdds = item.CompanyOdds,
-                CompanyPayout = item.CompanyPayout,
-
-                RewardRate = item.RewardRate,
-                Children = children.Select(f => new CompletedChildrenTicketModel
-                {
-                    TicketId = f.TicketId,
-                    ParentId = f.ParentId,
-                    State = f.State,
-
-                    ChoosenNumbers = f.ChoosenNumbers,
-                    Stake = f.Stake,
-
-                    PlayerOdds = f.PlayerOdds,
-                    PlayerPayout = f.PlayerPayout,
-
-                    AgentOdds = f.AgentOdds,
-                    AgentPayout = f.AgentPayout,
-                    AgentPt = f.AgentPt,
-
-                    MasterOdds = f.MasterOdds,
-                    MasterPayout = f.MasterPayout,
-                    MasterPt = f.MasterPt,
-
-                    SupermasterOdds = f.SupermasterOdds,
-                    SupermasterPayout = f.SupermasterPayout,
-                    SupermasterPt = f.SupermasterPt,
-
-                    CompanyOdds = f.CompanyOdds,
-                    CompanyPayout = f.CompanyPayout
-                }).ToList()
-            }, result);
             if (resultTicket == null) continue;
 
             item.Times = resultTicket.Times;
             item.MixedTimes = resultTicket.MixedTimes;
 
+            var matchInQueue = _matches.FirstOrDefault(f => f.MatchId == item.MatchId);
+            var isDraft = matchInQueue != null && matchInQueue.IsDraft;
             if (isDraft)
             {
                 item.DraftPlayerWinLoss = resultTicket.PlayerWinLoss;
@@ -290,6 +245,145 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             i = 0;
         }
         lotteryUow.SaveChanges();
+    }
+
+    private CompletedTicketResultModel GetTicketsByAllChannels(Data.Entities.Ticket item, List<Data.Entities.Ticket> children, Dictionary<int, List<PrizeMatchResultModel>> results)
+    {
+        return _processor.CompletedTicket(item.BetKindId, new CompletedTicketModel
+        {
+            TicketId = item.TicketId,
+            ChoosenNumbers = item.ChoosenNumbers,
+            Stake = item.Stake,
+
+            Prize = item.Prize,
+            Position = item.Position,
+
+            PlayerOdds = item.PlayerOdds,
+            PlayerPayout = item.PlayerPayout,
+
+            AgentOdds = item.AgentOdds,
+            AgentPayout = item.AgentPayout,
+            AgentPt = item.AgentPt,
+
+            MasterOdds = item.MasterOdds,
+            MasterPayout = item.MasterPayout,
+            MasterPt = item.MasterPt,
+
+            SupermasterOdds = item.SupermasterOdds,
+            SupermasterPayout = item.SupermasterPayout,
+            SupermasterPt = item.SupermasterPt,
+
+            CompanyOdds = item.CompanyOdds,
+            CompanyPayout = item.CompanyPayout,
+
+            RewardRate = item.RewardRate,
+            Children = children.Select(f => new CompletedChildrenTicketModel
+            {
+                TicketId = f.TicketId,
+                ParentId = f.ParentId,
+                State = f.State,
+
+                ChoosenNumbers = f.ChoosenNumbers,
+                Stake = f.Stake,
+
+                PlayerOdds = f.PlayerOdds,
+                PlayerPayout = f.PlayerPayout,
+
+                AgentOdds = f.AgentOdds,
+                AgentPayout = f.AgentPayout,
+                AgentPt = f.AgentPt,
+
+                MasterOdds = f.MasterOdds,
+                MasterPayout = f.MasterPayout,
+                MasterPt = f.MasterPt,
+
+                SupermasterOdds = f.SupermasterOdds,
+                SupermasterPayout = f.SupermasterPayout,
+                SupermasterPt = f.SupermasterPt,
+
+                CompanyOdds = f.CompanyOdds,
+                CompanyPayout = f.CompanyPayout
+            }).ToList()
+        }, results);
+    }
+
+    private Dictionary<int, List<PrizeMatchResultModel>> GetResultsByChannels(long matchId, int regionId, List<MatchResult> matchResults)
+    {
+        var data = new Dictionary<int, List<PrizeMatchResultModel>>();
+        var matchResultByRegion = matchResults.Where(f => f.MatchId == matchId && f.RegionId == regionId).ToList();
+        foreach (var itemMatchResult in matchResultByRegion)
+        {
+            if (string.IsNullOrEmpty(itemMatchResult.Results)) continue;
+            var results = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(itemMatchResult.Results);
+
+            if (!data.TryGetValue(itemMatchResult.ChannelId, out List<PrizeMatchResultModel> vals))
+            {
+                vals = new List<PrizeMatchResultModel>();
+                data[itemMatchResult.ChannelId] = vals;
+            }
+            vals.AddRange(results);
+        }
+        return data;
+    }
+
+    private CompletedTicketResultModel GetTicketsByChannel(Data.Entities.Ticket item, List<Data.Entities.Ticket> children, List<PrizeMatchResultModel> results)
+    {
+        return _processor.CompletedTicket(item.BetKindId, new CompletedTicketModel
+        {
+            TicketId = item.TicketId,
+            ChoosenNumbers = item.ChoosenNumbers,
+            Stake = item.Stake,
+
+            Prize = item.Prize,
+            Position = item.Position,
+
+            PlayerOdds = item.PlayerOdds,
+            PlayerPayout = item.PlayerPayout,
+
+            AgentOdds = item.AgentOdds,
+            AgentPayout = item.AgentPayout,
+            AgentPt = item.AgentPt,
+
+            MasterOdds = item.MasterOdds,
+            MasterPayout = item.MasterPayout,
+            MasterPt = item.MasterPt,
+
+            SupermasterOdds = item.SupermasterOdds,
+            SupermasterPayout = item.SupermasterPayout,
+            SupermasterPt = item.SupermasterPt,
+
+            CompanyOdds = item.CompanyOdds,
+            CompanyPayout = item.CompanyPayout,
+
+            RewardRate = item.RewardRate,
+            Children = children.Select(f => new CompletedChildrenTicketModel
+            {
+                TicketId = f.TicketId,
+                ParentId = f.ParentId,
+                State = f.State,
+
+                ChoosenNumbers = f.ChoosenNumbers,
+                Stake = f.Stake,
+
+                PlayerOdds = f.PlayerOdds,
+                PlayerPayout = f.PlayerPayout,
+
+                AgentOdds = f.AgentOdds,
+                AgentPayout = f.AgentPayout,
+                AgentPt = f.AgentPt,
+
+                MasterOdds = f.MasterOdds,
+                MasterPayout = f.MasterPayout,
+                MasterPt = f.MasterPt,
+
+                SupermasterOdds = f.SupermasterOdds,
+                SupermasterPayout = f.SupermasterPayout,
+                SupermasterPt = f.SupermasterPt,
+
+                CompanyOdds = f.CompanyOdds,
+                CompanyPayout = f.CompanyPayout
+            }).ToList()
+        }, results);
     }
 
     public void Enqueue(CompletedMatchInQueueModel model)

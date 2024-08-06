@@ -29,7 +29,7 @@ namespace Lottery.Core.Services.CockFight
             ILotteryClientContext clientContext,
             ILotteryUow lotteryUow,
             IPartnerPublishService partnerPublishService,
-            IRedisCacheService redisCacheService) 
+            IRedisCacheService redisCacheService)
             : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _partnerPublishService = partnerPublishService;
@@ -130,7 +130,7 @@ namespace Lottery.Core.Services.CockFight
                 {
                     MemberRefId = playerInfo.Member_ref_id,
                     AccountId = playerInfo.Account_id,
-                    DrawLimitAmountPerFight  = playerInfo.Draw_limit_amount_per_fight,
+                    DrawLimitAmountPerFight = playerInfo.Draw_limit_amount_per_fight,
                     Enabled = playerInfo.Enabled,
                     Freeze = playerInfo.Freeze,
                     LimitNumbTicketPerFight = playerInfo.Limit_num_ticket_per_fight,
