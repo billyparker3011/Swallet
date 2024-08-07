@@ -2,6 +2,7 @@
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Partners;
 using Lottery.Core.Partners.Models;
+using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Periodic;
 using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.UnitOfWorks;

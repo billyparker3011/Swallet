@@ -6,6 +6,7 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.CockFight;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
+using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Publish;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;

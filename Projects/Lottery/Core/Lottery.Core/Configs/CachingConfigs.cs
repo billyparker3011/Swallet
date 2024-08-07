@@ -70,9 +70,5 @@
         //  Begin: Suspend Numbers
         public const string SuspendedNumbersByMatchBetKindKey = "suspended-numbers.{0}.{1}"; //  <MatchId>.<BetKindId>
         //  End: Suspend Numbers
-
-        // Begin: Login Player Info
-        public const string LoginCockFightPlayerInfoByPlayerId = "cockfight-login-player.{0}"; // <PlayerId>
-        // End: Login Player Info
     }
 }
