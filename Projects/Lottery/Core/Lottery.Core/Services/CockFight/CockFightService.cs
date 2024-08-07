@@ -6,7 +6,6 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.CockFight;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
-using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Publish;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;
@@ -21,6 +20,7 @@ namespace Lottery.Core.Services.CockFight
     {
         private readonly IPartnerPublishService _partnerPublishService;
         private readonly IRedisCacheService _redisCacheService;
+
         public CockFightService(
             ILogger<CockFightService> logger,
             IServiceProvider serviceProvider,

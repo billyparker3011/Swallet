@@ -38,6 +38,7 @@ namespace Lottery.Data
         public virtual DbSet<Setting> Settings { get; set; }
 
         public virtual DbSet<BookieSetting> BookieSettings { get; set; }
+
         #region Cock Fight Partner
         public virtual DbSet<CockFightAgentBetSetting> CockFightAgentBetSettings { get; set; }
         public virtual DbSet<CockFightAgentPostionTaking> CockFightAgentPostionTakings { get; set; }

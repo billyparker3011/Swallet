@@ -14,11 +14,11 @@ namespace Lottery.Data.Entities
         public long AgentId { get; set; }
         [Required]
         public long BetKindId { get; set; }
-        [Required, Precision(18, 3)] 
+        [Required, Precision(18, 3)]
         public decimal MainLimitAmountPerFight { get; set; }
-	    [Required, Precision(18, 3)]
+        [Required, Precision(18, 3)]
         public decimal DrawLimitAmountPerFight { get; set; }
-	    [Required, Precision(18, 3)]
+        [Required, Precision(18, 3)]
         public decimal LimitNumTicketPerFight { get; set; }
         [ForeignKey(nameof(AgentId))]
         public virtual Agent Agent { get; set; }
