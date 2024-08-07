@@ -71,5 +71,7 @@ namespace Lottery.Data.Entities
         public virtual ICollection<AgentOdd> AgentOdds { get; set; }
 
         public virtual ICollection<AgentPositionTaking> AgentPositionTakings { get; set; }
+        public virtual ICollection<CockFightAgentBetSetting> AgentCockFightBetSettings { get; set; }
+        public virtual ICollection<CockFightAgentPostionTaking> AgentCockFightPostionTakings { get; set; }
     }
 }

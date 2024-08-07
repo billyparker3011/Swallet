@@ -29,6 +29,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Scripts\CreateCockFightOddForCompany.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\MigrationAllMixed.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

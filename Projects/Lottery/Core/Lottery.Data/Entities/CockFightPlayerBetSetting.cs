@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -13,11 +14,16 @@ namespace Lottery.Data.Entities
         public long PlayerId { get; set; }
         [Required]
         public long BetKindId { get; set; }
-        [Required]
+        [Required, Precision(18, 3)]
         public decimal MainLimitAmountPerFight { get; set; }
-        [Required]
+        [Required, Precision(18, 3)]
         public decimal DrawLimitAmountPerFight { get; set; }
-        [Required]
+        [Required, Precision(18, 3)]
         public decimal LimitNumTicketPerFight { get; set; }
+        [ForeignKey(nameof(PlayerId))]
+        public virtual Player Player { get; set; }
+
+        [ForeignKey(nameof(BetKindId))]
+        public virtual CockFightBetKind CockFightBetKind { get; set; }
     }
 }

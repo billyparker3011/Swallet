@@ -118,7 +118,7 @@ namespace Lottery.Core.Services.CockFight
             if (loginInfoCache == null || loginInfoCache.Count == 0) return null;
 
             if (!loginInfoCache.TryGetValue(nameof(Ga28LoginPlayerDataReturnModel.Token), out string token)) return null;
-            if (!loginInfoCache.TryGetValue(nameof(Ga28LoginPlayerDataReturnModel.Game_client_url), out string gameUrl)) return null;
+            if (!loginInfoCache.TryGetValue(nameof(Ga28LoginPlayerDataReturnModel.GameClientUrl), out string gameUrl)) return null;
             if (!loginInfoCache.TryGetValue(nameof(Ga28LoginPlayerDataReturnModel.Member), out string memberInfo)) return null;
 
             var playerInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<MemberInfo>(memberInfo);
@@ -128,14 +128,14 @@ namespace Lottery.Core.Services.CockFight
                 GameClientUrl = gameUrl,
                 PlayerInfo = playerInfo != null ? new PlayerInfoDto
                 {
-                    MemberRefId = playerInfo.Member_ref_id,
-                    AccountId = playerInfo.Account_id,
-                    DrawLimitAmountPerFight = playerInfo.Draw_limit_amount_per_fight,
+                    MemberRefId = playerInfo.MemberRefId,
+                    AccountId = playerInfo.AccountId,
+                    DrawLimitAmountPerFight  = playerInfo.DrawLimitAmountPerFight,
                     Enabled = playerInfo.Enabled,
                     Freeze = playerInfo.Freeze,
-                    LimitNumbTicketPerFight = playerInfo.Limit_num_ticket_per_fight,
-                    MainLimitAmountPerFight = playerInfo.Main_limit_amount_per_fight,
-                    DisplayName = playerInfo.Display_name
+                    LimitNumbTicketPerFight = playerInfo.LimitNumTicketPerFight,
+                    MainLimitAmountPerFight = playerInfo.MainLimitAmountPerFight,
+                    DisplayName = playerInfo.DisplayName
                 } : null
             };
         }

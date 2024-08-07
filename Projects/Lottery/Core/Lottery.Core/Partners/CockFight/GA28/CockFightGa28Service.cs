@@ -13,8 +13,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text;
-using System;
-using System.Text.Json;
 using Lottery.Core.Repositories.BookiesSetting;
 using HnMicro.Framework.Exceptions;
 using Lottery.Core.Partners.Models.Tests;
@@ -41,7 +39,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
             if(cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
-            var jsonContent = System.Text.Json.JsonSerializer.Serialize(data);
+            var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(data);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", cockFightRequestSetting.SettingValue.AuthValue);
@@ -66,7 +64,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", cockFightRequestSetting.SettingValue.AuthValue);
             var url = $"{cockFightRequestSetting.SettingValue.ApiAddress}/api/v1/members/{ga28BetSettingData.MemberRefId.ToLower()}";
             // Update limit amount per fight setting
-            var limitAmountPerFightSetting = System.Text.Json.JsonSerializer.Serialize(new
+            var limitAmountPerFightSetting = Newtonsoft.Json.JsonConvert.SerializeObject(new
             {
                 main_limit_amount_per_fight = ga28BetSettingData.MainLimitAmountPerFight,
                 draw_limit_amount_per_fight = ga28BetSettingData.DrawLimitAmountPerFight
@@ -76,7 +74,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             await _httpClient.PatchAsync(url, limitAmountContent);
 
             // Update limit number ticket per fight setting
-            var limitNumbTicketPerFightSetting = System.Text.Json.JsonSerializer.Serialize(new
+            var limitNumbTicketPerFightSetting = Newtonsoft.Json.JsonConvert.SerializeObject(new
             {
                 limit_num_ticket_per_fight = ga28BetSettingData.LimitNumTicketPerFight
             });
@@ -95,7 +93,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
             if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
 
-            var jsonContent = System.Text.Json.JsonSerializer.Serialize(data);
+            var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(data);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", cockFightRequestSetting.SettingValue.AuthValue);
@@ -106,20 +104,16 @@ namespace Lottery.Core.Partners.CockFight.GA28
             if (response is null) return;
 
             var stringData = await response.Content.ReadAsStringAsync();
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
-            var objectData = System.Text.Json.JsonSerializer.Deserialize<Ga28LoginPlayerDataReturnModel>(stringData, options);
+            var objectData = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28LoginPlayerDataReturnModel>(stringData);
             if (objectData is null || objectData.Member is null) return;
 
-            var playerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.MemberRefId == objectData.Member.Member_ref_id && x.IsInitial).FirstOrDefaultAsync();
+            var playerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.MemberRefId == objectData.Member.MemberRefId && x.IsInitial).FirstOrDefaultAsync();
             if (playerMapping is null) return;
             // Update redis cache
             var entryDatas = new Dictionary<string, string>
             {
                 { nameof(Ga28LoginPlayerDataReturnModel.Token), objectData.Token },
-                { nameof(Ga28LoginPlayerDataReturnModel.Game_client_url), objectData.Game_client_url },
+                { nameof(Ga28LoginPlayerDataReturnModel.GameClientUrl), objectData.GameClientUrl },
                 { nameof(Ga28LoginPlayerDataReturnModel.Member), Newtonsoft.Json.JsonConvert.SerializeObject(objectData.Member ?? new MemberInfo())}
             };
             var loginPlayerInfoKey = playerMapping.PlayerId.GetLoginPlayerInfoKeyByTokenMemberRefIdAccountId();
