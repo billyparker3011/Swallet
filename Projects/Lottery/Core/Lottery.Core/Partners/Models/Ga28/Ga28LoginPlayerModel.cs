@@ -1,6 +1,6 @@
 ﻿using Lottery.Core.Enums.Partner;
 
-namespace Lottery.Core.Partners.Models.Tests
+namespace Lottery.Core.Partners.Models.Ga28
 {
     public class Ga28LoginPlayerModel : IBaseMessageModel
     {

@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Lottery.Core.Partners.Models.Tests
+namespace Lottery.Core.Partners.Models.Ga28
 {
     public class Ga28LoginPlayerDataReturnModel
     {

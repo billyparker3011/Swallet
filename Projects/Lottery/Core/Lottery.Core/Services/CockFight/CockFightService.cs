@@ -6,7 +6,7 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.CockFight;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
-using Lottery.Core.Partners.Models.Tests;
+using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Publish;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;
@@ -112,31 +112,12 @@ namespace Lottery.Core.Services.CockFight
 
             if (cockFightPlayerMapping == null || !cockFightPlayerMapping.IsInitial) return null;
 
-            var targetCacheKey = string.Format(CachingConfigs.LoginCockFightPlayerInfoByPlayerId, ClientContext.Player.PlayerId);
-            var loginInfoCache = await _redisCacheService.HashGetAsync(targetCacheKey, CachingConfigs.RedisConnectionForApp);
-
-            if (loginInfoCache == null || loginInfoCache.Count == 0) return null;
-
-            if (!loginInfoCache.TryGetValue(nameof(Ga28LoginPlayerDataReturnModel.Token), out string token)) return null;
-            if (!loginInfoCache.TryGetValue(nameof(Ga28LoginPlayerDataReturnModel.GameClientUrl), out string gameUrl)) return null;
-            if (!loginInfoCache.TryGetValue(nameof(Ga28LoginPlayerDataReturnModel.Member), out string memberInfo)) return null;
-
-            var playerInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<MemberInfo>(memberInfo);
+            var clientUrlKey = ClientContext.Player.PlayerId.GetGa28ClientUrlByPlayerId();
+            var clientUrlHash = await _redisCacheService.HashGetFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+            if (!clientUrlHash.TryGetValue(clientUrlKey.SubKey, out string gameUrl)) return null;
             return new LoginPlayerInformationDto
             {
-                Token = token,
-                GameClientUrl = gameUrl,
-                PlayerInfo = playerInfo != null ? new PlayerInfoDto
-                {
-                    MemberRefId = playerInfo.MemberRefId,
-                    AccountId = playerInfo.AccountId,
-                    DrawLimitAmountPerFight  = playerInfo.DrawLimitAmountPerFight,
-                    Enabled = playerInfo.Enabled,
-                    Freeze = playerInfo.Freeze,
-                    LimitNumbTicketPerFight = playerInfo.LimitNumTicketPerFight,
-                    MainLimitAmountPerFight = playerInfo.MainLimitAmountPerFight,
-                    DisplayName = playerInfo.DisplayName
-                } : null
+                GameClientUrl = gameUrl
             };
         }
 

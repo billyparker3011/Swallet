@@ -4,7 +4,7 @@ using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Configs;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
-using Lottery.Core.Partners.Models.Tests;
+using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.UnitOfWorks;
@@ -13,10 +13,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Text;
-using Lottery.Core.Repositories.BookiesSetting;
-using HnMicro.Framework.Exceptions;
-using Lottery.Core.Partners.Models.Tests;
-using System.Net.Http.Json;
 
 namespace Lottery.Core.Partners.CockFight.GA28
 {
@@ -38,7 +34,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
-            if(cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
+            if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
             var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(data);
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
@@ -58,7 +54,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
             if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
-            
+
             var ga28BetSettingData = data as Ga28SyncUpBetSettingModel;
 
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", cockFightRequestSetting.SettingValue.AuthValue);
@@ -70,7 +66,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
                 draw_limit_amount_per_fight = ga28BetSettingData.DrawLimitAmountPerFight
             });
             var limitAmountContent = new StringContent(limitAmountPerFightSetting, Encoding.UTF8, "application/json");
-            
+
             await _httpClient.PatchAsync(url, limitAmountContent);
 
             // Update limit number ticket per fight setting
@@ -109,15 +105,28 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             var playerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.MemberRefId == objectData.Member.MemberRefId && x.IsInitial).FirstOrDefaultAsync();
             if (playerMapping is null) return;
-            // Update redis cache
-            var entryDatas = new Dictionary<string, string>
+
+            // Update cache
+            await UpdateCacheClientUrl(playerMapping.PlayerId, objectData.GameClientUrl);
+            await UpdateCacheToken(playerMapping.PlayerId, objectData.Token);
+        }
+
+        private async Task UpdateCacheClientUrl(long playerId, string clientUrl)
+        {
+            var clientUrlKey = playerId.GetGa28ClientUrlByPlayerId();
+            await _redisCacheService.HashSetFieldsAsync(clientUrlKey.MainKey, new Dictionary<string, string>
             {
-                { nameof(Ga28LoginPlayerDataReturnModel.Token), objectData.Token },
-                { nameof(Ga28LoginPlayerDataReturnModel.GameClientUrl), objectData.GameClientUrl },
-                { nameof(Ga28LoginPlayerDataReturnModel.Member), Newtonsoft.Json.JsonConvert.SerializeObject(objectData.Member ?? new MemberInfo())}
-            };
-            var loginPlayerInfoKey = playerMapping.PlayerId.GetLoginPlayerInfoKeyByTokenMemberRefIdAccountId();
-            await _redisCacheService.SetAddAsync(loginPlayerInfoKey.MainKey, entryDatas, loginPlayerInfoKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+                { clientUrlKey.SubKey, clientUrl }
+            }, clientUrlKey.TimeSpan == TimeSpan.Zero ? null : clientUrlKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+        }
+
+        private async Task UpdateCacheToken(long playerId, string token)
+        {
+            var tokenKey = playerId.GetGa28TokenByPlayerId();
+            await _redisCacheService.HashSetFieldsAsync(tokenKey.MainKey, new Dictionary<string, string>
+            {
+                { tokenKey.SubKey, token }
+            }, tokenKey.TimeSpan == TimeSpan.Zero ? null : tokenKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
         }
     }
 }

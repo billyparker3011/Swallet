@@ -175,14 +175,5 @@ namespace Lottery.Core.Helpers
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }
-
-        public static KeyOfRedisHash GetLoginPlayerInfoKeyByTokenMemberRefIdAccountId(this long playerId)
-        {
-            return new KeyOfRedisHash
-            {
-                MainKey = string.Format(CachingConfigs.LoginCockFightPlayerInfoByPlayerId, playerId),
-                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
-            };
-        }
     }
 }

@@ -1,19 +1,13 @@
-﻿using HnMicro.Framework.Exceptions;
-using HnMicro.Framework.Options;
+﻿using HnMicro.Framework.Options;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Partners;
-using Lottery.Core.Partners.CockFight.GA28;
 using Lottery.Core.Partners.Models;
-using Lottery.Core.Partners.Models.Tests;
+using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Periodic;
 using Lottery.Core.Repositories.BetKind;
-using Lottery.Core.Repositories.BookiesSetting;
-using Lottery.Core.Services.Audit;
 using Lottery.Core.UnitOfWorks;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
 
 namespace CockFight.Tools.Ga28.Services.Periodic
 {
