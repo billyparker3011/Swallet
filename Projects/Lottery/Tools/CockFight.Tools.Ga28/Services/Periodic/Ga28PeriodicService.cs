@@ -35,34 +35,19 @@ namespace CockFight.Tools.Ga28.Services.Periodic
                 if (typeOfItem == typeof(Ga28CreateMemberModel))
                 {
                     var derivedItem = item as Ga28CreateMemberModel;
-                    await ga28Service.CreatePlayer(new
-                    {
-                        member_ref_id = derivedItem.MemberRefId,
-                        account_id = derivedItem.AccountId
-                    });
+                    await ga28Service.CreatePlayer(derivedItem);
                     Logger.LogInformation($"Partner: {item.Partner}. PlayerId: {derivedItem.PlayerId}.");
                 }
                 else if (typeOfItem == typeof(Ga28SyncUpBetSettingModel))
                 {
                     var derivedItem = item as Ga28SyncUpBetSettingModel;
-                    await ga28Service.UpdateBetSetting(new
-                    {
-                        derivedItem.MemberRefId,
-                        derivedItem.AccountId,
-                        derivedItem.MainLimitAmountPerFight,
-                        derivedItem.DrawLimitAmountPerFight,
-                        derivedItem.LimitNumTicketPerFight
-                    });
+                    await ga28Service.UpdateBetSetting(derivedItem);
                     Logger.LogInformation($"Partner: {item.Partner}. Update bet setting member: {derivedItem.MemberRefId}.");
                 }
                 else if (typeOfItem == typeof(Ga28LoginPlayerModel))
                 {
                     var derivedItem = item as Ga28LoginPlayerModel;
-                    await ga28Service.GenerateUrl(new
-                    {
-                        member_ref_id = derivedItem.MemberRefId,
-                        account_id = derivedItem.AccountId
-                    });
+                    await ga28Service.GenerateUrl(derivedItem);
                     Logger.LogInformation($"Partner: {item.Partner}. Login member: {derivedItem.MemberRefId}.");
                 }
             }

@@ -8,11 +8,12 @@ namespace Lottery.Core.Partners.LiveCasino
 {
     public class LiveCasinoAlibetService : BasePartnerType
     {
-        public override PartnerType PartnerType => PartnerType.Alibet;
-
-        public LiveCasinoAlibetService(ILogger<LiveCasinoAlibetService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, lotteryUow)
+        public LiveCasinoAlibetService(ILogger<BasePartnerType> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
         {
         }
+
+        public override PartnerType PartnerType { get; set; } = PartnerType.Alibet;
+
         public override Task<HttpResponseMessage> CreatePlayer(object data)
         {
             throw new NotImplementedException();

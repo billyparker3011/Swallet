@@ -1,5 +1,4 @@
 ﻿using HnMicro.Framework.Services;
-using Lottery.Core.Contexts;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.Extensions.Configuration;
@@ -9,11 +8,12 @@ namespace Lottery.Core.Partners.Casino
 {
     public class CasinoAlibetService : BasePartnerType
     {
-        public override PartnerType PartnerType => PartnerType.Alibet;
-
-        public CasinoAlibetService(ILogger<CasinoAlibetService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, lotteryUow)
+        public CasinoAlibetService(ILogger<BasePartnerType> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
         {
         }
+
+        public override PartnerType PartnerType { get; set; } = PartnerType.Alibet;
+
         public override Task<HttpResponseMessage> CreatePlayer(object data)
         {
             throw new NotImplementedException();

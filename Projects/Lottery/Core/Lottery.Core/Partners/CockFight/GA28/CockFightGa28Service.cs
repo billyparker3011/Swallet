@@ -18,32 +18,42 @@ namespace Lottery.Core.Partners.CockFight.GA28
 {
     public class CockFightGa28Service : BasePartnerType
     {
-        public override PartnerType PartnerType => PartnerType.GA28;
-        private readonly HttpClient _httpClient;
         private readonly IRedisCacheService _redisCacheService;
 
-        public CockFightGa28Service(ILogger<CockFightGa28Service> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryUow lotteryUow, HttpClient httpClient, IRedisCacheService redisCacheService) : base(logger, serviceProvider, configuration, clockService, lotteryUow)
+        public CockFightGa28Service(ILogger<BasePartnerType> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
         {
-            _httpClient = httpClient;
-            _redisCacheService = redisCacheService;
         }
 
-        public override async Task<HttpResponseMessage> CreatePlayer(object data)
+        public override PartnerType PartnerType { get; set; } = PartnerType.GA28;
+
+        public override async Task CreatePlayer(object data)
         {
-            if (data is null) return null;
+            if (data is null) return;
             var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
             if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
-            var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+
+            var ga28CreatePlayerModel = data as Ga28CreateMemberModel;
+
+            var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                member_ref_id = ga28CreatePlayerModel.MemberRefId,
+                account_id = ga28CreatePlayerModel.AccountId
+            });
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", cockFightRequestSetting.SettingValue.AuthValue);
+            var httpClient = CreateClient(cockFightRequestSetting.SettingValue.AuthValue);
 
             var url = $"{cockFightRequestSetting.SettingValue.ApiAddress}/api/v1/members/";
-            var response = await _httpClient.PostAsync(url, content);
-            return response;
+            await httpClient.PostAsync(url, content);
+        }
 
+        private HttpClient CreateClient(string token)
+        {
+            var httpClient = HttpClientFactory.CreateClient();
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", $"Token {token}");
+            return httpClient;
         }
 
         public override async Task UpdateBetSetting(object data)
@@ -55,10 +65,12 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
             if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
 
+            var httpClient = CreateClient(cockFightRequestSetting.SettingValue.AuthValue);
+
             var ga28BetSettingData = data as Ga28SyncUpBetSettingModel;
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", cockFightRequestSetting.SettingValue.AuthValue);
             var url = $"{cockFightRequestSetting.SettingValue.ApiAddress}/api/v1/members/{ga28BetSettingData.MemberRefId.ToLower()}";
+
             // Update limit amount per fight setting
             var limitAmountPerFightSetting = Newtonsoft.Json.JsonConvert.SerializeObject(new
             {
@@ -67,7 +79,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             });
             var limitAmountContent = new StringContent(limitAmountPerFightSetting, Encoding.UTF8, "application/json");
 
-            await _httpClient.PatchAsync(url, limitAmountContent);
+            await httpClient.PatchAsync(url, limitAmountContent);
 
             // Update limit number ticket per fight setting
             var limitNumbTicketPerFightSetting = Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -76,7 +88,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             });
             var limitNumbTicketContent = new StringContent(limitNumbTicketPerFightSetting, Encoding.UTF8, "application/json");
 
-            await _httpClient.PatchAsync(url, limitNumbTicketContent);
+            await httpClient.PatchAsync(url, limitNumbTicketContent);
         }
 
         public override async Task GenerateUrl(object data)
@@ -89,14 +101,19 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
             if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
 
-            var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+            var ga28GenerateUrlModel = data as Ga28LoginPlayerModel;
+
+            var httpClient = CreateClient(cockFightRequestSetting.SettingValue.AuthValue);
+
+            var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            {
+                member_ref_id = ga28GenerateUrlModel.MemberRefId,
+                account_id = ga28GenerateUrlModel.AccountId
+            });
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", cockFightRequestSetting.SettingValue.AuthValue);
-
             var url = $"{cockFightRequestSetting.SettingValue.ApiAddress}/api/v1/members/login";
-            var response = await _httpClient.PostAsync(url, content);
-
+            var response = await httpClient.PostAsync(url, content);
             if (response is null) return;
 
             var stringData = await response.Content.ReadAsStringAsync();

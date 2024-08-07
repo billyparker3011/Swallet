@@ -7,9 +7,12 @@ namespace Lottery.Core.Partners
 {
     public class PartnerBaseService<T> : HnMicroBaseService<T>
     {
+        protected IHttpClientFactory HttpClientFactory;
         protected ILotteryUow LotteryUow;
-        public PartnerBaseService(ILogger<T> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService)
+
+        public PartnerBaseService(ILogger<T> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService)
         {
+            HttpClientFactory = httpClientFactory;
             LotteryUow = lotteryUow;
         }
     }
