@@ -29,7 +29,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Scripts\CreateCockFightPTForCompany.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\CreateCockFightOddForCompany.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\MigrateAgentCockFightPositionTakings.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Scripts\MigrationAllMixed.sql">
