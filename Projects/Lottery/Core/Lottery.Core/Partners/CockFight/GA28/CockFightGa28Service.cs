@@ -1,4 +1,5 @@
-﻿using HnMicro.Framework.Exceptions;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Configs;
@@ -117,6 +118,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             if (response is null) return;
 
             var stringData = await response.Content.ReadAsStringAsync();
+            if (!stringData.IsValidJson()) return;
             var objectData = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28LoginPlayerDataReturnModel>(stringData);
             if (objectData is null || objectData.Member is null) return;
 

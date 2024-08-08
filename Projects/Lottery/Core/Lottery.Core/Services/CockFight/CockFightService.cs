@@ -66,7 +66,7 @@ namespace Lottery.Core.Services.CockFight
                 catch (Exception ex)
                 {
                     isSuccessCreatedPlayer = false;
-                    Logger.LogError($"Create cock fight player with id = {ClientContext.Player.PlayerId} failed.");
+                    Logger.LogError($"Create cock fight player with id = {ClientContext.Player.PlayerId} failed. Detail : {ex}");
                 }
 
                 if (!isSuccessCreatedPlayer) return;
@@ -99,7 +99,7 @@ namespace Lottery.Core.Services.CockFight
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Update bet setting cock fight player with id = {ClientContext.Player.PlayerId} failed.");
+                Logger.LogError($"Update bet setting cock fight player with id = {ClientContext.Player.PlayerId} failed. Detail : {ex}");
             }
 
             await LotteryUow.SaveChangesAsync();
@@ -145,7 +145,7 @@ namespace Lottery.Core.Services.CockFight
             }
             catch (Exception ex)
             {
-                Logger.LogError($"Login cock fight player with id = {ClientContext.Player.PlayerId} failed.");
+                Logger.LogError($"Login cock fight player with id = {ClientContext.Player.PlayerId} failed. Detail : {ex}");
             }
         }
     }

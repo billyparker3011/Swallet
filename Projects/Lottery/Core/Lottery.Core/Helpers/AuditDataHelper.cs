@@ -1,4 +1,6 @@
-﻿namespace Lottery.Core.Helpers
+﻿using Lottery.Core.Enums;
+
+namespace Lottery.Core.Helpers
 {
     public static class AuditDataHelper
     {
@@ -53,12 +55,25 @@
             public const string MaxPerNumberTitle = "Max Per Number";
             public const string BuyTitle = "Buy";
             public const string PositionTakingTitle = "Position Taking";
+            public const string CockFightMainLimitAmountPerFight = "Main Limit Amount Per Fight";
+            public const string CockFightDrawLimitAmountPerFight = "Draw Limit Amount Per Fight";
+            public const string CockFightLimitNumTicketPerFight = "Limit Number Ticket Per Fight";
             public static class Action
             {
                 public const string ActionUpdateBetSetting = "Change Bet Setting";
                 public const string ActionUpdatePositionTaking = "Change Position Taking";
                 public const string ActionUpdateBuySetting = "Change Buy Setting";
             }
+        }
+
+        public static long GetAuditMasterId(Data.Entities.Agent targetUser)
+        {
+            return targetUser.RoleId is (int)Role.Agent ? targetUser.MasterId : 0;
+        }
+
+        public static long GetAuditSupermasterId(Data.Entities.Agent targetUser)
+        {
+            return targetUser.RoleId is (int)Role.Master or (int)Role.Agent ? targetUser.SupermasterId : 0;
         }
     }
 }

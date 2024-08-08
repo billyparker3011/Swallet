@@ -140,19 +140,9 @@ namespace Lottery.Core.Services.Agent
                 DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailSetCreditWhenUserCreated, newAgent.Username, newAgent.MemberMaxCredit?.ToString("N3", _culture), ClientContext.Agent.ParentId != 0 ? ClientContext.Agent.UserName : string.Empty),
                 OldValue = 0m,
                 NewValue = newAgent.Credit,
-                SupermasterId = GetAuditSupermasterId(newAgent),
-                MasterId = GetAuditMasterId(newAgent)
+                SupermasterId = AuditDataHelper.GetAuditSupermasterId(newAgent),
+                MasterId = AuditDataHelper.GetAuditMasterId(newAgent)
             });
-        }
-
-        private long GetAuditMasterId(Data.Entities.Agent targetUser)
-        {
-            return targetUser.RoleId is (int)Role.Agent ? targetUser.MasterId : 0;
-        }
-
-        private long GetAuditSupermasterId(Data.Entities.Agent targetUser)
-        {
-            return targetUser.RoleId is (int)Role.Master or (int)Role.Agent ? targetUser.SupermasterId : 0;
         }
 
         private long GetMasterId(Data.Entities.Agent clientAgent)
@@ -393,8 +383,8 @@ namespace Lottery.Core.Services.Agent
                     DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdateGivenCredit, updatedAgent.Username),
                     OldValue = oldCreditValue,
                     NewValue = updatedAgent.Credit,
-                    SupermasterId = GetAuditSupermasterId(updatedAgent),
-                    MasterId = GetAuditMasterId(updatedAgent)
+                    SupermasterId = AuditDataHelper.GetAuditSupermasterId(updatedAgent),
+                    MasterId = AuditDataHelper.GetAuditMasterId(updatedAgent)
                 });
             }
 
@@ -411,8 +401,8 @@ namespace Lottery.Core.Services.Agent
                     DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdateGivenCreditWithMemberMaxCredit, updatedAgent.Username, updatedAgent.MemberMaxCredit?.ToString("N3", _culture), oldMemberMaxCreditValue.ToString("N3", _culture)),
                     OldValue = oldCreditValue,
                     NewValue = updatedAgent.Credit,
-                    SupermasterId = GetAuditSupermasterId(updatedAgent),
-                    MasterId = GetAuditMasterId(updatedAgent)
+                    SupermasterId = AuditDataHelper.GetAuditSupermasterId(updatedAgent),
+                    MasterId = AuditDataHelper.GetAuditMasterId(updatedAgent)
                 });
             }
 
@@ -427,8 +417,8 @@ namespace Lottery.Core.Services.Agent
                     DetailMessage = string.Format(AuditDataHelper.State.DetailMessage.DetailUpdateState, updatedAgent.Username, Enum.GetName(typeof(UserState), oldStateValue), Enum.GetName(typeof(UserState), updatedAgent.State)),
                     OldValue = oldStateValue,
                     NewValue = updatedAgent.State,
-                    SupermasterId = GetAuditSupermasterId(updatedAgent),
-                    MasterId = GetAuditMasterId(updatedAgent)
+                    SupermasterId = AuditDataHelper.GetAuditSupermasterId(updatedAgent),
+                    MasterId = AuditDataHelper.GetAuditMasterId(updatedAgent)
                 });
             }
         }
@@ -1608,8 +1598,8 @@ namespace Lottery.Core.Services.Agent
                     EditedUsername = ClientContext.Agent.UserName,
                     AgentUserName = agent.Username,
                     Action = AuditDataHelper.Setting.Action.ActionUpdateBetSetting,
-                    SupermasterId = GetAuditSupermasterId(agent),
-                    MasterId = GetAuditMasterId(agent),
+                    SupermasterId = AuditDataHelper.GetAuditSupermasterId(agent),
+                    MasterId = AuditDataHelper.GetAuditMasterId(agent),
                     AuditSettingDatas = auditBetSettings.OrderBy(x => x.BetKind).ToList()
                 });
             }
@@ -1717,8 +1707,8 @@ namespace Lottery.Core.Services.Agent
                     EditedUsername = ClientContext.Agent.UserName,
                     AgentUserName = agent.Username,
                     Action = AuditDataHelper.Setting.Action.ActionUpdatePositionTaking,
-                    SupermasterId = GetAuditSupermasterId(agent),
-                    MasterId = GetAuditMasterId(agent),
+                    SupermasterId = AuditDataHelper.GetAuditSupermasterId(agent),
+                    MasterId = AuditDataHelper.GetAuditMasterId(agent),
                     AuditSettingDatas = auditPositionTakings.OrderBy(x => x.BetKind).ToList()
                 });
             }
@@ -1901,8 +1891,8 @@ namespace Lottery.Core.Services.Agent
                 DetailMessage = string.Format(AuditDataHelper.Credit.DetailMessage.DetailUpdateAgentCredit, updatedAgent.Username),
                 OldValue = oldCreditValue,
                 NewValue = updatedAgent.Credit,
-                SupermasterId = GetAuditSupermasterId(updatedAgent),
-                MasterId = GetAuditMasterId(updatedAgent)
+                SupermasterId = AuditDataHelper.GetAuditSupermasterId(updatedAgent),
+                MasterId = AuditDataHelper.GetAuditMasterId(updatedAgent)
             });
         }
 

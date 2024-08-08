@@ -15,6 +15,7 @@ using Lottery.Core.Models.Player.UpdatePlayerCreditBalance;
 using Lottery.Core.Models.Setting;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BetKind;
+using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.Services.Audit;
 using Lottery.Core.Services.Authentication;
@@ -51,6 +52,8 @@ namespace Lottery.Core.Services.Player
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var playerOddRepos = LotteryUow.GetRepository<IPlayerOddsRepository>();
+            var cockFightPlayerBetSettingRepos = LotteryUow.GetRepository<ICockFightPlayerBetSettingRepository>();
+            var cockFightBetKindRepos = LotteryUow.GetRepository<ICockFightBetKindRepository>();
 
             var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
             if (clientAgent.RoleId != (int)Role.Agent) return;
@@ -94,6 +97,18 @@ namespace Lottery.Core.Services.Player
                 CreatedBy = clientAgent.AgentId
             }).ToList();
             await playerOddRepos.AddRangeAsync(playerBetSettings);
+
+            //Add default cockfight player bet setting
+            var defaultCockFightPlayerBetSettings = await cockFightBetKindRepos.FindQuery().Select(x => new CockFightPlayerBetSetting
+            {
+                Player = player,
+                BetKindId = x.Id,
+                MainLimitAmountPerFight = 0m,
+                DrawLimitAmountPerFight = 0m,
+                LimitNumTicketPerFight = 0m,
+                CreatedAt = createdAt
+            }).ToListAsync();
+            await cockFightPlayerBetSettingRepos.AddRangeAsync(defaultCockFightPlayerBetSettings);
 
             await LotteryUow.SaveChangesAsync();
 

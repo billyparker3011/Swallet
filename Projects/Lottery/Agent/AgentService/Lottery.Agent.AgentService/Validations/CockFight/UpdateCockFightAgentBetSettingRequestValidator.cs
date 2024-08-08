@@ -8,7 +8,7 @@ namespace Lottery.Agent.AgentService.Validations.CockFight
         public UpdateCockFightAgentBetSettingRequestValidator()
         {
             RuleFor(item => item.MainLimitAmountPerFight).NotNull().LessThanOrEqualTo(x => x.DefaultMaxMainLimitAmountPerFight);
-            RuleFor(item => item.DrawLimitAmountPerFight).NotNull().GreaterThanOrEqualTo(item => item.DefaultMaxDrawLimitAmountPerFight);
+            RuleFor(item => item.DrawLimitAmountPerFight).NotNull().LessThanOrEqualTo(item => item.DefaultMaxDrawLimitAmountPerFight);
             RuleFor(item => item.LimitNumTicketPerFight).NotNull().LessThanOrEqualTo(item => item.DefaultMaxLimitNumTicketPerFight);
         }
     }
