@@ -109,7 +109,7 @@ namespace Lottery.Core.Services.CockFight
         public async Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance()
         {
             //TODO: Implement logic later
-            return new GetCockFightPlayerBalanceResult { Balance = 9999.99m };
+            return new GetCockFightPlayerBalanceResult { Balance = "999.99" };
         }
 
         public async Task<LoginPlayerInformationDto> GetCockFightUrl()

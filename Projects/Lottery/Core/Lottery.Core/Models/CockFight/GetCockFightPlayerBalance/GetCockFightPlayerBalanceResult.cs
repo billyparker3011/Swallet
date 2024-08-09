@@ -2,6 +2,6 @@
 {
     public class GetCockFightPlayerBalanceResult
     {
-        public decimal Balance { get; set; }
+        public string Balance { get; set; }
     }
 }

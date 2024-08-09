@@ -57,6 +57,11 @@ namespace Lottery.Core.Services.Agent
             {
                 var oldPassword = model.OldPassword.DecodePassword();
                 if (!agent.Password.Equals(oldPassword.Md5(), StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.OldPasswordWrong);
+                if (password.Equals(oldPassword, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewPasswordMustNotBeEqualToOldPassword);
+            }
+            else
+            {
+                if (password.Md5().Equals(agent.Password, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewPasswordMustNotBeEqualToOldPassword);
             }
             if (ClientContext.Agent.RoleId != Role.Company.ToInt() && !model.IsSelfChange)
             {
@@ -89,6 +94,8 @@ namespace Lottery.Core.Services.Agent
             if (!securityCode.Equals(confirmSecurityCode, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewSecurityCodeDoesnotMatch);
 
             var agent = await agentRepository.FindByIdAsync(model.TargetId) ?? throw new NotFoundException();
+
+            if (securityCode.Md5().Equals(agent.SecurityCode, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewScMustNotBeEqualToOldSc);
             if (ClientContext.Agent.RoleId != Role.Company.ToInt() && !model.IsSelfChange)
             {
                 if (agent.ParentId != 0L)

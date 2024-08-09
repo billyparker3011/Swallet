@@ -44,7 +44,7 @@ namespace Lottery.Player.PlayerService.Controllers
         [Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
         public async Task<IActionResult> GetCockFightPlayerBalance()
         {
-            return Ok(OkResponse.Create(await _cockFightService.GetCockFightPlayerBalance()));
+            return Ok(await _cockFightService.GetCockFightPlayerBalance());
         }
 
         [HttpGet("{playerId:long}/bet-settings")]

@@ -16,6 +16,8 @@
             public const int PasswordComplexityIsWeak = -4;
             public const int WrongSecurityCodeFormat = -5;
             public const int NewSecurityCodeDoesnotMatch = -6;
+            public const int NewPasswordMustNotBeEqualToOldPassword = -7;
+            public const int NewScMustNotBeEqualToOldSc = -8;
         }
 
         public static class Agent
