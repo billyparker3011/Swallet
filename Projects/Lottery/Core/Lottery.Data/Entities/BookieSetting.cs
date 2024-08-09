@@ -26,6 +26,15 @@ namespace Lottery.Data.Entities
         public string AuthValue { get; set; }
     }
 
+    public class CABookieSettingValue
+    {
+        public string ApiURL { get; set; }
+        public string ContentType { get; set; }
+        public string OperatorId { get; set; }
+        public string AllbetApiKey { get; set; }
+        public string PartnerApiKey { get; set; }
+    } 
+
     public class BookieSettingConfiguration : IEntityTypeConfiguration<BookieSetting>
     {
         public void Configure(EntityTypeBuilder<BookieSetting> builder)
