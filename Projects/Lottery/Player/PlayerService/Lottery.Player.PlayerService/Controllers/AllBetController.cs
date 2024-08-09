@@ -10,8 +10,8 @@ namespace Lottery.Player.PlayerService.Controllers
     [Authorize(AuthenticationSchemes = nameof(CAAuthorizeAttribute))]
     public class AllBetController : PartnerControllerBase
     {
-        [HttpGet("GetBalance")]
-        public async Task<IActionResult> GetBalance([FromQuery] string player)
+        [HttpGet("GetBalance/{player}")]
+        public async Task<IActionResult> GetBalance(string player)
         {
             return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, 2000, 1));
         }
