@@ -24,6 +24,7 @@ namespace Lottery.Data.Entities
         public string PartnerAccountId { get; set; }
         public string GameClientId { get; set; }
         public string AuthValue { get; set; }
+        public string ApplicationStaticToken { get; set; }
     }
 
     public class CABookieSettingValue

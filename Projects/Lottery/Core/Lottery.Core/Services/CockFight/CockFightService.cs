@@ -6,6 +6,7 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.CockFight;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
+using Lottery.Core.Models.CockFight.GetBalance;
 using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Publish;
 using Lottery.Core.Repositories.BookiesSetting;
@@ -103,6 +104,12 @@ namespace Lottery.Core.Services.CockFight
             }
 
             await LotteryUow.SaveChangesAsync();
+        }
+
+        public async Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance()
+        {
+            //TODO: Implement logic later
+            return new GetCockFightPlayerBalanceResult { Balance = 9999.99m };
         }
 
         public async Task<LoginPlayerInformationDto> GetCockFightUrl()

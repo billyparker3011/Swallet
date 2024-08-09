@@ -1,9 +1,10 @@
 using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Responses;
 using Lottery.Core.Models.CockFight.UpdateCockFightAgentBetSetting;
+using Lottery.Core.Partners.Attribute.CockFight;
 using Lottery.Core.Services.CockFight;
 using Lottery.Player.PlayerService.Requests.CockFight;
-using Lottery.Player.PlayerService.Requests.Player;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lottery.Player.PlayerService.Controllers
@@ -37,6 +38,13 @@ namespace Lottery.Player.PlayerService.Controllers
         public async Task<IActionResult> GetCockFightUrl()
         {
             return Ok(OkResponse.Create(await _cockFightService.GetCockFightUrl()));
+        }
+
+        [HttpGet("get-balance")]
+        [Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
+        public async Task<IActionResult> GetCockFightPlayerBalance()
+        {
+            return Ok(OkResponse.Create(await _cockFightService.GetCockFightPlayerBalance()));
         }
 
         [HttpGet("{playerId:long}/bet-settings")]

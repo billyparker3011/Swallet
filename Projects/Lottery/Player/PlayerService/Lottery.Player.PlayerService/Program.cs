@@ -2,6 +2,7 @@ using HnMicro.Framework.Helpers;
 using HnMicro.Module.Caching.ByRedis.Helpers;
 using Lottery.Core.Helpers;
 using Lottery.Core.Partners.Attribute.CA;
+using Lottery.Core.Partners.Attribute.CockFight;
 using Lottery.Player.PlayerService.Helpers;
 using Microsoft.AspNetCore.Authentication;
 
@@ -13,6 +14,7 @@ builder.BuildInternalPlayerService();
 builder.BuildRedis();
 
 builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, CAAuthorizeAttribute>(nameof(CAAuthorizeAttribute), null);
+builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, CockFightAuthorizeAttribute>(nameof(CockFightAuthorizeAttribute), null);
 
 var app = builder.Build();
 

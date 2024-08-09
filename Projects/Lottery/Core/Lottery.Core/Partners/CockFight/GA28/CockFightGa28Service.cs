@@ -17,7 +17,7 @@ using System.Text;
 
 namespace Lottery.Core.Partners.CockFight.GA28
 {
-    public class CockFightGa28Service : BasePartnerType
+    public class CockFightGa28Service : BasePartnerType, ICockFightGa28Service
     {
         private readonly IRedisCacheService _redisCacheService;
 
