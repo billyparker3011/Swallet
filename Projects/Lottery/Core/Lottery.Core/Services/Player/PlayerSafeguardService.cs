@@ -25,6 +25,7 @@ namespace Lottery.Core.Services.Player
             var confirmPassword = model.ConfirmPassword.DecodePassword();
             if (!oldPassword.IsStrongPassword() || !newPassword.IsStrongPassword() || !confirmPassword.IsStrongPassword()) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.PasswordComplexityIsWeak);
             if (!newPassword.Equals(confirmPassword, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewPasswordDoesnotMatch);
+            if (newPassword.Equals(oldPassword, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewPasswordMustNotBeEqualToOldPassword);
 
             var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
             var player = await playerRepository.FindByIdAsync(ClientContext.Player.PlayerId);
@@ -46,6 +47,7 @@ namespace Lottery.Core.Services.Player
 
             var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
             var player = await playerRepository.FindByIdAsync(model.TargetId) ?? throw new NotFoundException();
+            if (password.Md5().Equals(player.Password, StringComparison.OrdinalIgnoreCase)) throw new BadRequestException(ErrorCodeHelper.ChangeInfo.NewPasswordMustNotBeEqualToOldPassword);
             if (ClientContext.Agent.RoleId != Role.Company.ToInt())
             {
                 var agentId = ClientContext.Agent.ParentId == 0L ? ClientContext.Agent.AgentId : ClientContext.Agent.ParentId;
