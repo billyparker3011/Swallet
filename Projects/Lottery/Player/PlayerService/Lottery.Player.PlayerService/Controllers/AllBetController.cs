@@ -15,5 +15,19 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, 2000, 1));
         }
+
+        [HttpPost("Transfer")]
+        public async Task<IActionResult> Transfer()
+        {
+            return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, new Random().NextInt64(1000, 2500), 1));
+        }
+        
+        [HttpPost("CancelTransfer")]
+        public async Task<IActionResult> CancelTransfer()
+        {
+            return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, new Random().NextInt64(1000, 2000), 1));
+        }
+
+
     }
 }
