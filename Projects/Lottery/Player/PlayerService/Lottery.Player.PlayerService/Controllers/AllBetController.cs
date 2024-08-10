@@ -17,15 +17,15 @@ namespace Lottery.Player.PlayerService.Controllers
         }
 
         [HttpPost("Transfer")]
-        public async Task<IActionResult> Transfer()
+        public async Task<IActionResult> Transfer(Transaction transaction)
         {
-            return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, new Random().NextInt64(1000, 2500), 1));
+            return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, 2000 + transaction.Amount, 1));
         }
         
         [HttpPost("CancelTransfer")]
         public async Task<IActionResult> CancelTransfer()
         {
-            return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, new Random().NextInt64(1000, 2000), 1));
+            return Ok(new CABalanceResponseModel(PartnerHelper.CAReponseCode.Success, null, 2000, 1));
         }
 
 
