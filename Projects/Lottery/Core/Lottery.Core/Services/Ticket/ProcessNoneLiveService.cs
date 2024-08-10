@@ -351,7 +351,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
         var noOfNumbers = model.BetKindId.GetNoOfNumbers();
         var enableStats = _ticketProcessor.EnableStats(model.BetKindId);
 
-        var metadataDetail = processValidation.Details.FirstOrDefault(f => f.BetKind != null && f.BetKind.Id == model.BetKindId) ?? throw new NotFoundException();
+        var metadataDetail = processValidation.Details.FirstOrDefault(f => f.BetKind != null && f.Channel != null && f.BetKind.Id == model.BetKindId && f.Channel.Id == model.ChannelId) ?? throw new NotFoundException();
 
         //  Get Player OddsValue, MinBet, MaxBet, MaxPerMatch
         (var setting, var refreshSettingCache) = await _playerSettingService.GetBetSettings(processValidation.Player.PlayerId, model.BetKindId);
@@ -391,7 +391,7 @@ public class ProcessNoneLiveService : LotteryBaseService<ProcessNoneLiveService>
             MatchId = processValidation.Match.MatchId,
             KickOffTime = processValidation.Match.KickoffTime,
             RegionId = metadataDetail.BetKind.RegionId,
-            ChannelId = metadataDetail.Channel.Id,
+            ChannelId = model.ChannelId,
             ChoosenNumbers = string.Empty,
 
             RewardRate = metadataDetail.BetKind.Award,

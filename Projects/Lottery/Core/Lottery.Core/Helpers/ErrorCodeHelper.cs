@@ -60,10 +60,10 @@
         public static class MatchChangeState
         {
             public const int NorthernHasMoreResult = -1;
-            public const int NorthernResultHasNotUpdatedYet = -2;
-            public const int NorthernResultCannotFindPrize = -3;
-            public const int NorthernResultDoesntMatchPrize = -4;
-            public const int NorthernResultIsBadFormat = -5;
+            public const int ResultHasNotUpdatedYet = -2;
+            public const int ResultCannotFindPrize = -3;
+            public const int ResultDoesntMatchPrize = -4;
+            public const int ResultIsBadFormat = -5;
         }
 
         public static class CockFight

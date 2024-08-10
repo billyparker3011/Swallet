@@ -166,20 +166,21 @@ namespace Lottery.Core.Services.Match
         private void InternalValidationResultsOfRegion(Data.Entities.Match match, List<Models.Prize.PrizeModel> prizes, Region region)
         {
             var regionPrizes = prizes.Where(f => f.RegionId == region.ToInt()).ToList();
-            var northernResults = match.MatchResults.Where(f => f.RegionId == region.ToInt()).ToList();
-            if (northernResults.Count != 1) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernHasMoreResult);
+            var regionResults = match.MatchResults.Where(f => f.RegionId == region.ToInt()).ToList();
+            if (region == Region.Northern && regionResults.Count != 1) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernHasMoreResult);
 
-            var latestNorthernResults = northernResults.FirstOrDefault();
-            if (latestNorthernResults == null || string.IsNullOrEmpty(latestNorthernResults.Results)) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernResultHasNotUpdatedYet);
-
-            var listPrizes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(latestNorthernResults.Results);
-            if (listPrizes.Count == 0) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernResultHasNotUpdatedYet);
-            foreach (var itemPrize in listPrizes.OrderBy(f => f.Prize))
+            foreach (var itemRegionResult in regionResults)
             {
-                var currentPrize = regionPrizes.FirstOrDefault(f => f.PrizeId == itemPrize.Prize);
-                if (currentPrize == null) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernResultCannotFindPrize, itemPrize.Prize.ToString());
-                if (itemPrize.Results.Count != currentPrize.NoOfNumbers) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernResultDoesntMatchPrize);
-                if (itemPrize.Results.Any(f => string.IsNullOrEmpty(f.Result) || f.Result.Trim().Length < 2)) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.NorthernResultIsBadFormat);
+                if (string.IsNullOrEmpty(itemRegionResult.Results)) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.ResultHasNotUpdatedYet);
+
+                var listPrizes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(itemRegionResult.Results);
+                if (listPrizes.Count == 0) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.ResultHasNotUpdatedYet);
+                foreach (var itemPrize in listPrizes.OrderBy(f => f.Prize))
+                {
+                    var currentPrize = regionPrizes.FirstOrDefault(f => f.PrizeId == itemPrize.Prize) ?? throw new BadRequestException(ErrorCodeHelper.MatchChangeState.ResultCannotFindPrize, itemPrize.Prize.ToString());
+                    if (itemPrize.Results.Count != currentPrize.NoOfNumbers) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.ResultDoesntMatchPrize);
+                    if (itemPrize.Results.Any(f => string.IsNullOrEmpty(f.Result) || f.Result.Trim().Length < 2)) throw new BadRequestException(ErrorCodeHelper.MatchChangeState.ResultIsBadFormat);
+                }
             }
         }
 
