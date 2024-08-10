@@ -129,8 +129,13 @@ namespace Lottery.Core.Services.Match
                 var prizeInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IPrizeInMemoryRepository>();
                 var prizes = prizeInMemoryRepository.GetAll().ToList();
 
-                //  Need check result Region = Northern
-                InternalValidationNorthernRegion(match, prizes, Region.Northern);
+                var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
+                var regions = regionInMemoryRepository.GetAll().ToList();
+
+                foreach (var region in regions)
+                {
+                    InternalValidationResultsOfRegion(match, prizes, region.Id);
+                }
             }
 
             match.MatchState = model.State;
@@ -158,7 +163,7 @@ namespace Lottery.Core.Services.Match
             });
         }
 
-        private void InternalValidationNorthernRegion(Data.Entities.Match match, List<Models.Prize.PrizeModel> prizes, Region region)
+        private void InternalValidationResultsOfRegion(Data.Entities.Match match, List<Models.Prize.PrizeModel> prizes, Region region)
         {
             var regionPrizes = prizes.Where(f => f.RegionId == region.ToInt()).ToList();
             var northernResults = match.MatchResults.Where(f => f.RegionId == region.ToInt()).ToList();

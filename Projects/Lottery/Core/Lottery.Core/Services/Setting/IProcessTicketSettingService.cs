@@ -10,5 +10,8 @@ namespace Lottery.Core.Services.Setting
 
         Task<ValidationPrizeSettingModel> GetValidationPrizeSetting(int betKindId);
         Task UpdateValidationPrizeSetting(ValidationPrizeSettingModel model);
+
+        Task<ChannelsForCompletedTicketModel> GetChannelsForCompletedTicket();
+        Task UpdateChannelsForCompletedTicket(ChannelsForCompletedTicketModel model);
     }
 }

@@ -62,6 +62,26 @@ namespace Lottery.Agent.AgentService.Controllers
         {
             return Ok(await _processTicketSettingService.GetValidationPrizeSetting(betKindId));
         }
+
+        [HttpGet("process-ticket/channels-completed-tickets")]
+        public async Task<IActionResult> GetChannelsForCompletedTicket()
+        {
+            return Ok(await _processTicketSettingService.GetChannelsForCompletedTicket());
+        }
+
+        [HttpPost("process-ticket/channels-completed-tickets")]
+        public async Task<IActionResult> UpdateChannelsForCompletedTicket([FromBody] ChannelsForCompletedTicketRequest request)
+        {
+            await _processTicketSettingService.UpdateChannelsForCompletedTicket(new ChannelsForCompletedTicketModel
+            {
+                Items = request.Items.ToDictionary(f => f.Key, f => f.Value.Select(f1 => new ChannelsForCompletedTicketDetailModel
+                {
+                    DayOfWeek = f1.DayOfWeek,
+                    ChannelIds = f1.ChannelIds
+                }).ToList())
+            });
+            return Ok();
+        }
         #endregion
 
         #region Balance Table Setting

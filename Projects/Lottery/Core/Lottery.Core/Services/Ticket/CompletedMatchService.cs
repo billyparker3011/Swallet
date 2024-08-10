@@ -139,6 +139,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             if (item.ChannelId == -1)
             {
                 var results = GetResultsByChannels(item.MatchId, item.RegionId, _matchResults);
+                var okResults = ValidResults(item.ChannelId, results.SelectMany(f => f.Value).ToList());
                 resultTicket = GetTicketsByAllChannels(item, children, results);
             }
             else
@@ -146,6 +147,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                 var matchResult = _matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
                 if (matchResult == null || string.IsNullOrEmpty(matchResult.Results)) continue;
                 var results = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(matchResult.Results);
+                var okResults = ValidResults(item.ChannelId, results);
                 resultTicket = GetTicketsByChannel(item, children, results);
             }
 
@@ -245,6 +247,15 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             i = 0;
         }
         lotteryUow.SaveChanges();
+    }
+
+    private bool ValidResults(int channelId, List<PrizeMatchResultModel> results)
+    {
+        foreach (var itemResult in results)
+        {
+            if (itemResult.Results.Any(f => string.IsNullOrEmpty(f.Result) || f.Result.Trim().Length < 2)) return false;
+        }
+        return true;
     }
 
     private CompletedTicketResultModel GetTicketsByAllChannels(Data.Entities.Ticket item, List<Data.Entities.Ticket> children, Dictionary<int, List<PrizeMatchResultModel>> results)
