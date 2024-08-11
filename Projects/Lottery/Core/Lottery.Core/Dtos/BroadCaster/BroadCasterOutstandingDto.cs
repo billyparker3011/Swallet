@@ -2,11 +2,11 @@
 {
     public class BroadCasterOutstandingDto
     {
-        public long RegionId { get; set; }
+        public int RegionId { get; set; }
         public string RegionName { get; set; }
-        public long CategoryId { get; set; }
+        public int CategoryId { get; set; }
         public string CategoryName { get; set; }
-        public long BetKindId { get; set; }
+        public int BetKindId { get; set; }
         public string BetKindName { get; set; }
         public long TotalBetCount { get; set; }
         public decimal TotalStake { get; set; }

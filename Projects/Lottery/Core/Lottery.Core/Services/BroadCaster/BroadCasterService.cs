@@ -81,7 +81,7 @@ namespace Lottery.Core.Services.BroadCaster
                      BetKindName = groupedData.Key.Name,
                      TotalStake = groupedData.Where(f => !f.ParentId.HasValue).Sum(x => x.Stake),
                      TotalPayout = groupedData.Where(f => !f.ParentId.HasValue).Sum(x => x.PlayerPayout),
-                     TotalBetCount = groupedData.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (f.ParentId.HasValue && !f.ShowMore.HasValue))
+                     TotalBetCount = groupedData.LongCount(f => (!f.ParentId.HasValue && !f.ShowMore.HasValue) || (!f.ParentId.HasValue && f.ShowMore.HasValue && !f.ShowMore.Value) || (f.ParentId.HasValue && !f.ShowMore.HasValue))
                  });
 
             if (model.SortType == SortType.Descending)
