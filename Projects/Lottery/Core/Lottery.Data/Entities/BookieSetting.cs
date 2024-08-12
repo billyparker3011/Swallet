@@ -34,7 +34,7 @@ namespace Lottery.Data.Entities
         public string OperatorId { get; set; }
         public string AllbetApiKey { get; set; }
         public string PartnerApiKey { get; set; }
-    } 
+    }
 
     public class BookieSettingConfiguration : IEntityTypeConfiguration<BookieSetting>
     {
