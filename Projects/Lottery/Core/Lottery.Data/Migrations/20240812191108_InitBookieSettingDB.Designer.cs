@@ -4,6 +4,7 @@ using Lottery.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lottery.Data.Migrations
 {
     [DbContext(typeof(LotteryContext))]
-    partial class LotteryContextModelSnapshot : ModelSnapshot
+    [Migration("20240812191108_InitBookieSettingDB")]
+    partial class InitBookieSettingDB
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1104,6 +1107,9 @@ namespace Lottery.Data.Migrations
                     b.Property<decimal?>("Award")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<int>("BookieId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CategoryId")
                         .HasColumnType("nvarchar(max)");
 
@@ -1142,6 +1148,8 @@ namespace Lottery.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BookieId");
 
                     b.HasIndex("Code")
                         .IsUnique();
@@ -2045,6 +2053,17 @@ namespace Lottery.Data.Migrations
                     b.Navigation("Agent");
 
                     b.Navigation("CABetKind");
+                });
+
+            modelBuilder.Entity("Lottery.Data.Entities.Partners.CA.CABetKind", b =>
+                {
+                    b.HasOne("Lottery.Data.Entities.BookieSetting", "BookieSetting")
+                        .WithMany()
+                        .HasForeignKey("BookieId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BookieSetting");
                 });
 
             modelBuilder.Entity("Lottery.Data.Entities.Partners.CA.CAPlayerBetSetting", b =>

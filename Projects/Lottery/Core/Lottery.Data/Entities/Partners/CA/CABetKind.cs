@@ -9,8 +9,6 @@ namespace Lottery.Data.Entities.Partners.CA
     [Index(nameof(Code), IsUnique = true)]
     public class CABetKind: DefaultBaseEntity<long>
     {
-        [Required]
-        public int BookieId { get; set; }
         [Required, MaxLength(500)]
         public string Name { get; set; }
         [Required, MaxLength(10)]       
@@ -21,8 +19,5 @@ namespace Lottery.Data.Entities.Partners.CA
         public int? OrderInCategory { get; set; }
         public decimal? Award { get; set; }
         public bool? Enabled { get; set; }
-
-        [ForeignKey(nameof(BookieId))]
-        public virtual BookieSetting BookieSetting { get; set; }
     }
 }
