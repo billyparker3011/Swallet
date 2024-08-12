@@ -139,7 +139,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             if (item.ChannelId == -1)
             {
                 var results = GetResultsByChannels(item.MatchId, item.RegionId, _matchResults);
-                var okResults = ValidResults(item.ChannelId, results.SelectMany(f => f.Value).ToList());
+                var okResults = ValidResults(results.SelectMany(f => f.Value).ToList());
                 resultTicket = GetTicketsByAllChannels(item, children, results);
             }
             else
@@ -147,7 +147,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                 var matchResult = _matchResults.FirstOrDefault(f => f.MatchId == item.MatchId && f.RegionId == item.RegionId && f.ChannelId == item.ChannelId);
                 if (matchResult == null || string.IsNullOrEmpty(matchResult.Results)) continue;
                 var results = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PrizeMatchResultModel>>(matchResult.Results);
-                var okResults = ValidResults(item.ChannelId, results);
+                var okResults = ValidResults(results);
                 resultTicket = GetTicketsByChannel(item, children, results);
             }
 
@@ -249,7 +249,7 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
         lotteryUow.SaveChanges();
     }
 
-    private bool ValidResults(int channelId, List<PrizeMatchResultModel> results)
+    private bool ValidResults(List<PrizeMatchResultModel> results)
     {
         foreach (var itemResult in results)
         {
@@ -263,6 +263,8 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
         return _processor.CompletedTicket(item.BetKindId, new CompletedTicketModel
         {
             TicketId = item.TicketId,
+            KickoffTime = item.KickOffTime,
+
             ChoosenNumbers = item.ChoosenNumbers,
             Stake = item.Stake,
 
@@ -342,6 +344,8 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
         return _processor.CompletedTicket(item.BetKindId, new CompletedTicketModel
         {
             TicketId = item.TicketId,
+            KickoffTime = item.KickOffTime,
+
             ChoosenNumbers = item.ChoosenNumbers,
             Stake = item.Stake,
 

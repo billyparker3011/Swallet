@@ -4,6 +4,7 @@
     {
         public long TicketId { get; set; }
         public long? ParentId { get; set; }
+        public DateTime KickoffTime { get; set; }
         public string ChoosenNumbers { get; set; }
         public decimal Stake { get; set; }
         public int? Prize { get; set; }

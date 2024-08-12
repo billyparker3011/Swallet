@@ -2,9 +2,12 @@
 using HnMicro.Framework.Exceptions;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.InMemory.Setting;
 using Lottery.Core.Models.MatchResult;
+using Lottery.Core.Models.Setting.ProcessTicket;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Lottery.Core.Services.Ticket.Processors;
 
@@ -170,53 +173,54 @@ public class Southern_Mixed_Xien2_Processor : AbstractBetKindProcessor
         return dataResult;
     }
 
-    private bool CheckOnPairChannels(string choosenNumbers, Dictionary<int, List<PrizeMatchResultModel>> results, out int times)
+    private bool CheckOnPairChannels(string choosenNumbers, Dictionary<int, List<PrizeMatchResultModel>> results, List<int> calculatedChannelIds, out int times)
     {
         times = 0;
 
         var listNumbers = choosenNumbers.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
         if (listNumbers.Length != 2) return false;
 
-        var subsets = new List<List<int>>();
-        results.Keys.ToArray().GenerateCombination(2, subsets);
-        foreach (var set in subsets)
+        var dictResults = new Dictionary<int, int>();
+        foreach (var channelId in calculatedChannelIds)
         {
-            var ok = true;
-            foreach (var channelId in set)
+            if (!results.TryGetValue(channelId, out List<PrizeMatchResultModel> resultByChannel)) break;
+
+            var rs = resultByChannel.SelectMany(f => f.Results).Select(f => f.Result).ToList();
+            var endOfResults = new List<string>();
+            rs.ForEach(f =>
             {
-                if (!results.TryGetValue(channelId, out List<PrizeMatchResultModel> resultByChannel))
-                {
-                    ok = false;
-                    break;
-                }
+                if (!f.GetEndOfResult(out string val)) return;
+                endOfResults.Add(val);
+            });
+            var groupEndOfResults = endOfResults.GroupBy(f => f).Select(f => new { f.Key, Count = f.Count() }).ToList();
 
-                var rs = resultByChannel.SelectMany(f => f.Results).Select(f => f.Result).ToList();
-                var endOfResults = new List<string>();
-                rs.ForEach(f =>
-                {
-                    if (!f.GetEndOfResult(out string val)) return;
-                    endOfResults.Add(val);
-                });
-                var groupEndOfResults = endOfResults.GroupBy(f => f).Select(f => new { f.Key, Count = f.Count() }).ToList();
+            var firstNumber = listNumbers[0].Trim();
+            var timesOfFirstNumber = groupEndOfResults.FirstOrDefault(f => f.Key == firstNumber);
 
-                var firstNumber = listNumbers[0].Trim();
-                var timesOfFirstNumber = groupEndOfResults.FirstOrDefault(f => f.Key == firstNumber);
-
-                var secondNumber = listNumbers[1].Trim();
-                var timesOfSecondNumber = groupEndOfResults.FirstOrDefault(f => f.Key == secondNumber);
-                if (timesOfFirstNumber != null && timesOfSecondNumber != null) continue;
-
-                ok = false;
-                break;
+            var secondNumber = listNumbers[1].Trim();
+            var timesOfSecondNumber = groupEndOfResults.FirstOrDefault(f => f.Key == secondNumber);
+            if (timesOfFirstNumber != null && timesOfSecondNumber != null)
+            {
+                dictResults[channelId] = Math.Max(timesOfFirstNumber.Count, timesOfSecondNumber.Count);
+                continue;
             }
-            if (!ok) continue;
-            times++;
+            break;
         }
-        return times > 0;
+        var isWon = dictResults.Count == 2;
+        if (isWon) times = dictResults.Values.Max();
+        return isWon;
     }
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results)
     {
+        var channelIds = ChannelCalculation(ticket.KickoffTime);
+        if (channelIds.Count != 2) return null;
+        foreach (var channelId in channelIds)
+        {
+            if (results.ContainsKey(channelId)) continue;
+            return null;
+        }
+
         var dataResult = new CompletedTicketResultModel
         {
             TicketId = ticket.TicketId
@@ -235,7 +239,7 @@ public class Southern_Mixed_Xien2_Processor : AbstractBetKindProcessor
             var choosenNumbers = string.IsNullOrEmpty(ticket.ChoosenNumbers) ? string.Empty : ticket.ChoosenNumbers.Trim();
             if (string.IsNullOrEmpty(choosenNumbers)) return null;
 
-            var isWon = CheckOnPairChannels(choosenNumbers, results, out int times);
+            var isWon = CheckOnPairChannels(choosenNumbers, results, channelIds, out int times);
             if (isWon)
             {
                 //  Won
@@ -275,7 +279,7 @@ public class Southern_Mixed_Xien2_Processor : AbstractBetKindProcessor
                 {
                     TicketId = item.TicketId
                 };
-                var isWon = CheckOnPairChannels(choosenNumbers, results, out int times);
+                var isWon = CheckOnPairChannels(choosenNumbers, results, channelIds, out int times);
                 var playerWinlose = 0m;
                 if (isWon)
                 {
@@ -329,6 +333,28 @@ public class Southern_Mixed_Xien2_Processor : AbstractBetKindProcessor
         dataResult.SupermasterCommission = totalSupermasterCommission;
         dataResult.CompanyWinLoss = totalCompanyWinLose;
         return dataResult;
+    }
+
+    private List<int> ChannelCalculation(DateTime kickOffTime)
+    {
+        using var scope = ServiceProvider.CreateScope();
+        var settingInMemoryRepository = scope.ServiceProvider.GetService<ISettingInMemoryRepository>();
+        var setting = settingInMemoryRepository.FindByKey(nameof(ChannelsForCompletedTicketModel));
+        if (setting == null || string.IsNullOrEmpty(setting.ValueSetting)) return new List<int>();
+
+        var data = Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelsForCompletedTicketModel>(setting.ValueSetting);
+        var channelIds = new List<int>();
+        if (data != null && data.Items.TryGetValue(Region.Southern.ToInt(), out List<ChannelsForCompletedTicketDetailModel> vals))
+        {
+            var configData = vals.FirstOrDefault(f => f.DayOfWeek == kickOffTime.DayOfWeek.ToInt());
+            if (configData == null) return new List<int>();
+            foreach (var channelId in configData.ChannelIds)
+            {
+                if (channelIds.Contains(channelId)) continue;
+                channelIds.Add(channelId);
+            }
+        }
+        return channelIds;
     }
 
     public override RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(RefundRejectTicketByNumbersModel model)
