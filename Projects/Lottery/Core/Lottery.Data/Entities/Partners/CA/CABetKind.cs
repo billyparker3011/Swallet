@@ -10,7 +10,7 @@ namespace Lottery.Data.Entities.Partners.CA
     public class CABetKind: DefaultBaseEntity<long>
     {
         [Required]
-        public long BookieId { get; set; }
+        public int BookieId { get; set; }
         [Required, MaxLength(500)]
         public string Name { get; set; }
         [Required, MaxLength(10)]       

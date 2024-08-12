@@ -8,7 +8,7 @@ namespace Lottery.Data.Entities
     public class CockFightBetKind : BaseEntity
     {
         [Key]
-        public long Id { get; set; }
+        public int Id { get; set; }
         [Required, MaxLength(250)]
         public string Name { get; set; }
         [Required]

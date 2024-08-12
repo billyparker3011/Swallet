@@ -24,7 +24,7 @@ namespace Lottery.Data.Entities
         [Required]
         public long SupermasterId { get; set; }
         [Required]
-        public long BetKindId { get; set; }
+        public int BetKindId { get; set; }
         [Required]
         public Guid AccountId { get; set; }
         [MaxLength(255), Required]

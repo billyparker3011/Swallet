@@ -13,7 +13,7 @@ namespace Lottery.Data.Entities
         [Required]
         public long AgentId { get; set; }
         [Required]
-        public long BetKindId { get; set; }
+        public int BetKindId { get; set; }
         [Required, Precision(18, 3)]
         public decimal PositionTaking { get; set; }
         [ForeignKey(nameof(AgentId))]

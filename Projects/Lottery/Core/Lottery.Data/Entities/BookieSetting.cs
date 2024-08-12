@@ -11,7 +11,7 @@ namespace Lottery.Data.Entities
     public class BookieSetting : BaseEntity
     {
         [Key]
-        public long Id { get; set; }
+        public int Id { get; set; }
         [Required]
         public int BookieTypeId { get; set; }
         public BookieSettingValue SettingValue { get; set; }
