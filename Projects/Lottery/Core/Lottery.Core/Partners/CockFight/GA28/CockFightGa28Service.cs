@@ -21,8 +21,9 @@ namespace Lottery.Core.Partners.CockFight.GA28
     {
         private readonly IRedisCacheService _redisCacheService;
 
-        public CockFightGa28Service(ILogger<BasePartnerType> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
+        public CockFightGa28Service(ILogger<BasePartnerType> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow, IRedisCacheService redisCacheService) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
         {
+            _redisCacheService = redisCacheService;
         }
 
         public override PartnerType PartnerType { get; set; } = PartnerType.GA28;
@@ -54,7 +55,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
         private HttpClient CreateClient(string token)
         {
             var httpClient = HttpClientFactory.CreateClient();
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Authorization", $"Token {token}");
+            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Token", token);
             return httpClient;
         }
 
