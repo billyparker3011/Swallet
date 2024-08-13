@@ -116,7 +116,7 @@ namespace Lottery.Core.Services.Agent
             await agentPositionTakingRepos.AddRangeAsync(agentPositionTakings);
 
             //Add default cockfight agent bet setting
-            var defaultCockFightAgentBetSettings = await cockFightBetKindRepos.FindQuery().Select(x => new CockFightAgentBetSetting
+            var defaultCockFightAgentBetSettings = await cockFightBetKindRepos.FindQuery().Select(x => new Data.Entities.Partners.CockFight.CockFightAgentBetSetting
             {
                 Agent = newAgent,
                 BetKindId = x.Id,

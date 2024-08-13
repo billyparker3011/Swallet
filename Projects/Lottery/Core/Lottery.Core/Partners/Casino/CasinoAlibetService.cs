@@ -12,7 +12,7 @@ namespace Lottery.Core.Partners.Casino
         {
         }
 
-        public override PartnerType PartnerType { get; set; } = PartnerType.Alibet;
+        public override PartnerType PartnerType { get; set; } = PartnerType.Allbet;
 
         public override Task<HttpResponseMessage> CreatePlayer(object data)
         {

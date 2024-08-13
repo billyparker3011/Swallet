@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Lottery.Core.Repositories.BookiesSetting
 {
-    public class BookiesSettingRepository : EntityFrameworkCoreRepository<long, Data.Entities.BookieSetting, LotteryContext>, IBookiesSettingRepository
+    public class BookiesSettingRepository : EntityFrameworkCoreRepository<int, BookieSetting, LotteryContext>, IBookiesSettingRepository
     {
         public BookiesSettingRepository(LotteryContext context) : base(context)
         {

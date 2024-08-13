@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Data.Entities;
+using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;

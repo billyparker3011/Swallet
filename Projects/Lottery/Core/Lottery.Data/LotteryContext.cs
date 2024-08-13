@@ -1,5 +1,6 @@
 ﻿using Lottery.Data.Entities;
-using Lottery.Data.Entities.Partners.CA;
+using Lottery.Data.Entities.Partners.Casino;
+using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lottery.Data
@@ -40,49 +41,29 @@ namespace Lottery.Data
         public virtual DbSet<BookieSetting> BookieSettings { get; set; }
 
         #region Cock Fight Partner
+        public virtual DbSet<CockFightBetKind> CockFightBetKinds { get; set; }
         public virtual DbSet<CockFightAgentBetSetting> CockFightAgentBetSettings { get; set; }
         public virtual DbSet<CockFightAgentPostionTaking> CockFightAgentPostionTakings { get; set; }
-        public virtual DbSet<CockFightBetKind> CockFightBetKinds { get; set; }
         public virtual DbSet<CockFightPlayerBetSetting> CockFightPlayerBetSettings { get; set; }
         public virtual DbSet<CockFightPlayerMapping> CockFightPlayerMappings { get; set; }
         public virtual DbSet<CockFightTicket> CockFightTickets { get; set; }
         #endregion
 
-        #region CA Partner
-        public virtual DbSet<CAAgentBetSetting> CAAgentBetSettings { get; set; }
-        public virtual DbSet<CAAgentBetSettingAgentHandicap> CAAgentBetSettingAgentHandicaps { get; set; }
-        public virtual DbSet<CAAgentHandicap> CAAgentHandicaps { get; set; }
-        public virtual DbSet<CAAgentPositionTaking> CAAgentPositionTakings { get; set; }
-        public virtual DbSet<CABetKind> CABetKinds { get; set; }
-        public virtual DbSet<CAGameType> CAGameTypes { get; set; }
-        public virtual DbSet<CAPlayerBetSetting> CAPlayerBetSettings { get; set; }
-        public virtual DbSet<CAPlayerBetSettingAgentHandicap> CAPlayerBetSettingAgentHandicaps { get; set; }
-        public virtual DbSet<CAPlayerMapping> CAPlayerMappings { get; set; }
+        #region Casino Partner
+        public virtual DbSet<CasinoBetKind> CasinoBetKinds { get; set; }
+        public virtual DbSet<CasinoGameType> CasinoGameTypes { get; set; }
+        public virtual DbSet<CasinoAgentHandicap> CasinoAgentHandicaps { get; set; }
+        public virtual DbSet<CasinoAgentBetSetting> CasinoAgentBetSettings { get; set; }
+        //public virtual DbSet<CasinoAgentBetSettingAgentHandicap> CasinoAgentBetSettingAgentHandicaps { get; set; }
+        public virtual DbSet<CasinoAgentPositionTaking> CasinoAgentPositionTakings { get; set; }
+        public virtual DbSet<CasinoPlayerBetSetting> CasinoPlayerBetSettings { get; set; }
+        //public virtual DbSet<CasinoPlayerBetSettingAgentHandicap> CasinoPlayerBetSettingAgentHandicaps { get; set; }
+        public virtual DbSet<CasinoPlayerMapping> CasinoPlayerMappings { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
-
-            modelBuilder.Entity<CAAgentBetSettingAgentHandicap>()
-           .HasKey(ca => new { ca.CAAgentBetSettingId, ca.CAAgentHandicapId });
-
-            modelBuilder.Entity<CAAgentBetSettingAgentHandicap>()
-                .HasOne(ca => ca.CAAgentBetSetting)
-                .WithMany(s => s.CAAgentBetSettingAgentHandicaps)
-                .HasForeignKey(ca => ca.CAAgentBetSettingId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-
-            modelBuilder.Entity<CAPlayerBetSettingAgentHandicap>()
-                .HasKey(ca => new { ca.CAPlayerBetSettingId, ca.CAAgentHandicapId });
-
-            modelBuilder.Entity<CAPlayerBetSettingAgentHandicap>()
-               .HasOne(ca => ca.CAPlayerBetSetting)
-               .WithMany(s => s.CAPlayerBetSettingAgentHandicaps)
-               .HasForeignKey(ca => ca.CAPlayerBetSettingId)
-               .OnDelete(DeleteBehavior.Restrict);
-
             base.OnModelCreating(modelBuilder);
         }
     }

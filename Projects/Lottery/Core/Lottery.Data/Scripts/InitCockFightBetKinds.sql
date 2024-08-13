@@ -1,7 +1,8 @@
-﻿Declare @CockFightBetKindName nvarchar(255) = N'Cockfight bet kind'
-If NOT EXISTS (Select Top 1 1 From CockFightBetKinds Where Name = @CockFightBetKindName)
+﻿Declare @CockFightBetKindId int = 1
+Declare @CockFightBetKindName nvarchar(255) = N'Cockfight bet kind'
+If NOT EXISTS (Select Top 1 1 From CockFightBetKinds Where Id = @CockFightBetKindId)
 Begin
-	INSERT INTO CockFightBetKinds (Name, Enabled, CreatedAt, CreatedBy) 
+	INSERT INTO CockFightBetKinds (Id, Name, Enabled) 
 	VALUES 
-		(@CockFightBetKindName, 1, GETDATE(), 0)
+		(@CockFightBetKindId, @CockFightBetKindName, 1)
 End

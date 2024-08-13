@@ -2,7 +2,7 @@
 {
     public class UpdateCockFightAgentPositionTakingModel
     {
-        public long BetKindId { get; set; }
+        public int BetKindId { get; set; }
         public decimal ActualPositionTaking { get; set; }
     }
 }

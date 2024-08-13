@@ -1,18 +1,12 @@
 ﻿using Lottery.Core.Enums.Partner;
+using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.PortableExecutable;
 using System.Security.Claims;
-using System.Text;
 using System.Text.Encodings.Web;
-using System.Threading.Tasks;
 
 namespace Lottery.Core.Partners.Attribute.CockFight
 {
@@ -29,11 +23,12 @@ namespace Lottery.Core.Partners.Attribute.CockFight
         {
             if (!Request.Headers.TryGetValue("Authorization", out var authHeader))
                 return AuthenticateResult.Fail("Authorization header not found.");
-            
+
             var bookieRequestRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
             var bookieRequestSetting = await bookieRequestRepos.FindBookieSettingByType(PartnerType.GA28);
-            if (bookieRequestSetting == null || bookieRequestSetting.SettingValue == null) return AuthenticateResult.Fail("Setting has not been configured yet.");
-            var expectedToken = bookieRequestSetting.SettingValue.ApplicationStaticToken;
+            if (bookieRequestSetting == null || string.IsNullOrEmpty(bookieRequestSetting.SettingValue)) return AuthenticateResult.Fail("Setting has not been configured yet.");
+            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(bookieRequestSetting.SettingValue);
+            var expectedToken = settingValue.ApplicationStaticToken;
 
             var token = authHeader.ToString().Replace("Token ", "");
 

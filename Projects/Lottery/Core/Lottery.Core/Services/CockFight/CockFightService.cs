@@ -47,7 +47,9 @@ namespace Lottery.Core.Services.CockFight
             var cockFightPlayerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.PlayerId == ClientContext.Player.PlayerId).FirstOrDefaultAsync();
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType.GA28) ?? throw new BadRequestException(ErrorCodeHelper.CockFight.BookieSettingIsNotBeingInitiated);
-            var accountId = cockFightRequestSetting.SettingValue?.PartnerAccountId ?? throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
+            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
+            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
+            var accountId = settingValue?.PartnerAccountId ?? throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
 
             // Create CockFight player
             bool isSuccessCreatedPlayer = true;
@@ -71,7 +73,7 @@ namespace Lottery.Core.Services.CockFight
                 }
 
                 if (!isSuccessCreatedPlayer) return;
-                await cockFightPlayerMappingRepos.AddAsync(new Data.Entities.CockFightPlayerMapping
+                await cockFightPlayerMappingRepos.AddAsync(new Data.Entities.Partners.CockFight.CockFightPlayerMapping
                 {
                     PlayerId = ClientContext.Player.PlayerId,
                     AccountId = accountId,
@@ -137,7 +139,9 @@ namespace Lottery.Core.Services.CockFight
             var cockFightPlayerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.PlayerId == ClientContext.Player.PlayerId).FirstOrDefaultAsync();
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType.GA28) ?? throw new BadRequestException(ErrorCodeHelper.CockFight.BookieSettingIsNotBeingInitiated);
-            var accountId = cockFightRequestSetting.SettingValue?.PartnerAccountId ?? throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
+            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
+            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
+            var accountId = settingValue?.PartnerAccountId ?? throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
 
             if (cockFightPlayerMapping == null || !cockFightPlayerMapping.IsInitial) throw new BadRequestException(ErrorCodeHelper.CockFight.PlayerHasNotBeenInitiatedYet);
 

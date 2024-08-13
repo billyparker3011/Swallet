@@ -1,30 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Net;
-using System.Security.Cryptography;
-using System.Text;
-using Lottery.Core.Partners.Models.CA;
-using System.IO;
-using Lottery.Core.Services.CockFight;
-using HnMicro.Framework.Services;
+﻿using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Contexts;
+using Lottery.Core.Helpers;
+using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Partners.Publish;
+using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Lottery.Data.Entities;
-using Lottery.Core.Repositories.BookiesSetting;
-using HnMicro.Framework.Exceptions;
-using Lottery.Core.Enums.Partner;
-using Lottery.Core.Helpers;
+using System.Globalization;
+using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Lottery.Core.Services.Partners.CA
 {
-    public class CAService: LotteryBaseService<CAService>, ICAService
+    public class CAService : LotteryBaseService<CAService>, ICAService
     {
         private readonly HttpClient _client;
         private readonly IPartnerPublishService _partnerPublishService;
@@ -50,7 +41,7 @@ namespace Lottery.Core.Services.Partners.CA
         public async Task<string> SendRequestAsync(HttpMethod httpMethod, string path, string requestBody)
         {
             try
-            { 
+            {
                 var cABookieSetting = await GetCABookieSettingValueAsync();
 
                 CultureInfo ci = new CultureInfo("en-US");
@@ -59,7 +50,7 @@ namespace Lottery.Core.Services.Partners.CA
                 string contentMD5 = Base64edMd5(requestBody);
                 var authorization = GeneralAuthorizationHeader(httpMethod.Method, path, contentMD5, cABookieSetting.ContentType, requestTime, cABookieSetting.AllbetApiKey, cABookieSetting.OperatorId);
 
-                var httpRequestMessage = new HttpRequestMessage();               
+                var httpRequestMessage = new HttpRequestMessage();
                 httpRequestMessage.Method = httpMethod;
                 httpRequestMessage.Content = httpMethod == HttpMethod.Post ? new StringContent(requestBody) : null;
 
@@ -117,19 +108,19 @@ namespace Lottery.Core.Services.Partners.CA
             return md5Crp.ComputeHash(data);
         }
 
-        public async Task<CABookieSettingValue> GetCABookieSettingValueAsync()
+        public async Task<AllbetBookieSettingValue> GetCABookieSettingValueAsync()
         {
-            var cABookieSetting = await _redisCacheService.GetDataAsync<CABookieSettingValue>(PartnerHelper.CAPartnerKey.CABookieSettingKey);
+            var cABookieSetting = await _redisCacheService.GetDataAsync<AllbetBookieSettingValue>(PartnerHelper.CAPartnerKey.CABookieSettingKey);
 
-            if(cABookieSetting != null)
+            if (cABookieSetting != null)
             {
                 return cABookieSetting;
             }
             else
             {
                 var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
-                cABookieSetting = new CABookieSettingValue();//await bookiesSettingRepos.FindBookieSettingByType(PartnerType.Allbet) ?? throw new BadRequestException(ErrorCodeHelper.CockFight.BookieSettingIsNotBeingInitiated);
-               await _redisCacheService.SetAddAsync<CABookieSettingValue>(PartnerHelper.CAPartnerKey.CABookieSettingKey, cABookieSetting);
+                cABookieSetting = new AllbetBookieSettingValue();//await bookiesSettingRepos.FindBookieSettingByType(PartnerType.Allbet) ?? throw new BadRequestException(ErrorCodeHelper.CockFight.BookieSettingIsNotBeingInitiated);
+                await _redisCacheService.SetAddAsync<AllbetBookieSettingValue>(PartnerHelper.CAPartnerKey.CABookieSettingKey, cABookieSetting);
             }
 
             return cABookieSetting;
@@ -148,9 +139,9 @@ namespace Lottery.Core.Services.Partners.CA
 
             if (string.IsNullOrWhiteSpace(signature)) return false;
 
-            var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey,  cABookieSettingValue.OperatorId);
+            var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
 
-            if(header == authorizationHeader) return true;
+            if (header == authorizationHeader) return true;
 
             return false;
         }

@@ -5,7 +5,7 @@ using Lottery.Data.Entities;
 
 namespace Lottery.Core.Repositories.BookiesSetting
 {
-    public interface IBookiesSettingRepository : IEntityFrameworkCoreRepository<long, Data.Entities.BookieSetting, LotteryContext>
+    public interface IBookiesSettingRepository : IEntityFrameworkCoreRepository<int, BookieSetting, LotteryContext>
     {
         Task<BookieSetting> FindBookieSettingByType(PartnerType type);
     }

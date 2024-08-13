@@ -33,7 +33,8 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
-            if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
+            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new NotFoundException();
+            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
 
             var ga28CreatePlayerModel = data as Ga28CreateMemberModel;
 
@@ -44,9 +45,9 @@ namespace Lottery.Core.Partners.CockFight.GA28
             });
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            var httpClient = CreateClient(cockFightRequestSetting.SettingValue.AuthValue);
+            var httpClient = CreateClient(settingValue.AuthValue);
 
-            var url = $"{cockFightRequestSetting.SettingValue.ApiAddress}/api/v1/members/";
+            var url = $"{settingValue.ApiAddress}/api/v1/members/";
             await httpClient.PostAsync(url, content);
         }
 
@@ -64,13 +65,14 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
-            if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
+            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new NotFoundException();
+            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
 
-            var httpClient = CreateClient(cockFightRequestSetting.SettingValue.AuthValue);
+            var httpClient = CreateClient(settingValue.AuthValue);
 
             var ga28BetSettingData = data as Ga28SyncUpBetSettingModel;
 
-            var url = $"{cockFightRequestSetting.SettingValue.ApiAddress}/api/v1/members/{ga28BetSettingData.MemberRefId.ToLower()}";
+            var url = $"{settingValue.ApiAddress}/api/v1/members/{ga28BetSettingData.MemberRefId.ToLower()}";
 
             // Update limit amount per fight setting
             var limitAmountPerFightSetting = Newtonsoft.Json.JsonConvert.SerializeObject(new
@@ -100,11 +102,12 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var cockFightPlayerMappingRepos = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
 
             var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
-            if (cockFightRequestSetting.SettingValue == null) throw new NotFoundException();
+            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new NotFoundException();
+            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
 
             var ga28GenerateUrlModel = data as Ga28LoginPlayerModel;
 
-            var httpClient = CreateClient(cockFightRequestSetting.SettingValue.AuthValue);
+            var httpClient = CreateClient(settingValue.AuthValue);
 
             var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(new
             {
@@ -113,7 +116,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             });
             var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            var url = $"{cockFightRequestSetting.SettingValue.ApiAddress}/api/v1/members/login";
+            var url = $"{settingValue.ApiAddress}/api/v1/members/login";
             var response = await httpClient.PostAsync(url, content);
             if (response is null) return;
 

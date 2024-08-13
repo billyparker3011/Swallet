@@ -2,7 +2,7 @@
 {
     public class UpdateCockFightAgentBetSettingRequest
     {
-        public long BetKindId { get; set; }
+        public int BetKindId { get; set; }
         public decimal MainLimitAmountPerFight { get; set; }
         public decimal DefaultMaxMainLimitAmountPerFight { get; set; }
         public decimal DrawLimitAmountPerFight { get; set; }

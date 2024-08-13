@@ -50,7 +50,7 @@ namespace Lottery.Core.Services.CockFight
 
             var targetAgent = await agentRepos.FindByIdAsync(agentId) ?? throw new NotFoundException();
 
-            var defaultPositionTaking = new CockFightAgentPostionTaking();
+            var defaultPositionTaking = new Data.Entities.Partners.CockFight.CockFightAgentPostionTaking();
             switch (targetAgent.RoleId)
             {
                 case (int)Role.Supermaster:

@@ -1,6 +1,5 @@
 ﻿using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Responses;
-using Lottery.Agent.AgentService.Requests.Agent;
 using Lottery.Agent.AgentService.Requests.CockFight;
 using Lottery.Core.Models.CockFight.UpdateCockFightAgentBetSetting;
 using Lottery.Core.Services.CockFight;

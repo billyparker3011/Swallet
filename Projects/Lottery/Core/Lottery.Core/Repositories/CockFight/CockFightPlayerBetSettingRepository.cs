@@ -1,11 +1,11 @@
 ﻿using HnMicro.Modules.EntityFrameworkCore.Repositories;
 using Lottery.Data;
-using Lottery.Data.Entities;
+using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
 
 namespace Lottery.Core.Repositories.CockFight
 {
-    public class CockFightPlayerBetSettingRepository : EntityFrameworkCoreRepository<long, Data.Entities.CockFightPlayerBetSetting, LotteryContext>, ICockFightPlayerBetSettingRepository
+    public class CockFightPlayerBetSettingRepository : EntityFrameworkCoreRepository<long, CockFightPlayerBetSetting, LotteryContext>, ICockFightPlayerBetSettingRepository
     {
         public CockFightPlayerBetSettingRepository(LotteryContext context) : base(context)
         {

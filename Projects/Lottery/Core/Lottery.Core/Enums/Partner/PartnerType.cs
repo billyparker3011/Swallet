@@ -3,6 +3,6 @@
     public enum PartnerType
     {
         GA28,
-        Alibet
+        Allbet
     }
 }

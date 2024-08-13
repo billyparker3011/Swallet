@@ -99,7 +99,7 @@ namespace Lottery.Core.Services.Player
             await playerOddRepos.AddRangeAsync(playerBetSettings);
 
             //Add default cockfight player bet setting
-            var defaultCockFightPlayerBetSettings = await cockFightBetKindRepos.FindQuery().Select(x => new CockFightPlayerBetSetting
+            var defaultCockFightPlayerBetSettings = await cockFightBetKindRepos.FindQuery().Select(x => new Data.Entities.Partners.CockFight.CockFightPlayerBetSetting
             {
                 Player = player,
                 BetKindId = x.Id,
