@@ -122,8 +122,13 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             var stringData = await response.Content.ReadAsStringAsync();
             if (!stringData.IsValidJson()) return;
+
+            Logger.LogInformation($"Login responsed data: {stringData}");
+
             var objectData = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28LoginPlayerDataReturnModel>(stringData);
             if (objectData is null || objectData.Member is null) return;
+
+            Logger.LogInformation($"MemberRefId responsed data: {objectData.Member.MemberRefId}");
 
             var playerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.MemberRefId == objectData.Member.MemberRefId && x.IsInitial).FirstOrDefaultAsync();
             if (playerMapping is null) return;
