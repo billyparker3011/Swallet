@@ -47,6 +47,15 @@ namespace Lottery.Player.PlayerService.Controllers
             return Ok(await _cockFightService.GetCockFightPlayerBalance());
         }
 
+        [HttpPost("transfer")]
+        //[Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
+        [AllowAnonymous]
+        public async Task<IActionResult> TransferTicket([FromBody] TransferTicketRequest request)
+        {
+            //  TODO Need to save ticket to DB
+            return Ok();
+        }
+
         [HttpGet("{playerId:long}/bet-settings")]
         public async Task<IActionResult> GetDetailCockFightPlayerBetSettings([FromRoute] long playerId)
         {
