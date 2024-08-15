@@ -1,14 +1,4 @@
-﻿using Lottery.Data.Entities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading.Tasks;
-using static Lottery.Core.Helpers.AuditDataHelper;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace Lottery.Core.Helpers
+﻿namespace Lottery.Core.Helpers
 {
     public static class PartnerHelper
     {

@@ -7,6 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.BuildServices();
 builder.BuildLotteryService();
 builder.BuildRedis();
+builder.BuildBackgroundServices();
 
 var app = builder.Build();
 

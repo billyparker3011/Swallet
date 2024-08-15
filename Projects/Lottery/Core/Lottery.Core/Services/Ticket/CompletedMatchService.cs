@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Enums;
 using HnMicro.Framework.Services;
 using Lottery.Core.Helpers;
 using Lottery.Core.Models.MatchResult;
@@ -25,16 +26,19 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
     private readonly List<int> _recalculateStates;
     private readonly List<int> _refundRejectTicketStates;
     private readonly ITicketProcessor _processor;
+    private readonly IProcessPlayerWinloseService _processPlayerWinloseService;
     private readonly List<CompletedMatchInQueueModel> _matches = new();
     private readonly List<long> _matchIds = new();
     private readonly List<Data.Entities.Ticket> _ticketsByMatch = new();
     private readonly List<Data.Entities.MatchResult> _matchResults = new();
 
     public CompletedMatchService(ILogger<CompletedMatchService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService,
-        ITicketProcessor processor) : base(logger, serviceProvider, configuration, clockService)
+        ITicketProcessor processor,
+        IProcessPlayerWinloseService processPlayerWinloseService) : base(logger, serviceProvider, configuration, clockService)
     {
         _completedMatchOption = configuration.GetSection(CompletedMatchOption.AppSettingName).Get<CompletedMatchOption>();
         _processor = processor;
+        _processPlayerWinloseService = processPlayerWinloseService;
         _outsStates = CommonHelper.OutsTicketState();
         _recalculateStates = CommonHelper.RecalculateTicketState();
         _refundRejectTicketStates = CommonHelper.RefundRejectTicketState();
@@ -127,8 +131,10 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             }
         }
 
-        var rootTickets = _ticketsByMatch.Where(f => !f.ParentId.HasValue).ToList();
+        var rootTickets = tickets.Where(f => !f.ParentId.HasValue).ToList();
         var i = 0;
+        //  Key = PlayerId; Value = Dict(Key = <Month Kickofftime (MM)>.<Day Kickofftime (DD)>.<Year Kickofftime (YYYY)>; Value = Total Winlose)
+        var dictProcessed = new Dictionary<long, Dictionary<string, decimal>>();
         foreach (var item in rootTickets)
         {
             if (_refundRejectTicketStates.Contains(item.State)) continue;
@@ -189,6 +195,16 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
                 item.SupermasterCommission = resultTicket.SupermasterCommission;
 
                 item.CompanyWinLoss = resultTicket.CompanyWinLoss;
+
+                Dictionary<string, decimal> processedVals;
+                if (!dictProcessed.TryGetValue(item.PlayerId, out processedVals))
+                {
+                    processedVals = new Dictionary<string, decimal>();
+                    dictProcessed[item.PlayerId] = processedVals;
+                }
+                var kickOffTimeKey = item.KickOffTime.GetPartOfWinloseMainKey();
+                if (processedVals.ContainsKey(kickOffTimeKey)) processedVals[kickOffTimeKey] += item.PlayerWinLoss;
+                else processedVals[kickOffTimeKey] = item.PlayerWinLoss;
             }
 
             item.UpdatedAt = ClockService.GetUtcNow();
@@ -247,6 +263,9 @@ public class CompletedMatchService : HnMicroBaseService<CompletedMatchService>, 
             i = 0;
         }
         lotteryUow.SaveChanges();
+
+        if (dictProcessed.Count == 0) return;
+        _processPlayerWinloseService.Enqueue(SportKind.Lottery, dictProcessed);
     }
 
     private bool ValidResults(List<PrizeMatchResultModel> results)
