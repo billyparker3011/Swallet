@@ -52,6 +52,7 @@ namespace Lottery.Player.PlayerService.Controllers
         public async Task<IActionResult> TransferTicket([FromBody] TransferTicketRequest request)
         {
             //  TODO Need to save ticket to DB
+            //await _cockFightService.TransferCockFightPlayerTickets();
             return Ok();
         }
 

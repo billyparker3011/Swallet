@@ -2,19 +2,19 @@
 {
     public enum CockFightTicketStatus
     {
-        TicketIsConfirm,
-        SettlementIsInProgress,
-        SettledButIsWaitingForPayout,
-        SettledButPayoutIsInProgress,
-        TicketIsSettled,
-        CanceledButIsWaitingForPayout,
-        CanceledButPayoutIsInProgress,
-        TicketIsCanceled,
-        VoidIsInProgress,
-        TicketIsVoided,
-        UnsettledButWaitingForPayout,
-        UnsettledButPayoutIsInProgress,
-        UncancelledWaitingForPayout,
-        UncancelledButPayoutIsInProgress
+        TicketIsConfirm = 0,
+        SettlementIsInProgress = 1,
+        SettledButIsWaitingForPayout = 2,
+        SettledButPayoutIsInProgress = 3,
+        TicketIsSettled = 4,
+        CanceledButIsWaitingForPayout = 5,
+        CanceledButPayoutIsInProgress = 6,
+        TicketIsCanceled = 7,
+        VoidIsInProgress = 8,
+        TicketIsVoided = 9,
+        UnsettledButWaitingForPayout = 10,
+        UnsettledButPayoutIsInProgress = 11,
+        UncancelledWaitingForPayout = 12,
+        UncancelledButPayoutIsInProgress = 13
     }
 }

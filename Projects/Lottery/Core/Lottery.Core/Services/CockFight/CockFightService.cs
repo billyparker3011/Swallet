@@ -167,6 +167,12 @@ namespace Lottery.Core.Services.CockFight
                 generatedMemberRefId = cockFightPlayerMapping.MemberRefId;
             }
 
+            // Remove existing token
+            var clientUrlKey = ClientContext.Player.PlayerId.GetGa28ClientUrlByPlayerId();
+            await _redisCacheService.HashDeleteFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+            var tokenKey = ClientContext.Player.PlayerId.GetGa28TokenByPlayerId();
+            await _redisCacheService.HashDeleteFieldsAsync(tokenKey.MainKey, new List<string> { tokenKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+
             await LotteryUow.SaveChangesAsync();
 
             // Login and save game url to redis cache
@@ -205,6 +211,11 @@ namespace Lottery.Core.Services.CockFight
                     Logger.LogError($"Update bet setting cock fight player with id = {ClientContext.Player.PlayerId} failed. Detail : {ex}");
                 }
             }
+        }
+
+        public async Task TransferCockFightPlayerTickets()
+        {
+            throw new NotImplementedException();
         }
     }
 }

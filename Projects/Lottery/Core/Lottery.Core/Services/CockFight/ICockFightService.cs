@@ -10,5 +10,6 @@ namespace Lottery.Core.Services.CockFight
         Task LoginCockFightPlayer();
         Task<LoginPlayerInformationDto> GetCockFightUrl();
         Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance();
+        Task TransferCockFightPlayerTickets();
     }
 }
