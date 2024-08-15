@@ -48,8 +48,7 @@ namespace Lottery.Player.PlayerService.Controllers
         }
 
         [HttpPost("transfer")]
-        //[Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
-        [AllowAnonymous]
+        [Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
         public async Task<IActionResult> TransferTicket([FromBody] TransferTicketRequest request)
         {
             //  TODO Need to save ticket to DB
