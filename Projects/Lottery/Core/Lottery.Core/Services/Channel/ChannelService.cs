@@ -49,6 +49,25 @@ namespace Lottery.Core.Services.Channel
             };
         }
 
+        public async Task Refresh()
+        {
+            var channelRepository = LotteryUow.GetRepository<IChannelRepository>();
+            var channels = await channelRepository.FindQueryBy(f => true).ToListAsync();
+            var publishedChannels = new List<ChannelModel>();
+            channels.ForEach(f =>
+            {
+                publishedChannels.Add(new ChannelModel
+                {
+                    Id = f.Id,
+                    Name = f.Name,
+                    RegionId = f.RegionId,
+                    DayOfWeeks = string.IsNullOrEmpty(f.DayOfWeeks) ? new List<int>() : f.DayOfWeeks.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(f1 => int.Parse(f1)).OrderBy(f => f).ToList()
+                });
+            });
+
+            await _publishCommonService.PublishChannel(publishedChannels);
+        }
+
         public async Task UpdateChannels(UpdateChannelsModel model)
         {
             var channelIds = model.Items.Select(f => f.ChannelId).ToList();

@@ -25,6 +25,13 @@ namespace Lottery.Agent.AgentService.Controllers
             return Ok(OkResponse.Create(_channelService.GetFilterOptions()));
         }
 
+        [HttpGet("refresh"), LotteryAuthorize(Permission.Management.Channels)]
+        public async Task<IActionResult> Refresh()
+        {
+            await _channelService.Refresh();
+            return Ok();
+        }
+
         [HttpGet, LotteryAuthorize(Permission.Management.Channels)]
         public async Task<IActionResult> GetChannels([FromQuery] int? regionId)
         {

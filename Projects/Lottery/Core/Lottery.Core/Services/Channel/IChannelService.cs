@@ -8,5 +8,6 @@ namespace Lottery.Core.Services.Channel
         Task<List<ChannelModel>> GetChannels(int? regionId);
         ChannelFilterOptionModel GetFilterOptions();
         Task UpdateChannels(UpdateChannelsModel model);
+        Task Refresh();
     }
 }
