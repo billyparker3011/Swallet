@@ -9,7 +9,7 @@ namespace Lottery.Data.Entities.Partners.Casino
     public class CasinoPlayerBetSetting : DefaultBaseEntity<long>
     {
         [Required]
-        public long PlayerMappingId { get; set; }
+        public long PlayerId { get; set; }
         [Required]
         public int BetKindId { get; set; }
         [Required]
@@ -21,13 +21,15 @@ namespace Lottery.Data.Entities.Partners.Casino
         public decimal? MaxWin { get; set; }
         public decimal? MaxLose { get; set; }
 
-        [ForeignKey(nameof(PlayerMappingId))]
-        public virtual CasinoPlayerMapping CasinoPlayerMapping { get; set; }
+        [ForeignKey(nameof(PlayerId))]
+        public virtual Player Player { get; set; }
 
         [ForeignKey(nameof(BetKindId))]
         public virtual CasinoBetKind CasinoBetKind { get; set; }
 
         [ForeignKey(nameof(VipHandicapId))]
         public virtual CasinoAgentHandicap CasinoAgentHandicap { get; set; }
+
+        public ICollection<CasinoPlayerBetSettingAgentHandicap> CasinoPlayerBetSettingAgentHandicaps { get; set; }
     }
 }

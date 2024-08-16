@@ -110,7 +110,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "5.1.6. Tools", "5.1.6. Tool
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lottery.Tools.AdjustOddsService", "Projects\Lottery\Tools\Lottery.Tools.AdjustOddsService\Lottery.Tools.AdjustOddsService.csproj", "{A75ED866-2EDB-470B-9F97-B767DC4DE415}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CockFight.Tools.Ga28", "Projects\Lottery\Tools\CockFight.Tools.Ga28\CockFight.Tools.Ga28.csproj", "{A90DE021-8C3E-4757-9E75-2FB757E99E76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CockFight.Tools.Ga28", "Projects\Lottery\Tools\CockFight.Tools.Ga28\CockFight.Tools.Ga28.csproj", "{A90DE021-8C3E-4757-9E75-2FB757E99E76}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Casino.Tools.AllBet", "Projects\Lottery\Tools\Casino.Tools.AllBet\Casino.Tools.AllBet.csproj", "{6B52352B-E88D-4847-AC86-C973F36DCCD3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -226,6 +228,10 @@ Global
 		{A90DE021-8C3E-4757-9E75-2FB757E99E76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A90DE021-8C3E-4757-9E75-2FB757E99E76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A90DE021-8C3E-4757-9E75-2FB757E99E76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6B52352B-E88D-4847-AC86-C973F36DCCD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6B52352B-E88D-4847-AC86-C973F36DCCD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6B52352B-E88D-4847-AC86-C973F36DCCD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6B52352B-E88D-4847-AC86-C973F36DCCD3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -278,6 +284,7 @@ Global
 		{02A7FCE3-F2A6-4F9D-9725-A4717903AD35} = {B347CD93-33C0-4635-9DC8-235742ABDAFE}
 		{A75ED866-2EDB-470B-9F97-B767DC4DE415} = {02A7FCE3-F2A6-4F9D-9725-A4717903AD35}
 		{A90DE021-8C3E-4757-9E75-2FB757E99E76} = {02A7FCE3-F2A6-4F9D-9725-A4717903AD35}
+		{6B52352B-E88D-4847-AC86-C973F36DCCD3} = {02A7FCE3-F2A6-4F9D-9725-A4717903AD35}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4C8C7468-507A-47C9-B746-8B8FCB1E2F5E}

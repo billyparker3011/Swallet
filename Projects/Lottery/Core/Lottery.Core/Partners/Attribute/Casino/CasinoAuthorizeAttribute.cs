@@ -6,11 +6,11 @@ using System.Text.Encodings.Web;
 
 namespace Lottery.Core.Partners.Attribute.CA
 {
-    public class CAAuthorizeAttribute : AuthenticationHandler<AuthenticationSchemeOptions>
+    public class CasinoAuthorizeAttribute : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         //private readonly ICAService _caService;
 
-        public CAAuthorizeAttribute(
+        public CasinoAuthorizeAttribute(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
@@ -35,7 +35,7 @@ namespace Lottery.Core.Partners.Attribute.CA
                 return Task.FromResult(AuthenticateResult.Fail("Date Header Not Found."));
             }
 
-            var identity = new ClaimsIdentity(null , nameof(CAAuthorizeAttribute));
+            var identity = new ClaimsIdentity(null , nameof(CasinoAuthorizeAttribute));
             var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name);
 
             return Task.FromResult(AuthenticateResult.Success(ticket));

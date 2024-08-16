@@ -13,7 +13,7 @@ builder.BuildLotteryService();
 builder.BuildInternalPlayerService();
 builder.BuildRedis();
 
-builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, CAAuthorizeAttribute>(nameof(CAAuthorizeAttribute), null);
+builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, CasinoAuthorizeAttribute>(nameof(CasinoAuthorizeAttribute), null);
 builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, CockFightAuthorizeAttribute>(nameof(CockFightAuthorizeAttribute), null);
 
 var app = builder.Build();

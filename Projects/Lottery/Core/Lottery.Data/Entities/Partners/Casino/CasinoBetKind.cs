@@ -18,8 +18,8 @@ namespace Lottery.Data.Entities.Partners.Casino
         [Required, MaxLength(10)]
         public string Code { get; set; }
 
-        public string RegionId { get; set; }
-        public string CategoryId { get; set; }
+        public int? RegionId { get; set; }
+        public int? CategoryId { get; set; }
         public bool? IsLive { get; set; }
         public int? OrderInCategory { get; set; }
         public decimal? Award { get; set; }

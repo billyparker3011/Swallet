@@ -13,5 +13,7 @@ namespace Lottery.Data.Entities.Partners.Casino
         public string TableCode { get; set; }
         [Required, MaxLength(10)]
         public string GameCode { get; set; }
+        [MaxLength(10)]
+        public string Caterory { get; set; }
     }
 }

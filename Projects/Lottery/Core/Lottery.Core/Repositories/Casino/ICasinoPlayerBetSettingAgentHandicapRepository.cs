@@ -5,6 +5,6 @@ namespace Lottery.Core.Repositories.Casino
 {
     public interface ICasinoPlayerBetSettingAgentHandicapRepository : IEntityFrameworkCoreRepository<long, Data.Entities.Partners.Casino.CasinoPlayerBetSettingAgentHandicap, LotteryContext>
     {
-
+        void DeleteItems(IEnumerable<Data.Entities.Partners.Casino.CasinoPlayerBetSettingAgentHandicap> items);
     }
 }

@@ -32,5 +32,7 @@ namespace Lottery.Data.Entities.Partners.Casino
 
         [ForeignKey(nameof(DefaultVipHandicapId))]
         public virtual CasinoAgentHandicap DefaultVipHandicap { get; set; }
+
+        public ICollection<CasinoAgentBetSettingAgentHandicap> CasinoAgentBetSettingAgentHandicaps { get; set; }
     }
 }

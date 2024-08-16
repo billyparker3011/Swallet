@@ -24,5 +24,25 @@ namespace Lottery.Core.Helpers
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }
+
+        public static KeyOfRedisHash GetCACientUrlByPlayerId(this long playerId)
+        {
+            return new KeyOfRedisHash
+            {
+                MainKey = string.Format(PartnerCachingConfigs.CAClientUrlByPlayerIdMainKey, playerId / CachingConfigs.HashStructureMaxLength),
+                SubKey = string.Format(PartnerCachingConfigs.CAClientUrlByPlayerIdSubKey, playerId % CachingConfigs.HashStructureMaxLength),
+                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
+            };
+        }
+
+        public static KeyOfRedisHash GetCATokenByPlayerId(this long playerId)
+        {
+            return new KeyOfRedisHash
+            {
+                MainKey = string.Format(PartnerCachingConfigs.CATokenByPlayerIdMainKey, playerId / CachingConfigs.HashStructureMaxLength),
+                SubKey = string.Format(PartnerCachingConfigs.CATokenByPlayerIdSubKey, playerId % CachingConfigs.HashStructureMaxLength),
+                TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
+            };
+        }
     }
 }

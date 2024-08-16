@@ -54,16 +54,45 @@ namespace Lottery.Data
         public virtual DbSet<CasinoGameType> CasinoGameTypes { get; set; }
         public virtual DbSet<CasinoAgentHandicap> CasinoAgentHandicaps { get; set; }
         public virtual DbSet<CasinoAgentBetSetting> CasinoAgentBetSettings { get; set; }
-        //public virtual DbSet<CasinoAgentBetSettingAgentHandicap> CasinoAgentBetSettingAgentHandicaps { get; set; }
+        public virtual DbSet<CasinoAgentBetSettingAgentHandicap> CasinoAgentBetSettingAgentHandicaps { get; set; }
         public virtual DbSet<CasinoAgentPositionTaking> CasinoAgentPositionTakings { get; set; }
         public virtual DbSet<CasinoPlayerBetSetting> CasinoPlayerBetSettings { get; set; }
-        //public virtual DbSet<CasinoPlayerBetSettingAgentHandicap> CasinoPlayerBetSettingAgentHandicaps { get; set; }
+        public virtual DbSet<CasinoPlayerBetSettingAgentHandicap> CasinoPlayerBetSettingAgentHandicaps { get; set; }
         public virtual DbSet<CasinoPlayerMapping> CasinoPlayerMappings { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(GetType().Assembly);
+
+            modelBuilder.Entity<CasinoAgentBetSettingAgentHandicap>()
+.HasKey(ca => new { ca.CasinoAgentBetSettingId, ca.CasinoAgentHandicapId });
+
+            modelBuilder.Entity<CasinoAgentBetSettingAgentHandicap>()
+                .HasOne(ca => ca.CasinoAgentBetSetting)
+                .WithMany(s => s.CasinoAgentBetSettingAgentHandicaps)
+                .HasForeignKey(ca => ca.CasinoAgentBetSettingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CasinoAgentBetSettingAgentHandicap>()
+                .HasOne(sc => sc.CasinoAgentHandicap)
+                .WithMany()
+                .HasForeignKey(sc => sc.CasinoAgentHandicapId);
+
+            modelBuilder.Entity<CasinoPlayerBetSettingAgentHandicap>()
+                .HasKey(ca => new { ca.CasinoPlayerBetSettingId, ca.CasinoAgentHandicapId });
+
+            modelBuilder.Entity<CasinoPlayerBetSettingAgentHandicap>()
+               .HasOne(ca => ca.CasinoPlayerBetSetting)
+               .WithMany(s => s.CasinoPlayerBetSettingAgentHandicaps)
+               .HasForeignKey(ca => ca.CasinoPlayerBetSettingId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<CasinoPlayerBetSettingAgentHandicap>()
+                .HasOne(sc => sc.CasinoAgentHandicap)
+                .WithMany()
+                .HasForeignKey(sc => sc.CasinoAgentHandicapId);
+
             base.OnModelCreating(modelBuilder);
         }
     }

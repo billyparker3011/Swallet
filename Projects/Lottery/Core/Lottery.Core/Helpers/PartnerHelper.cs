@@ -2,12 +2,12 @@
 {
     public static class PartnerHelper
     {
-        public static class CAPartnerKey
+        public static class CasinoPartnerKey
         {
-            public static string CABookieSettingKey = "CABSKey";
+            public static string CasinoBookieSettingKey = "CABSKey";
         }
 
-        public static class CAReponseCode
+        public static class CasinoReponseCode
         {
             public static int Success = 0;
             public static int Invalid_Operator_ID = 10000;
@@ -22,6 +22,32 @@
             public static int System_is_under_maintenance = 10200;
             public static int Invalid_request_parameter = 40000;
             public static int Server_error = 50000;
+
+        }
+
+        public static class CasinoPathPost
+        {
+            public static string CheckOrCreate = "/CheckOrCreate";
+            public static string Login = "/Login";
+            public static string LoginTrial = "/LoginTrial";
+            public static string Logout = "/Logout";
+            public static string GetPlayerSetting = "/GetPlayerSetting";
+            public static string ModifyPlayerSetting = "/ModifyPlayerSetting";
+            public static string GetAgentHandicaps = "/GetAgentHandicaps";
+            public static string SetDefaultHandicapsForCreatingPlayer = "/SetDefaultHandicapsForCreatingPlayer";
+            public static string GetGameTables = "/GetGameTables";
+            public static string GetMaintenanceState = "/GetMaintenanceState";
+            public static string SetMaintenanceState = "/SetMaintenanceState";
+            public static string QueryWinningBetType = "/QueryWinningBetType";
+
+            public static string QueryBetRecordByBetNum = "/QueryBetRecordByBetNum";
+            public static string QuickQueryBetRecords = "/QuickQueryBetRecords";
+            public static string PagingQueryBetRecords = "/PagingQueryBetRecords";
+            public static string QueryModifiedBetRecords = "/QueryModifiedBetRecords";
+            public static string QuerySumHistories = "/QuerySumHistories";
+            public static string QueryOneDaySumHistories = "/QueryOneDaySumHistories";
+            public static string PagingQueryEventRecords = "/PagingQueryEventRecords";
+            public static string PagingQueryBetRecordsByPlayer = "/PagingQueryBetRecordsByPlayer";
         }
     }
 }

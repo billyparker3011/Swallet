@@ -35,6 +35,9 @@
     <None Update="Scripts\CreateCockFightOddForCompany.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="Scripts\InitCasinoData.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\MigrateAgentCockFightPositionTakings.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
