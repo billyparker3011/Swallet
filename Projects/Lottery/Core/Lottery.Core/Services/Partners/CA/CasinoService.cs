@@ -67,32 +67,20 @@ namespace Lottery.Core.Services.Partners.CA
 
         public async Task<AllbetBookieSettingValue> GetCasinoBookieSettingValueAsync()
         {
-            var data = await _redisCacheService.HashGetAsync(PartnerHelper.CasinoPartnerKey.CasinoBookieSettingKey, CachingConfigs.RedisConnectionForApp);
-            
-            if (data != null && data.TryGetValue(nameof(AllbetBookieSettingValue), out string allbetBookieSettingValue))
-            {
-                return JsonConvert.DeserializeObject<AllbetBookieSettingValue>(allbetBookieSettingValue);
-            }
-            else
-            {
-                var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
-                var bookieSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType.Allbet) ?? throw new NotFoundException();
-                var dict = new Dictionary<string, string>() { { nameof(AllbetBookieSettingValue), bookieSetting.SettingValue } };
-                await _redisCacheService.HashSetAsync(PartnerHelper.CasinoPartnerKey.CasinoBookieSettingKey, dict, null, CachingConfigs.RedisConnectionForApp);
-                return JsonConvert.DeserializeObject<AllbetBookieSettingValue>(bookieSetting.SettingValue);
-            }
-
+            var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
+            var bookieSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType.Allbet) ?? throw new NotFoundException();
+            return JsonConvert.DeserializeObject<AllbetBookieSettingValue>(bookieSetting.SettingValue);
         }
 
         public async Task<string> GetGameUrlAsync()
         {
             var caPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
-            var cAPlayerMapping = await caPlayerMappingRepository.FindQueryBy(x => x.PlayerId == 1/*ClientContext.Player.PlayerId*/).FirstOrDefaultAsync();
+            var cAPlayerMapping = await caPlayerMappingRepository.FindQueryBy(x => x.PlayerId == ClientContext.Player.PlayerId).FirstOrDefaultAsync();
 
             if (cAPlayerMapping == null) return null;
 
-            var clientUrlKey = cAPlayerMapping.PlayerId.GetCACientUrlByPlayerId();//ClientContext.Player.PlayerId.GetCACientUrlByPlayerId();
+            var clientUrlKey = ClientContext.Player.PlayerId.GetCACientUrlByPlayerId();
             var clientUrlHash = await _redisCacheService.HashGetFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
             if (!clientUrlHash.TryGetValue(clientUrlKey.SubKey, out string gameUrl)) return null;
             return gameUrl;
