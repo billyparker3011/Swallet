@@ -7,6 +7,8 @@ using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Category;
 using Lottery.Core.InMemory.Channel;
 using Lottery.Core.InMemory.Region;
+using Lottery.Core.InMemory.Setting;
+using Lottery.Core.Models.Setting.ProcessTicket;
 using Lottery.Core.Models.Ticket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -38,6 +40,9 @@ public class NormalizeTicketService : HnMicroBaseService<NormalizeTicketService>
         var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
         var categoryInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ICategoryInMemoryRepository>();
         var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
+        var settingInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ISettingInMemoryRepository>();
+        var setting = settingInMemoryRepository.FindByKey(nameof(ChannelsForCompletedTicketModel));
+
         data.ForEach(f =>
         {
             var region = regionInMemoryRepository.FindById(f.RegionId.ToEnum<Region>());
@@ -53,8 +58,29 @@ public class NormalizeTicketService : HnMicroBaseService<NormalizeTicketService>
                 f.CategoryName = category?.Name;
             }
 
-            var channel = channelInMemoryRepository.FindById(f.ChannelId);
-            f.ChannelName = channel?.Name;
+            if (f.ChannelId == -1 && setting != null && !string.IsNullOrEmpty(setting.ValueSetting))
+            {
+                var settingVal = Newtonsoft.Json.JsonConvert.DeserializeObject<ChannelsForCompletedTicketModel>(setting.ValueSetting);
+                if (settingVal.Items.TryGetValue(f.RegionId, out List<ChannelsForCompletedTicketDetailModel> listSetting))
+                {
+                    var channelsInList = listSetting.FirstOrDefault(f1 => f1.DayOfWeek == f.KickoffTime.DayOfWeek.ToInt());
+                    if (channelsInList != null)
+                    {
+                        var channelNames = channelInMemoryRepository.FindBy(f1 => channelsInList.ChannelIds.Contains(f1.Id)).Select(f1 => f1.Name).ToList();
+                        f.ChannelName = string.Join(", ", channelNames).Trim();
+                    }
+                    else
+                    {
+                        var channelNamesInRegion = channelInMemoryRepository.FindBy(f1 => f1.RegionId == f.RegionId && f1.DayOfWeeks.Contains(f.KickoffTime.DayOfWeek.ToInt())).Select(f1 => f1.Name).ToList();
+                        if (channelNamesInRegion.Count == 2) f.ChannelName = string.Join(", ", channelNamesInRegion).Trim();
+                    }
+                }
+            }
+            else
+            {
+                var channel = channelInMemoryRepository.FindById(f.ChannelId);
+                f.ChannelName = channel?.Name;
+            }
 
             var splitChooseNumbers = f.ChoosenNumbers.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
             if (f.BetKindId.IsMixedHas2Numbers()) f.ShowMore = splitChooseNumbers.Length > 2;

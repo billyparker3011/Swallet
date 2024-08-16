@@ -18,7 +18,7 @@ public class Central_Mixed_LoXien_Processor : AbstractBetKindProcessor
     {
     }
 
-    public override int BetKindId { get; set; } = Enums.BetKind.Central_LoXien.ToInt();
+    public override int BetKindId { get; set; } = Enums.BetKind.Central_Mixed_LoXien.ToInt();
 
     public override bool EnableStats()
     {

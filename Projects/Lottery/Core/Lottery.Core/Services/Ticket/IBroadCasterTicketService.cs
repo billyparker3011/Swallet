@@ -6,6 +6,6 @@ namespace Lottery.Core.Services.Ticket;
 
 public interface IBroadCasterTicketService : IScopedDependency
 {
-    Task<List<TicketDetailModel>> GetBroadCasterOuts(long betkindId);
+    Task<List<TicketDetailModel>> GetBroadCasterOuts(int betkindId);
     Task<List<TicketDetailModel>> GetBroadCasterWinloseDetail(WinloseDetailQueryModel model);
 }

@@ -25,7 +25,7 @@ public class BroadCasterTicketService : LotteryBaseService<BroadCasterTicketServ
         _normalizeTicketService = normalizeTicketService;
     }
 
-    public async Task<List<TicketDetailModel>> GetBroadCasterOuts(long betkindId)
+    public async Task<List<TicketDetailModel>> GetBroadCasterOuts(int betkindId)
     {
         var ticketRepository = LotteryUow.GetRepository<ITicketRepository>();
         var outsState = CommonHelper.OutsTicketState();
