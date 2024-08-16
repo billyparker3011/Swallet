@@ -33,6 +33,33 @@ namespace Lottery.Core.Helpers
                 || betKindId == BetKind.Southern_Mixed_LoXien.ToInt();
         }
 
+        public static bool IsSomeSpecialOfFirstNorthern(this int betKindId)
+        {
+            return betKindId == BetKind.FirstNorthern_Northern_DeTruot.ToInt()
+                || betKindId == BetKind.FirstNorthern_Northern_LoTruot.ToInt();
+        }
+
+        public static bool IsMixedHas2Numbers(this int betKindId)
+        {
+            return betKindId == BetKind.FirstNorthern_Northern_Xien2.ToInt()
+                || betKindId == BetKind.Central_Xien2.ToInt()
+                || betKindId == BetKind.Southern_Xien2.ToInt();
+        }
+
+        public static bool IsMixedHas3Numbers(this int betKindId)
+        {
+            return betKindId == BetKind.FirstNorthern_Northern_Xien3.ToInt()
+                || betKindId == BetKind.Central_Xien3.ToInt()
+                || betKindId == BetKind.Southern_Xien3.ToInt();
+        }
+
+        public static bool IsMixedHas4Numbers(this int betKindId)
+        {
+            return betKindId == BetKind.FirstNorthern_Northern_Xien4.ToInt()
+                || betKindId == BetKind.Central_Xien4.ToInt()
+                || betKindId == BetKind.Southern_Xien4.ToInt();
+        }
+
         public static bool IsMixedChannels(this int betKindId)
         {
             return betKindId == BetKind.Central_Mixed_LoXien.ToInt()

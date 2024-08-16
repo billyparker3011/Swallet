@@ -2,6 +2,7 @@
 using HnMicro.Framework.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
+using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.BetKind;
 using Lottery.Core.InMemory.Category;
 using Lottery.Core.InMemory.Channel;
@@ -56,10 +57,10 @@ public class NormalizeTicketService : HnMicroBaseService<NormalizeTicketService>
             f.ChannelName = channel?.Name;
 
             var splitChooseNumbers = f.ChoosenNumbers.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries);
-            if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien2.ToInt()) f.ShowMore = splitChooseNumbers.Length > 2;
-            else if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien3.ToInt()) f.ShowMore = splitChooseNumbers.Length > 3;
-            else if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_Xien4.ToInt()) f.ShowMore = splitChooseNumbers.Length > 4;
-            else if (f.BetKindId == Enums.BetKind.FirstNorthern_Northern_DeTruot.ToInt() || f.BetKindId == Enums.BetKind.FirstNorthern_Northern_LoTruot.ToInt()) f.ShowMore = true;
+            if (f.BetKindId.IsMixedHas2Numbers()) f.ShowMore = splitChooseNumbers.Length > 2;
+            else if (f.BetKindId.IsMixedHas3Numbers()) f.ShowMore = splitChooseNumbers.Length > 3;
+            else if (f.BetKindId.IsMixedHas4Numbers()) f.ShowMore = splitChooseNumbers.Length > 4;
+            else if (f.BetKindId.IsSomeSpecialOfFirstNorthern()) f.ShowMore = true;
             else f.ShowMore = splitChooseNumbers.Length > 1;
             var noOfChooseNumbers = splitChooseNumbers.Length > 9 ? 9 : splitChooseNumbers.Length;
             var arrChooseNumbers = new List<string>();

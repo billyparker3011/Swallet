@@ -1,9 +1,13 @@
 ﻿using HnMicro.Core.Helpers;
 using HnMicro.Framework.Services;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Contexts;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Helpers.Converters.Tickets;
+using Lottery.Core.InMemory.BetKind;
+using Lottery.Core.InMemory.Channel;
+using Lottery.Core.InMemory.Region;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Winlose;
 using Lottery.Core.Repositories.Match;
@@ -18,11 +22,14 @@ namespace Lottery.Core.Services.Ticket;
 public class PlayerTicketService : LotteryBaseService<PlayerTicketService>, IPlayerTicketService
 {
     private readonly INormalizeTicketService _normalizeTicketService;
+    private readonly IInMemoryUnitOfWork _inMemoryUnitOfWork;
 
     public PlayerTicketService(ILogger<PlayerTicketService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ILotteryClientContext clientContext, ILotteryUow lotteryUow,
-        INormalizeTicketService normalizeTicketService) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
+        INormalizeTicketService normalizeTicketService,
+        IInMemoryUnitOfWork inMemoryUnitOfWork) : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
     {
         _normalizeTicketService = normalizeTicketService;
+        _inMemoryUnitOfWork = inMemoryUnitOfWork;
     }
 
     public async Task<List<TicketDetailModel>> GetDetailTicket(long ticketId, bool fromPlayer = true)
@@ -33,6 +40,21 @@ public class PlayerTicketService : LotteryBaseService<PlayerTicketService>, IPla
         var data = (await ticketRepository.FindQueryBy(f => (!fromPlayer || (fromPlayer && f.PlayerId == ClientContext.Player.PlayerId)) && f.ParentId.HasValue && f.ParentId.Value == ticketId).ToListAsync())
             .Select(f => f.ToTicketDetailModel())
             .OrderBy(f => f.ChoosenNumbers).ToList();
+
+        var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
+        var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
+        var regionInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IRegionInMemoryRepository>();
+        data.ForEach(f =>
+        {
+            var betKind = betKindInMemoryRepository.FindById(f.BetKindId);
+            if (betKind != null) f.BetKindName = betKind.Name;
+
+            var channel = channelInMemoryRepository.FindById(f.ChannelId);
+            if (channel != null) f.ChannelName = channel.Name;
+
+            var region = regionInMemoryRepository.FindById(f.RegionId.ToEnum<Region>());
+            if (region != null) f.RegionName = region.Name;
+        });
         return data;
     }
 

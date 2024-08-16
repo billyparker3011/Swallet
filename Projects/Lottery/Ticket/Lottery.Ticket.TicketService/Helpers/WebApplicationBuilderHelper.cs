@@ -1,6 +1,6 @@
-﻿using Lottery.Player.PlayerService.Services.InternalInitial;
+﻿using Lottery.Ticket.TicketService.Services.InternalInitial;
 
-namespace Lottery.Player.PlayerService.Helpers
+namespace Lottery.Ticket.TicketService.Helpers
 {
     public static class WebApplicationBuilderHelper
     {
