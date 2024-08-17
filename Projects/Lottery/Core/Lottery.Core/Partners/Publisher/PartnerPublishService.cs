@@ -22,7 +22,7 @@ namespace Lottery.Core.Partners.Publish
                     await _redisCacheService.PublishAsync(Configs.PartnerChannelConfigs.Ga28Channel, JsonConvert.SerializeObject(model, CommonHelper.CreateJsonSerializerSettings()));
                     return;
                 case Enums.Partner.PartnerType.Allbet:
-                    await _redisCacheService.PublishAsync(Configs.PartnerChannelConfigs.AlibetChannel, JsonConvert.SerializeObject(model, CommonHelper.CreateJsonSerializerSettings()));
+                    await _redisCacheService.PublishAsync(Configs.PartnerChannelConfigs.AllbetChannel, JsonConvert.SerializeObject(model, CommonHelper.CreateJsonSerializerSettings()));
                     return;
                 default:
                     return;

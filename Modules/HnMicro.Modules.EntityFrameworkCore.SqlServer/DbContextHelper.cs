@@ -33,9 +33,9 @@ namespace HnMicro.Modules.EntityFrameworkCore.SqlServer
             }
         }
 
-        public static void AddSqlServer<T>(this IServiceCollection serviceCollection, IConfigurationRoot configurationRoot) where T : DbContext
+        public static void AddSqlServer<T>(this IServiceCollection serviceCollection, IConfiguration configuration) where T : DbContext
         {
-            var dbConnection = configurationRoot.GetSection(SqlConnectionOption.AppSettingName).Get<SqlConnectionOption>() ?? throw new ArgumentNullException(nameof(SqlConnectionOption));
+            var dbConnection = configuration.GetSection(SqlConnectionOption.AppSettingName).Get<SqlConnectionOption>() ?? throw new ArgumentNullException(nameof(SqlConnectionOption));
             if (dbConnection.UsePool)
             {
                 serviceCollection.AddDbContextPool<T>(options => options.UseSqlServer(dbConnection.Connection));

@@ -25,22 +25,22 @@ namespace Lottery.Core.Helpers
             };
         }
 
-        public static KeyOfRedisHash GetCACientUrlByPlayerId(this long playerId)
+        public static KeyOfRedisHash GetCasinoClientUrlByPlayerId(this long playerId)
         {
             return new KeyOfRedisHash
             {
-                MainKey = string.Format(PartnerCachingConfigs.CAClientUrlByPlayerIdMainKey, playerId / CachingConfigs.HashStructureMaxLength),
-                SubKey = string.Format(PartnerCachingConfigs.CAClientUrlByPlayerIdSubKey, playerId % CachingConfigs.HashStructureMaxLength),
+                MainKey = string.Format(PartnerCachingConfigs.CasinoClientUrlByPlayerIdMainKey, playerId / CachingConfigs.HashStructureMaxLength),
+                SubKey = string.Format(PartnerCachingConfigs.CasinoClientUrlByPlayerIdSubKey, playerId % CachingConfigs.HashStructureMaxLength),
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }
 
-        public static KeyOfRedisHash GetCATokenByPlayerId(this long playerId)
+        public static KeyOfRedisHash GetCasinoTokenByPlayerId(this long playerId)
         {
             return new KeyOfRedisHash
             {
-                MainKey = string.Format(PartnerCachingConfigs.CATokenByPlayerIdMainKey, playerId / CachingConfigs.HashStructureMaxLength),
-                SubKey = string.Format(PartnerCachingConfigs.CATokenByPlayerIdSubKey, playerId % CachingConfigs.HashStructureMaxLength),
+                MainKey = string.Format(PartnerCachingConfigs.CasinoTokenByPlayerIdMainKey, playerId / CachingConfigs.HashStructureMaxLength),
+                SubKey = string.Format(PartnerCachingConfigs.CasinoTokenByPlayerIdSubKey, playerId % CachingConfigs.HashStructureMaxLength),
                 TimeSpan = TimeSpan.FromHours(CachingConfigs.ExpiredTimeKeyInHours)
             };
         }

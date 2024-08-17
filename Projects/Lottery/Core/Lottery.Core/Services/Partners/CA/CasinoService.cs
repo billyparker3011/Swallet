@@ -10,13 +10,10 @@ using Lottery.Core.Partners.Publish;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.Casino;
 using Lottery.Core.UnitOfWorks;
-using Lottery.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using System.Globalization;
-using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -67,58 +64,35 @@ namespace Lottery.Core.Services.Partners.CA
 
         public async Task<AllbetBookieSettingValue> GetCasinoBookieSettingValueAsync()
         {
-            var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
-            var bookieSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType.Allbet) ?? throw new NotFoundException();
-            return JsonConvert.DeserializeObject<AllbetBookieSettingValue>(bookieSetting.SettingValue);
+            var data = await _redisCacheService.HashGetAsync(PartnerHelper.CasinoPartnerKey.CasinoBookieSettingKey, CachingConfigs.RedisConnectionForApp);
+
+            if (data != null && data.TryGetValue(nameof(AllbetBookieSettingValue), out string allbetBookieSettingValue))
+            {
+                return JsonConvert.DeserializeObject<AllbetBookieSettingValue>(allbetBookieSettingValue);
+            }
+            else
+            {
+                var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
+                var bookieSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType.Allbet) ?? throw new NotFoundException();
+                var dict = new Dictionary<string, string>() { { nameof(AllbetBookieSettingValue), bookieSetting.SettingValue } };
+                await _redisCacheService.HashSetAsync(PartnerHelper.CasinoPartnerKey.CasinoBookieSettingKey, dict, null, CachingConfigs.RedisConnectionForApp);
+                return JsonConvert.DeserializeObject<AllbetBookieSettingValue>(bookieSetting.SettingValue);
+            }
+
         }
 
         public async Task<string> GetGameUrlAsync()
         {
             var caPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
-            var cAPlayerMapping = await caPlayerMappingRepository.FindQueryBy(x => x.PlayerId == ClientContext.Player.PlayerId).FirstOrDefaultAsync();
+            var cAPlayerMapping = await caPlayerMappingRepository.FindQueryBy(x => x.PlayerId == 1/*ClientContext.Player.PlayerId*/).FirstOrDefaultAsync();
 
             if (cAPlayerMapping == null) return null;
 
-            var clientUrlKey = ClientContext.Player.PlayerId.GetCACientUrlByPlayerId();
+            var clientUrlKey = cAPlayerMapping.PlayerId.GetCasinoClientUrlByPlayerId();//ClientContext.Player.PlayerId.GetCACientUrlByPlayerId();
             var clientUrlHash = await _redisCacheService.HashGetFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
             if (!clientUrlHash.TryGetValue(clientUrlKey.SubKey, out string gameUrl)) return null;
             return gameUrl;
-        }
-
-        public async Task<HttpResponseMessage> SendRequestAsync(HttpMethod httpMethod, string path, string requestBody)
-        {
-            try
-            {
-                var cABookieSetting = await GetCasinoBookieSettingValueAsync();
-
-                CultureInfo ci = new CultureInfo("en-US");
-                string requestTime = DateTime.Now.ToString("dd MMM yyyy HH:mm:ss z", ci);
-
-                string contentMD5 = Base64edMd5(requestBody);
-                var authorization = GeneralAuthorizationHeader(httpMethod.Method, path, contentMD5, cABookieSetting.ContentType, requestTime, cABookieSetting.AllbetApiKey, cABookieSetting.OperatorId);
-
-                var httpRequestMessage = new HttpRequestMessage();
-                httpRequestMessage.Method = httpMethod;
-                httpRequestMessage.Content = httpMethod == HttpMethod.Post ? new StringContent(requestBody) : null;
-
-                httpRequestMessage.RequestUri = new Uri(cABookieSetting.ApiURL + path);
-                httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", authorization);
-                httpRequestMessage.Headers.TryAddWithoutValidation("Date", requestTime);
-                httpRequestMessage.Content.Headers.TryAddWithoutValidation("Content-MD5", contentMD5);
-                httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
-                httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                Logger.LogError($"SendRequest to {httpRequestMessage.RequestUri} with body: {requestBody}.");
-                HttpResponseMessage response = _client.SendAsync(httpRequestMessage).Result;
-                return response;
-
-            }
-            catch (HttpRequestException e)
-            {
-                Logger.LogError($"SendRequest failed with errors {e.Message}.");
-                return null;
-            }
         }
 
         public string GeneralAuthorizationHeader(string httpMethod, string path, string contentMD5, string contentType, string requestTime, string allbetApiKey, string operatorId)
@@ -135,24 +109,12 @@ namespace Lottery.Core.Services.Partners.CA
 
         }
 
-
         public string HashSignature(string key, string value)
         {
             HMACSHA1 hmacsha1 = new HMACSHA1();
             hmacsha1.Key = Convert.FromBase64String(key);
             byte[] hashBytes = hmacsha1.ComputeHash(Encoding.UTF8.GetBytes(value));
             return Convert.ToBase64String(hashBytes);
-        }
-
-        public string Base64edMd5(string data)
-        {
-            return Convert.ToBase64String(MD5Hash(Encoding.UTF8.GetBytes(data)));
-        }
-
-        public byte[] MD5Hash(byte[] data)
-        {
-            MD5 md5Crp = MD5.Create();
-            return md5Crp.ComputeHash(data);
         }
 
         public async Task<bool> ValidateHeader(string authorizationHeader, string dateHeader, string player, string path)

@@ -23,25 +23,29 @@ using System.Text;
 
 namespace Lottery.Core.Partners.CockFight.GA28
 {
-    public class CockFightGa28Service : BasePartnerType, ICockFightGa28Service
+    public class CockFightGa28Service : BasePartnerType<CockFightGa28Service>, ICockFightGa28Service
     {
         private readonly IRedisCacheService _redisCacheService;
 
-        public CockFightGa28Service(ILogger<BasePartnerType> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow, IRedisCacheService redisCacheService) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
+        public CockFightGa28Service(ILogger<CockFightGa28Service> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow, IRedisCacheService redisCacheService) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
         {
             _redisCacheService = redisCacheService;
         }
 
         public override PartnerType PartnerType { get; set; } = PartnerType.GA28;
 
+        private async Task<Ga28BookieSettingValue> GetBookieSetting()
+        {
+            var bookiesSettingRepository = LotteryUow.GetRepository<IBookiesSettingRepository>();
+            var cockFightRequestSetting = await bookiesSettingRepository.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
+            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new NotFoundException();
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
+        }
+
         public override async Task CreatePlayer(object data)
         {
             if (data is null) return;
-            var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
-
-            var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
-            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new NotFoundException();
-            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
+            var settingValue = await GetBookieSetting();
 
             var ga28CreatePlayerModel = data as Ga28CreateMemberModel;
 
@@ -69,11 +73,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
         {
             if (data is null) return;
 
-            var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
-
-            var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
-            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new NotFoundException();
-            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
+            var settingValue = await GetBookieSetting();
 
             var httpClient = CreateClient(settingValue.AuthValue);
 
@@ -105,12 +105,8 @@ namespace Lottery.Core.Partners.CockFight.GA28
         {
             if (data is null) return;
 
-            var bookiesSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
+            var settingValue = await GetBookieSetting();
             var cockFightPlayerMappingRepos = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
-
-            var cockFightRequestSetting = await bookiesSettingRepos.FindBookieSettingByType(PartnerType) ?? throw new NotFoundException();
-            if (string.IsNullOrEmpty(cockFightRequestSetting.SettingValue)) throw new NotFoundException();
-            var settingValue = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightRequestSetting.SettingValue);
 
             var ga28GenerateUrlModel = data as Ga28LoginPlayerModel;
 

@@ -28,8 +28,4 @@
     <ProjectReference Include="..\..\Core\Lottery.Data\Lottery.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\Subscriber\" />
-  </ItemGroup>
-
 </Project>

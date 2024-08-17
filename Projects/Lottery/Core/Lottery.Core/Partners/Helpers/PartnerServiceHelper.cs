@@ -1,6 +1,6 @@
 ﻿using HnMicro.Module.Caching.ByRedis.Helpers;
 using HnMicro.Modules.EntityFrameworkCore.SqlServer;
-using Lottery.Core.Partners.Publish;
+using Lottery.Core.Partners.Periodic;
 using Lottery.Core.Partners.Subscriber;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data;
@@ -11,13 +11,14 @@ namespace Lottery.Core.Partners.Helpers
 {
     public static class PartnerServiceHelper
     {
-        public static void BuildPartnerService(this IServiceCollection serviceCollection, IConfigurationRoot configurationRoot)
+        public static void AddPartnerServices(this IServiceCollection serviceCollection, IConfiguration configuration)
         {
-            serviceCollection.AddSqlServer<LotteryContext>(configurationRoot);
+            serviceCollection.AddSqlServer<LotteryContext>(configuration);
             serviceCollection.AddScoped<ILotteryUow, LotteryUow>();
-            serviceCollection.AddRedis(configurationRoot);
+            serviceCollection.AddRedis(configuration);
             serviceCollection.AddSingleton<IPartnerSubscribeService, PartnerSubscribeService>();
-            serviceCollection.AddTransient<IPartnerPublishService, PartnerPublishService>();
+            //serviceCollection.AddTransient<IPartnerPublishService, PartnerPublishService>();
+            serviceCollection.AddHostedService<StartPeriodicService>();
         }
     }
 }

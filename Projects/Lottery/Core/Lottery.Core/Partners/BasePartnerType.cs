@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Lottery.Core.Partners
 {
-    public abstract class BasePartnerType : PartnerBaseService<BasePartnerType>, IPartnerService
+    public abstract class BasePartnerType<T> : PartnerBaseService<T>, IPartnerService
     {
-        protected BasePartnerType(ILogger<BasePartnerType> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
+        protected BasePartnerType(ILogger<T> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
         {
         }
 
