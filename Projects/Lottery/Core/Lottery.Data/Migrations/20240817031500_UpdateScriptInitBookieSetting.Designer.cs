@@ -4,6 +4,7 @@ using Lottery.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lottery.Data.Migrations
 {
     [DbContext(typeof(LotteryContext))]
-    partial class LotteryContextModelSnapshot : ModelSnapshot
+    [Migration("20240817031500_UpdateScriptInitBookieSetting")]
+    partial class UpdateScriptInitBookieSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1203,12 +1206,14 @@ namespace Lottery.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<long>("AgentId")
                         .HasColumnType("bigint");
 
                     b.Property<decimal?>("AnteAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("ArenaCode")
                         .IsRequired()
@@ -1216,8 +1221,7 @@ namespace Lottery.Data.Migrations
                         .HasColumnType("nvarchar(8)");
 
                     b.Property<decimal?>("BetAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("BetKindId")
                         .HasColumnType("int");
@@ -1240,6 +1244,9 @@ namespace Lottery.Data.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<DateTime>("KickOffDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<long>("MasterId")
                         .HasColumnType("bigint");
 
@@ -1248,13 +1255,13 @@ namespace Lottery.Data.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
-                    b.Property<string>("OddType")
-                        .HasMaxLength(5)
-                        .HasColumnType("nvarchar(5)");
+                    b.Property<string>("MemberRefId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
-                    b.Property<decimal?>("Odds")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                    b.Property<decimal>("Odds")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<long>("PlayerId")
                         .HasColumnType("bigint");
@@ -1270,10 +1277,8 @@ namespace Lottery.Data.Migrations
                     b.Property<DateTime?>("SettledDateTime")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Sid")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                    b.Property<Guid?>("Sid")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -1282,14 +1287,7 @@ namespace Lottery.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<decimal?>("TicketAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<DateTime>("TicketCreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("TicketModifiedDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -1301,13 +1299,8 @@ namespace Lottery.Data.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
-                    b.Property<decimal?>("ValidStake")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
                     b.Property<decimal?>("WinlossAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 

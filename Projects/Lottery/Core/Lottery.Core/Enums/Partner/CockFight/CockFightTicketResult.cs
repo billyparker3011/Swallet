@@ -4,11 +4,11 @@ namespace Lottery.Core.Enums.Partner.CockFight
 {
     public enum CockFightTicketResult
     {
-        [EnumDescription("win")]
+        [EnumDescription("Ticket is settled as win")]
         Win,
-        [EnumDescription("loss")]
+        [EnumDescription("Ticket is settled as loss")]
         Loss,
-        [EnumDescription("draw")]
+        [EnumDescription("Ticket is settled as draw")]
         Draw
     }
 }

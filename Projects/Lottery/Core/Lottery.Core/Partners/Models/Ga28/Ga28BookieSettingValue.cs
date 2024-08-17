@@ -8,5 +8,6 @@
         public string GameClientId { get; set; }
         public string AuthValue { get; set; }
         public string ApplicationStaticToken { get; set; }
+        public string ScanTicketTime { get; set; }
     }
 }
