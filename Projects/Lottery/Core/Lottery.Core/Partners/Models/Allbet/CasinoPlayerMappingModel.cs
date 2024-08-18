@@ -31,11 +31,6 @@ namespace Lottery.Core.Partners.Models.Allbet
     public class UpdateCasinoPlayerMappingModel
     {
         public long Id { get; set; }
-        [Required]
-        public long PlayerId { get; set; }
-        [Required, MaxLength(50)]
-        public string BookiePlayerId { get; set; }
-        [Required, MaxLength(500)]
         public string NickName { get; set; }
         [Required, DefaultValue(true)]
         public bool IsAccountEnable { get; set; }

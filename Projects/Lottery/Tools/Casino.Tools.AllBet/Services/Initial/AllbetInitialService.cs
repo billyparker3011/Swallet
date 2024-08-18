@@ -5,11 +5,11 @@ using Microsoft.Extensions.Hosting;
 
 namespace Casino.Tools.AllBet.Services.Initial
 {
-    public class AllbetInitialService : IHostedService
+    public class AllBetInitialService : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
 
-        public AllbetInitialService(IServiceProvider serviceProvider)
+        public AllBetInitialService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
         }

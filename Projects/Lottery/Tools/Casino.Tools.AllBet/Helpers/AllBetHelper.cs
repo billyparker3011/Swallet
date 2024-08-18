@@ -13,7 +13,7 @@ namespace Casino.Tools.AllBet.Helpers
         {
             serviceCollection.AddSingleton<IPeriodicService, AllBetPeriodicService>();
             serviceCollection.AddScoped<IPartnerService, CasinoAllbetService>();
-            serviceCollection.AddHostedService<AllbetInitialService>();
+            serviceCollection.AddHostedService<AllBetInitialService>();
         }
     }
 }

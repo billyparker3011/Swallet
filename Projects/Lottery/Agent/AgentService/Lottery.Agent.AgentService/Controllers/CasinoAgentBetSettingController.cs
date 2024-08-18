@@ -37,30 +37,22 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpPost("bet-setting")]
         public async Task<IActionResult> CreateAgentBetSetting(CreateCasinoAgentBetSettingModel model)
         {
-            if (ModelState.IsValid)
-            {
-                await _cAAgentBetSettingService.CreateAgentBetSettingAsync(model);
-                return Ok();
-            }
 
-            return BadRequest(ModelState.Select(x => x.Value.Errors).Where(y => y.Count > 0).ToList());
+            await _cAAgentBetSettingService.CreateAgentBetSettingAsync(model);
+            return Ok();
 
         }
 
         [HttpPost("bet-settings")]
         public async Task<IActionResult> CreateAgentBetSettings(List<CreateCasinoAgentBetSettingModel> models)
         {
-            if (ModelState.IsValid)
-            {
-                foreach(var model in models)
-                {
-                    await _cAAgentBetSettingService.CreateAgentBetSettingAsync(model);                 
-                }
 
-                return Ok();
+            foreach (var model in models)
+            {
+                await _cAAgentBetSettingService.CreateAgentBetSettingAsync(model);
             }
 
-            return BadRequest(ModelState.Select(x => x.Value.Errors).Where(y => y.Count > 0).ToList());
+            return Ok();
         }
 
         [HttpPut("{id:long}/bet-setting")]

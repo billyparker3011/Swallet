@@ -42,9 +42,11 @@ namespace Lottery.Core.Partners.Casino.Allbet
 
         public override async Task CreatePlayer(object data)
         {
+            Logger.LogInformation($"Start CreatePlayer with data {data}");
             if (data is null) return;
 
             var settingValue = await GetBookieSetting();
+
             var createPartnerPlayerModel = data as CasinoAllBetPlayerModel;
 
             var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
@@ -64,14 +66,11 @@ namespace Lottery.Core.Partners.Casino.Allbet
             createPartnerPlayerModel.Player = partnerUsername;
             createPartnerPlayerModel.Agent = settingValue.Agent;
 
-            //  Check or Create in partner
-            var httpClient = CreateClient(HttpMethod.Post, PartnerHelper.CasinoPathPost.CheckOrCreate, createPartnerPlayerModel.ToBodyJson(), settingValue);
-            var url = $"{settingValue.ApiURL}{PartnerHelper.CasinoPathPost.CheckOrCreate}";
-            var content = new StringContent(createPartnerPlayerModel.ToBodyJson(), Encoding.UTF8, "application/json");
-            await httpClient.PostAsync(url, content);
+            //  Check Or Create in partner
+            var response = await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.CheckOrCreate, createPartnerPlayerModel.ToBodyJson(), settingValue);
 
-            //  Update player bet setting in partner
-            var playerBetSetting = new CasinoAllBetPlayerBetSettingModel
+            // Update player bet setting in partner
+            var playerBetSetting = new CasinoAllBetPlayerBetSettingModel()
             {
                 Player = partnerUsername,
                 Nickname = createPartnerPlayerModel.NickName,
@@ -81,6 +80,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
 
             //  Get bet setting
             var casinoPlayerBetSettings = await casinoPlayerBetSettingRepository.FindQueryBy(c => c.PlayerId == createPartnerPlayerModel.PlayerId).Include(c => c.CasinoPlayerBetSettingAgentHandicaps).ThenInclude(c => c.CasinoAgentHandicap).Include(c => c.CasinoAgentHandicap).Include(c => c.Player).Include(c => c.CasinoBetKind).ToListAsync();
+
             if (casinoPlayerBetSettings != null && casinoPlayerBetSettings.Any())
             {
                 var casinoPlayerBetSetting = casinoPlayerBetSettings.FirstOrDefault();
@@ -98,37 +98,28 @@ namespace Lottery.Core.Partners.Casino.Allbet
                 }
             }
 
-            httpClient = CreateClient(HttpMethod.Post, PartnerHelper.CasinoPathPost.ModifyPlayerSetting, playerBetSetting.ToBodyJson(), settingValue);
-            url = $"{settingValue.ApiURL}{PartnerHelper.CasinoPathPost.ModifyPlayerSetting}";
-            content = new StringContent(playerBetSetting.ToBodyJson(), Encoding.UTF8, "application/json");
-            await httpClient.PostAsync(url, content);
+            // Update bet setting in Partner
+            await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.ModifyPlayerSetting, playerBetSetting.ToBodyJson(), settingValue);
 
-            //  Create Player Mapping
-            var createPlayerMappingModel = new CreateCasinoPlayerMappingModel
+            // Create Player Mapping
+            var playerMapping = new CasinoPlayerMapping()
             {
                 PlayerId = createPartnerPlayerModel.PlayerId,
+                BookiePlayerId = partnerUsername,
                 NickName = createPartnerPlayerModel.NickName,
                 IsAccountEnable = createPartnerPlayerModel.IsAccountEnabled,
                 IsAlowedToBet = createPartnerPlayerModel.IsAlowedToBet,
-                BookiePlayerId = partnerUsername
-            };
-
-            var playerMapping = new CasinoPlayerMapping
-            {
-                PlayerId = createPlayerMappingModel.PlayerId,
-                BookiePlayerId = createPlayerMappingModel.BookiePlayerId,
-                NickName = createPlayerMappingModel.NickName,
-                IsAccountEnable = createPlayerMappingModel.IsAccountEnable,
-                IsAlowedToBet = createPlayerMappingModel.IsAlowedToBet,
-                CreatedAt = ClockService.GetUtcNow()
+                CreatedAt = ClockService.GetUtcNow(),
             };
 
             await casinoPlayerMappingRepository.AddAsync(playerMapping);
             await LotteryUow.SaveChangesAsync();
+
         }
 
         public override async Task GenerateUrl(object data)
         {
+            Logger.LogInformation($"Start GenerateUrl with data {data}");
             if (data is null) return;
 
             var settingValue = await GetBookieSetting();
@@ -144,10 +135,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
             {
                 casinoPartnerLoginModel.Player = casinoPlayerMapping.BookiePlayerId;
 
-                var httpClient = CreateClient(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
-                var url = $"{settingValue.ApiURL}{PartnerHelper.CasinoPathPost.Login}";
-                var content = new StringContent(casinoPartnerLoginModel.ToBodyJson(), Encoding.UTF8, "application/json");
-                var response = await httpClient.PostAsync(url, content);
+                var response = await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
                 if (response == null) return;
                 await UpdateCacheClientUrl(casinoPartnerLoginModel.PlayerId, await response.Content.ReadAsStringAsync());
             }
@@ -162,14 +150,12 @@ namespace Lottery.Core.Partners.Casino.Allbet
                 await CreatePlayer(casinoCreatePartnerPlayerModel);
 
                 casinoPlayerMapping = await casinoPlayerMappingRepository.FindQueryBy(c => c.PlayerId == casinoPartnerLoginModel.PlayerId).FirstOrDefaultAsync();
+
                 if (casinoPlayerMapping != null)
                 {
                     casinoPartnerLoginModel.Player = casinoPlayerMapping.BookiePlayerId;
 
-                    var httpClient = CreateClient(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
-                    var url = $"{settingValue.ApiURL}{PartnerHelper.CasinoPathPost.Login}";
-                    var content = new StringContent(casinoPartnerLoginModel.ToBodyJson(), Encoding.UTF8, "application/json");
-                    var response = await httpClient.PostAsync(url, content);
+                    var response = await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
                     if (response == null) return;
                     await UpdateCacheClientUrl(casinoPartnerLoginModel.PlayerId, await response.Content.ReadAsStringAsync());
                 }
@@ -178,9 +164,11 @@ namespace Lottery.Core.Partners.Casino.Allbet
 
         public override async Task UpdateBetSetting(object data)
         {
+            Logger.LogInformation($"Start UpdateBetSetting with data {data}");
             if (data is null) return;
 
             var settingValue = await GetBookieSetting();
+
             var playerBetSetting = data as CasinoAllBetPlayerBetSettingModel;
             var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
@@ -193,10 +181,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
             playerBetSetting.VipHandicap = await casinoAgentHandicapRepository.FindQueryBy(c => playerBetSetting.VipHandicapId == c.Id).Select(c => c.Name).FirstOrDefaultAsync();
             playerBetSetting.Player = casinoPlayerMapping.BookiePlayerId;
 
-            var httpClient = CreateClient(HttpMethod.Post, PartnerHelper.CasinoPathPost.ModifyPlayerSetting, playerBetSetting.ToBodyJson(), settingValue);
-            var url = $"{settingValue.ApiURL}{PartnerHelper.CasinoPathPost.ModifyPlayerSetting}";
-            var content = new StringContent(playerBetSetting.ToBodyJson(), Encoding.UTF8, "application/json");
-            await httpClient.PostAsync(url, content);
+            await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.ModifyPlayerSetting, playerBetSetting.ToBodyJson(), settingValue);
         }
 
         private async Task<AllbetBookieSettingValue> GetBookieSetting()
@@ -220,24 +205,6 @@ namespace Lottery.Core.Partners.Casino.Allbet
         {
             if (item == null || !item.Any()) return null;
             return item.Select(c => c.Name).ToArray();
-        }
-
-        private HttpClient CreateClient(HttpMethod httpMethod, string path, string requestBody, AllbetBookieSettingValue setting)
-        {
-            var httpClient = HttpClientFactory.CreateClient();
-
-            var ci = new CultureInfo("en-US");
-            var requestTime = DateTime.Now.ToString("dd MMM yyyy HH:mm:ss z", ci);
-
-            var contentMD5 = Base64edMd5(requestBody);
-            var authorization = GeneralAuthorizationHeader(httpMethod.Method, path, contentMD5, setting.ContentType, requestTime, setting.AllbetApiKey, setting.OperatorId);
-
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authorization);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Date", requestTime);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Content-MD5", contentMD5);
-            httpClient.DefaultRequestHeaders.TryAddWithoutValidation(HttpRequestHeader.ContentType.ToString(), "application/json");
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            return httpClient;
         }
 
         private string Base64edMd5(string data)
@@ -293,6 +260,41 @@ namespace Lottery.Core.Partners.Casino.Allbet
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             int index = new Random().Next(chars.Length - 1);
             return chars[index];
+        }
+
+        private async Task<HttpResponseMessage> SendRequestAsync(HttpMethod httpMethod, string path, string requestBody, AllbetBookieSettingValue settingValue)
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+                CultureInfo ci = new CultureInfo("en-US");
+                string requestTime = DateTime.Now.ToString("dd MMM yyyy HH:mm:ss z", ci);
+
+                string contentMD5 = Base64edMd5(requestBody);
+                var authorization = GeneralAuthorizationHeader(httpMethod.Method, path, contentMD5, settingValue.ContentType, requestTime, settingValue.AllbetApiKey, settingValue.OperatorId);
+
+                var httpRequestMessage = new HttpRequestMessage();
+                httpRequestMessage.Method = httpMethod;
+                httpRequestMessage.Content = httpMethod == HttpMethod.Post ? new StringContent(requestBody) : null;
+
+                httpRequestMessage.RequestUri = new Uri(settingValue.ApiURL + path);
+                httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", authorization);
+                httpRequestMessage.Headers.TryAddWithoutValidation("Date", requestTime);
+                httpRequestMessage.Content.Headers.TryAddWithoutValidation("Content-MD5", contentMD5);
+                httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
+                httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                Logger.LogInformation($"SendRequest to {httpRequestMessage.RequestUri} with body: {requestBody}, header: {httpRequestMessage.Headers}.");
+                HttpResponseMessage response = client.SendAsync(httpRequestMessage).Result;
+                Logger.LogInformation($"Response: {await response.Content.ReadAsStringAsync()}");
+                return response;
+
+            }
+            catch (HttpRequestException e)
+            {
+                Logger.LogError($"SendRequest failed with errors {e.Message}.");
+                return null;
+            }
         }
     }
 }

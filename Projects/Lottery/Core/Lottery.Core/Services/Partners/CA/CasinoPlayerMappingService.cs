@@ -81,8 +81,6 @@ namespace Lottery.Core.Services.Partners.CA
 
             var cAPlayerMapping = await cAPlayerMappingRepository.FindByIdAsync(model.Id);
 
-            cAPlayerMapping.PlayerId = model.PlayerId;
-            cAPlayerMapping.BookiePlayerId = model.BookiePlayerId;
             cAPlayerMapping.NickName = model.NickName;
             cAPlayerMapping.IsAccountEnable = model.IsAccountEnable;
             cAPlayerMapping.IsAlowedToBet = model.IsAlowedToBet;

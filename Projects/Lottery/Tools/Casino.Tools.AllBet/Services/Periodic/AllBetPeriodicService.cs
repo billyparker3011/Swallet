@@ -1,6 +1,5 @@
 ﻿using HnMicro.Framework.Options;
 using Lottery.Core.Enums.Partner;
-using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Models;
 using Lottery.Core.Partners.Periodic;
 using Lottery.Core.Partners;
@@ -8,11 +7,6 @@ using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Lottery.Core.Partners.Models.Allbet;
 
 namespace Casino.Tools.AllBet.Services.Periodic
@@ -36,26 +30,35 @@ namespace Casino.Tools.AllBet.Services.Periodic
             //  TODO Process message here...
             foreach (var item in messages)
             {
-                //  Belong to message type to perform.
-                var typeOfItem = item.GetType();
-                if (typeOfItem == typeof(CasinoAllBetPlayerModel))
+                try
                 {
-                    var derivedItem = item as CasinoAllBetPlayerModel;
-                    await caService.CreatePlayer(derivedItem);
-                    Logger.LogInformation($"Partner: {item.Partner}. Create PlayerId: {derivedItem.PlayerId}.");
+                    //  Belong to message type to perform.
+                    var typeOfItem = item.GetType();
+                    if (typeOfItem == typeof(CasinoAllBetPlayerModel))
+                    {
+                        var derivedItem = item as CasinoAllBetPlayerModel;
+                        await caService.CreatePlayer(derivedItem);
+                        Logger.LogInformation($"Partner: {item.Partner}. Create PlayerId: {derivedItem.PlayerId}.");
+                    }
+                    else if (typeOfItem == typeof(CasinoAllBetPlayerBetSettingModel))
+                    {
+                        var derivedItem = item as CasinoAllBetPlayerBetSettingModel;
+                        await caService.UpdateBetSetting(derivedItem);
+                        Logger.LogInformation($"Partner: {item.Partner}. Update bet setting player: {derivedItem.PlayerId}.");
+                    }
+                    else if (typeOfItem == typeof(CasinoAllBetPlayerLoginModel))
+                    {
+                        var derivedItem = item as CasinoAllBetPlayerLoginModel;
+                        await caService.GenerateUrl(derivedItem);
+                        Logger.LogInformation($"Partner: {item.Partner}. Login player: {derivedItem.PlayerId}.");
+                    }
                 }
-                else if (typeOfItem == typeof(CasinoAllBetPlayerBetSettingModel))
+                catch (Exception ex)
                 {
-                    var derivedItem = item as CasinoAllBetPlayerBetSettingModel;
-                    await caService.UpdateBetSetting(derivedItem);
-                    Logger.LogInformation($"Partner: {item.Partner}. Update bet setting player: {derivedItem.PlayerId}.");
+                    Logger.LogError($"Error {ex.Message} when processing message: {item}.");
+                    continue;
                 }
-                else if (typeOfItem == typeof(CasinoAllBetPlayerLoginModel))
-                {
-                    var derivedItem = item as CasinoAllBetPlayerLoginModel;
-                    await caService.GenerateUrl(derivedItem);
-                    Logger.LogInformation($"Partner: {item.Partner}. Login player: {derivedItem.PlayerId}.");
-                }
+              
             }
         }
     }
