@@ -14,7 +14,7 @@ namespace Lottery.Data.Entities.Partners.Casino
         public long PlayerId { get; set; }
         [Required, MaxLength(50)]
         public string BookiePlayerId { get; set; }
-        [Required, MaxLength(500)]
+        [MaxLength(500)]
         public string NickName { get; set; }
         [Required, DefaultValue(true)]
         public bool IsAccountEnable { get; set; }
