@@ -19,9 +19,7 @@ namespace Lottery.Agent.AgentService.Controllers
         {
             if (playerId < 1) return NotFound();
             var playerBetSettings = await _cAPlayerBetSettingService.GetPlayerBetSettingsWithIncludeAsync(playerId);
-            if (playerBetSettings == null || !playerBetSettings.Any()) return Ok(OkResponse.Create(new CasinoPlayerBetSettingModel()));
-
-            return Ok(OkResponse.Create(playerBetSettings.Select(c => new CasinoPlayerBetSettingModel(c)).ToList()));
+            return Ok(OkResponse.Create(playerBetSettings?.Select(c => new CasinoPlayerBetSettingModel(c)).ToList()));
         }
 
         [HttpGet("bet-settings")]
@@ -35,7 +33,7 @@ namespace Lottery.Agent.AgentService.Controllers
         {
             if (id < 1) return NotFound();
             var playerBetSetting = await _cAPlayerBetSettingService.FindPlayerBetSettingWithIncludeAsync(id);
-            if (playerBetSetting == null) return Ok(OkResponse.Create(new CasinoPlayerBetSettingModel()));
+            if (playerBetSetting == null) return NotFound();
 
             return Ok(OkResponse.Create(new CasinoPlayerBetSettingModel(playerBetSetting)));
         }

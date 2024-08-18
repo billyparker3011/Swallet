@@ -19,9 +19,7 @@ namespace Lottery.Agent.AgentService.Controllers
         {
             if (agentId < 1) return NotFound();
             var agentBetSettings = await _cAAgentBetSettingService.GetAgentBetSettingsWithIncludeAsync(agentId);
-            if (agentBetSettings == null || !agentBetSettings.Any()) return Ok(OkResponse.Create(new CasinoAgentBetSettingModel()));
-
-            return Ok(OkResponse.Create(agentBetSettings.Select(c => new CasinoAgentBetSettingModel(c)).ToList()));
+            return Ok(OkResponse.Create(agentBetSettings?.Select(c => new CasinoAgentBetSettingModel(c)).ToList()));
 
         }
 
@@ -36,7 +34,7 @@ namespace Lottery.Agent.AgentService.Controllers
         {
             if(id < 1) return NotFound();
             var agentBetSetting = await _cAAgentBetSettingService.FindAgentBetSettingWithIncludeAsync(id);
-            if (agentBetSetting == null) return Ok(OkResponse.Create(new CasinoAgentBetSettingModel()));
+            if (agentBetSetting == null) return NotFound();
 
             return Ok(OkResponse.Create(new CasinoAgentBetSettingModel(agentBetSetting)));
         }
