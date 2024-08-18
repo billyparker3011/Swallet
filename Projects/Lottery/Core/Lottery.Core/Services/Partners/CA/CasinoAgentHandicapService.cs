@@ -1,21 +1,12 @@
 ﻿using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Contexts;
-using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Partners.Publish;
-using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.Repositories.Casino;
-using Lottery.Core.Services.CockFight;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities.Partners.Casino;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace Lottery.Core.Services.Partners.CA
 {
     public class CasinoAgentHandicapService: LotteryBaseService<CasinoAgentHandicapService>, ICasinoAgentHandicapService

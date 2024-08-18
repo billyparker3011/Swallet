@@ -1,14 +1,31 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Lottery.Data.Entities.Partners.Casino;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace Lottery.Core.Partners.Models.Allbet
 {
     public class CasinoPlayerBetSettingModel
     {
+        public CasinoPlayerBetSettingModel()
+        {
+        }
+        public CasinoPlayerBetSettingModel(CasinoPlayerBetSetting item)
+        {
+            Id = item.Id;
+            PlayerId = item.PlayerId;
+            BetKindId = item.BetKindId;
+            VipHandicapId = item.VipHandicapId;
+            GeneralHandicapIds = item.CasinoPlayerBetSettingAgentHandicaps?.Select(x => x.CasinoAgentHandicap.Id).ToList();
+            MinBet = item.MinBet;
+            MaxBet = item.MaxBet;
+            MaxWin = item.MaxWin;
+            MaxLose = item.MaxLose;
+        }
         public long Id { get; set; }
-        public int PlayerId { get; set; }
+        public long PlayerId { get; set; }
         public int BetKindId { get; set; }
-        public long VipHandicapId { get; set; }
+        public int VipHandicapId { get; set; }
+        public List<int> GeneralHandicapIds { get; set; }
         public decimal? MinBet { get; set; }
         public decimal? MaxBet { get; set; }
         public decimal? MaxWin { get; set; }

@@ -8,7 +8,10 @@ namespace Lottery.Core.Services.Partners.CA
     {
         Task<CasinoPlayerBetSetting> FindPlayerBetSettingAsync(long id);
 
+        Task<CasinoPlayerBetSetting> FindPlayerBetSettingWithIncludeAsync(long id);
+
         Task<IEnumerable<CasinoPlayerBetSetting>> GetPlayerBetSettingsAsync(long playerId);
+
         Task<IEnumerable<CasinoPlayerBetSetting>> GetPlayerBetSettingsWithIncludeAsync(long playerId);
 
         Task<IEnumerable<CasinoPlayerBetSetting>> GetAllPlayerBetSettingsAsync();

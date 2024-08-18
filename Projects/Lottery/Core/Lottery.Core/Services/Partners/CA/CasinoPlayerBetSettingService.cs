@@ -39,6 +39,12 @@ namespace Lottery.Core.Services.Partners.CA
             return await cAPlayerBetSettingRepository.FindByIdAsync(id);
         }
 
+        public async Task<CasinoPlayerBetSetting> FindPlayerBetSettingWithIncludeAsync(long id)
+        {
+            var cAPlayerBetSettingRepository = LotteryUow.GetRepository<ICasinoPlayerBetSettingRepository>();
+            return await cAPlayerBetSettingRepository.FindQueryBy(c => c.Id == id).Include(c => c.CasinoPlayerBetSettingAgentHandicaps).ThenInclude(c => c.CasinoAgentHandicap).Include(c => c.CasinoAgentHandicap).Include(c => c.Player).Include(c => c.CasinoBetKind).FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<CasinoPlayerBetSetting>> GetPlayerBetSettingsAsync(long playerId)
         {
             var cAPlayerBetSettingRepository = LotteryUow.GetRepository<ICasinoPlayerBetSettingRepository>();

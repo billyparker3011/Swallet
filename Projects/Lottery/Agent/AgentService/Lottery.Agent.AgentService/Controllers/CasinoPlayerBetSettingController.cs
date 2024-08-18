@@ -18,7 +18,10 @@ namespace Lottery.Agent.AgentService.Controllers
         public async Task<IActionResult> GetPlayerBetSettings([FromRoute] long playerId)
         {
             if (playerId < 1) return NotFound();
-            return Ok(OkResponse.Create(await _cAPlayerBetSettingService.GetPlayerBetSettingsAsync(playerId)));
+            var playerBetSettings = await _cAPlayerBetSettingService.GetPlayerBetSettingsWithIncludeAsync(playerId);
+            if (playerBetSettings == null || !playerBetSettings.Any()) return Ok(OkResponse.Create(new CasinoPlayerBetSettingModel()));
+
+            return Ok(OkResponse.Create(playerBetSettings.Select(c => new CasinoPlayerBetSettingModel(c)).ToList()));
         }
 
         [HttpGet("bet-settings")]
@@ -31,7 +34,10 @@ namespace Lottery.Agent.AgentService.Controllers
         public async Task<IActionResult> GetPlayerBetSetting([FromRoute] long id)
         {
             if (id < 1) return NotFound();
-            return Ok(OkResponse.Create(await _cAPlayerBetSettingService.FindPlayerBetSettingAsync(id)));
+            var playerBetSetting = await _cAPlayerBetSettingService.FindPlayerBetSettingWithIncludeAsync(id);
+            if (playerBetSetting == null) return Ok(OkResponse.Create(new CasinoPlayerBetSettingModel()));
+
+            return Ok(OkResponse.Create(new CasinoPlayerBetSettingModel(playerBetSetting)));
         }
 
         [HttpPost("bet-setting")]
