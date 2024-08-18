@@ -11,6 +11,7 @@ using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Publish;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;
+using Lottery.Core.Services.Wallet;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -22,6 +23,7 @@ namespace Lottery.Core.Services.CockFight
     {
         private readonly IPartnerPublishService _partnerPublishService;
         private readonly IRedisCacheService _redisCacheService;
+        private readonly ISingleWalletService _singleWalletService;
 
         public CockFightService(
             ILogger<CockFightService> logger,
@@ -31,11 +33,13 @@ namespace Lottery.Core.Services.CockFight
             ILotteryClientContext clientContext,
             ILotteryUow lotteryUow,
             IPartnerPublishService partnerPublishService,
-            IRedisCacheService redisCacheService)
+            IRedisCacheService redisCacheService,
+            ISingleWalletService singleWalletService)
             : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _partnerPublishService = partnerPublishService;
             _redisCacheService = redisCacheService;
+            _singleWalletService = singleWalletService;
         }
 
         public async Task CreateCockFightPlayer()
@@ -110,8 +114,8 @@ namespace Lottery.Core.Services.CockFight
 
         public async Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance()
         {
-            //TODO: Implement logic later
-            return new GetCockFightPlayerBalanceResult { Balance = "999.99" };
+            var balance = await _singleWalletService.GetBalance(ClientContext.Player.PlayerId);
+            return new GetCockFightPlayerBalanceResult { Balance = balance.ToString() };
         }
 
         public async Task<LoginPlayerInformationDto> GetCockFightUrl()
