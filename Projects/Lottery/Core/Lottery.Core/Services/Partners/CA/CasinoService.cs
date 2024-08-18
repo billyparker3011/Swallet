@@ -85,11 +85,11 @@ namespace Lottery.Core.Services.Partners.CA
         {
             var caPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
-            var cAPlayerMapping = await caPlayerMappingRepository.FindQueryBy(x => x.PlayerId == 1/*ClientContext.Player.PlayerId*/).FirstOrDefaultAsync();
+            var cAPlayerMapping = await caPlayerMappingRepository.FindQueryBy(x => x.PlayerId == ClientContext.Player.PlayerId).FirstOrDefaultAsync();
 
             if (cAPlayerMapping == null) return null;
 
-            var clientUrlKey = cAPlayerMapping.PlayerId.GetCasinoClientUrlByPlayerId();//ClientContext.Player.PlayerId.GetCACientUrlByPlayerId();
+            var clientUrlKey = cAPlayerMapping.PlayerId.GetCasinoClientUrlByPlayerId();
             var clientUrlHash = await _redisCacheService.HashGetFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
             if (!clientUrlHash.TryGetValue(clientUrlKey.SubKey, out string gameUrl)) return null;
             return gameUrl;
