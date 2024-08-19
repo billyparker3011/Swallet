@@ -117,7 +117,7 @@ namespace Lottery.Core.Services.CockFight
             var cockFightPlayerMappingRepository = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
             var cockFightPlayerMapping = await cockFightPlayerMappingRepository.FindByMemberRefId(memberRefId);
             var balance = 0m;
-            if (cockFightPlayerMapping != null) balance = await _singleWalletService.GetBalance(cockFightPlayerMapping.PlayerId);
+            if (cockFightPlayerMapping != null) balance = await _singleWalletService.GetBalance(cockFightPlayerMapping.PlayerId, 1000m);
             return new GetCockFightPlayerBalanceResult { Balance = balance.ToString() };
         }
 

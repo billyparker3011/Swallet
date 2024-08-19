@@ -9,6 +9,5 @@
         public string AllbetApiKey { get; set; }
         public string PartnerApiKey { get; set; }
         public string Suffix { get; set; }
-
     }
 }
