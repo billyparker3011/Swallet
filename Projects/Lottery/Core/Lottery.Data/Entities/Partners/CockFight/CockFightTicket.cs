@@ -23,6 +23,7 @@ namespace Lottery.Data.Entities.Partners.CockFight
         public long SupermasterId { get; set; }
         [Required]
         public int BetKindId { get; set; }
+        public long? ParentId { get; set; }
         [Precision(18,3)]
         public decimal? AnteAmount { get; set; }
         [MaxLength(8), Required]
@@ -60,5 +61,6 @@ namespace Lottery.Data.Entities.Partners.CockFight
         public decimal? ValidStake { get; set; }
         [MaxLength(5)]
         public string OddType { get; set; }
+        public bool? ShowMore { get; set; }
     }
 }

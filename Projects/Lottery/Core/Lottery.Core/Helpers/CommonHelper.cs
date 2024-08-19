@@ -1,5 +1,6 @@
 ﻿using HnMicro.Core.Helpers;
 using Lottery.Core.Enums;
+using Lottery.Core.Enums.Partner.CockFight;
 using Newtonsoft.Json;
 
 namespace Lottery.Core.Helpers
@@ -209,5 +210,12 @@ namespace Lottery.Core.Helpers
         {
             return new List<int> { TicketState.Completed.ToInt(), TicketState.Refund.ToInt(), TicketState.Reject.ToInt(), TicketState.Won.ToInt(), TicketState.Draw.ToInt(), TicketState.Lose.ToInt(), TicketState.Running.ToInt(), TicketState.Waiting.ToInt() };
         }
+
+        #region CockFight
+        public static List<int> OutsCockFightTicketState()
+        {
+            return new List<int> { CockFightTicketStatus.SettlementIsInProgress.ToInt(), CockFightTicketStatus.SettledButIsWaitingForPayout.ToInt() };
+        }
+        #endregion
     }
 }
