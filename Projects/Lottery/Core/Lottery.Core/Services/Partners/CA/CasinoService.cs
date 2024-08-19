@@ -39,6 +39,9 @@ namespace Lottery.Core.Services.Partners.CA
 
         public async Task AllBetPlayerLoginAsync(CasinoAllBetPlayerLoginModel model)
         {
+            var clientUrlKey = ClientContext.Player.PlayerId.GetCasinoClientUrlByPlayerId();
+            await _redisCacheService.HashDeleteFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+
             model.PlayerId = ClientContext.Player.PlayerId;
             await _partnerPublishService.Publish(model);
             return;

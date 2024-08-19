@@ -123,6 +123,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
 
             var settingValue = await GetBookieSetting();
             var casinoPartnerLoginModel = data as CasinoAllBetPlayerLoginModel;
+            await RemoveCacheClientUrl(casinoPartnerLoginModel.PlayerId);
 
             var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
             var casinoPlayerBetSettingRepository = LotteryUow.GetRepository<ICasinoPlayerBetSettingRepository>();
@@ -198,6 +199,12 @@ namespace Lottery.Core.Partners.Casino.Allbet
             {
                 { clientUrlKey.SubKey, clientUrl }
             }, clientUrlKey.TimeSpan == TimeSpan.Zero ? null : clientUrlKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
+        }
+
+        private async Task RemoveCacheClientUrl(long playerId)
+        {
+            var clientUrlKey = playerId.GetCasinoClientUrlByPlayerId();
+            await _redisCacheService.HashDeleteFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
         }
 
         private string[] GetStringGeneralHandicaps(IEnumerable<CasinoAgentHandicap> item)
