@@ -15,7 +15,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Globalization;
-using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -295,6 +294,11 @@ namespace Lottery.Core.Partners.Casino.Allbet
                 Logger.LogError($"SendRequest failed with errors {e.Message}.");
                 return null;
             }
+        }
+
+        public override async Task<Dictionary<string, object>> ScanTickets(Dictionary<string, object> data)
+        {
+            return new Dictionary<string, object>();
         }
     }
 }

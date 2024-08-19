@@ -12,6 +12,7 @@ namespace Casino.Tools.AllBet.Helpers
         public static void AddCasinoService(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IPeriodicService, AllBetPeriodicService>();
+            serviceCollection.AddSingleton<IScanTicketPeriodicService, AllBetScanTicketPeriodicService>();
             serviceCollection.AddScoped<IPartnerService, CasinoAllbetService>();
             serviceCollection.AddHostedService<AllBetInitialService>();
         }

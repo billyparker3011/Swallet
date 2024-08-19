@@ -2,8 +2,8 @@
 
 namespace Lottery.Core.Partners.CockFight.GA28
 {
-    public interface ICockFightGa28Service : ITransientDependency
+    public interface ICockFightGa28Service : IScopedDependency
     {
-        Task ScanTickets();
+
     }
 }

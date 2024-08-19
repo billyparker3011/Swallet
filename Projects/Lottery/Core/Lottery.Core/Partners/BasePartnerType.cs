@@ -19,5 +19,7 @@ namespace Lottery.Core.Partners
         public abstract Task UpdateBetSetting(object data);
 
         public abstract Task GenerateUrl(object data);
+
+        public abstract Task<Dictionary<string, object>> ScanTickets(Dictionary<string, object> metadata);
     }
 }

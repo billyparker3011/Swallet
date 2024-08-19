@@ -1,13 +1,13 @@
 ﻿using HnMicro.Framework.Options;
 using Lottery.Core.Enums.Partner;
-using Lottery.Core.Partners.Models;
-using Lottery.Core.Partners.Periodic;
 using Lottery.Core.Partners;
+using Lottery.Core.Partners.Models;
+using Lottery.Core.Partners.Models.Allbet;
+using Lottery.Core.Partners.Periodic;
 using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Lottery.Core.Partners.Models.Allbet;
 
 namespace Casino.Tools.AllBet.Services.Periodic
 {
@@ -58,7 +58,7 @@ namespace Casino.Tools.AllBet.Services.Periodic
                     Logger.LogError($"Error {ex.Message} when processing message: {item}.");
                     continue;
                 }
-              
+
             }
         }
     }

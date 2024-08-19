@@ -19,6 +19,7 @@ namespace Lottery.Core.Partners.Helpers
             serviceCollection.AddSingleton<IPartnerSubscribeService, PartnerSubscribeService>();
             //serviceCollection.AddTransient<IPartnerPublishService, PartnerPublishService>();
             serviceCollection.AddHostedService<StartPeriodicService>();
+            serviceCollection.AddHostedService<StartScanTicketPeriodicService>();
         }
     }
 }

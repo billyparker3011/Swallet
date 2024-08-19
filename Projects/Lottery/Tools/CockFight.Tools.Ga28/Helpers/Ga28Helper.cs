@@ -12,6 +12,7 @@ namespace CockFight.Tools.Ga28.Helpers
         public static void AddGa28Service(this IServiceCollection serviceCollection)
         {
             serviceCollection.AddSingleton<IPeriodicService, Ga28PeriodicService>();
+            serviceCollection.AddSingleton<IScanTicketPeriodicService, Ga28ScanTicketPeriodicService>();
             serviceCollection.AddScoped<IPartnerService, CockFightGa28Service>();
             serviceCollection.AddHostedService<Ga28InitialService>();
         }
