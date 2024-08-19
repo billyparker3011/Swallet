@@ -41,13 +41,13 @@ namespace Lottery.Core.Partners.Casino.Allbet
 
         public override async Task CreatePlayer(object data)
         {
-            Logger.LogInformation($"Start CreatePlayer with data {data}");
+            Logger.LogInformation($"Start CreatePlayer");
             if (data is null) return;
 
             var settingValue = await GetBookieSetting();
 
             var createPartnerPlayerModel = data as CasinoAllBetPlayerModel;
-
+            Logger.LogInformation($"Player {createPartnerPlayerModel.PlayerId}");
             var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
             var casinoPlayerBetSettingRepository = LotteryUow.GetRepository<ICasinoPlayerBetSettingRepository>();
             var casinoAgentBetSettingRepository = LotteryUow.GetRepository<ICasinoAgentBetSettingRepository>();
@@ -123,6 +123,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
 
             var settingValue = await GetBookieSetting();
             var casinoPartnerLoginModel = data as CasinoAllBetPlayerLoginModel;
+            Logger.LogInformation($"Player {casinoPartnerLoginModel.PlayerId}");
             await RemoveCacheClientUrl(casinoPartnerLoginModel.PlayerId);
 
             var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
@@ -170,6 +171,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
             var settingValue = await GetBookieSetting();
 
             var playerBetSetting = data as CasinoAllBetPlayerBetSettingModel;
+            Logger.LogInformation($"Player {playerBetSetting.PlayerId}");
             var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
             //  Check player is synced
