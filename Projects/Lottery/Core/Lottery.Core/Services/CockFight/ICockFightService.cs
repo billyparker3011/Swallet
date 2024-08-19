@@ -9,7 +9,7 @@ namespace Lottery.Core.Services.CockFight
         Task CreateCockFightPlayer();
         Task LoginCockFightPlayer();
         Task<LoginPlayerInformationDto> GetCockFightUrl();
-        Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance();
+        Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance(string memberRefId);
         Task TransferCockFightPlayerTickets();
     }
 }

@@ -42,9 +42,9 @@ namespace Lottery.Player.PlayerService.Controllers
 
         [HttpGet("get-balance")]
         [Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
-        public async Task<IActionResult> GetCockFightPlayerBalance()
+        public async Task<IActionResult> GetCockFightPlayerBalance([FromQuery] string member_ref_id)
         {
-            return Ok(await _cockFightService.GetCockFightPlayerBalance());
+            return Ok(await _cockFightService.GetCockFightPlayerBalance(member_ref_id));
         }
 
         [HttpPost("transfer")]

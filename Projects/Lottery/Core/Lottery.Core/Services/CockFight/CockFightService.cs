@@ -112,9 +112,12 @@ namespace Lottery.Core.Services.CockFight
             await LotteryUow.SaveChangesAsync();
         }
 
-        public async Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance()
+        public async Task<GetCockFightPlayerBalanceResult> GetCockFightPlayerBalance(string memberRefId)
         {
-            var balance = await _singleWalletService.GetBalance(ClientContext.Player.PlayerId);
+            var cockFightPlayerMappingRepository = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
+            var cockFightPlayerMapping = await cockFightPlayerMappingRepository.FindByMemberRefId(memberRefId);
+            var balance = 0m;
+            if (cockFightPlayerMapping != null) balance = await _singleWalletService.GetBalance(cockFightPlayerMapping.PlayerId);
             return new GetCockFightPlayerBalanceResult { Balance = balance.ToString() };
         }
 

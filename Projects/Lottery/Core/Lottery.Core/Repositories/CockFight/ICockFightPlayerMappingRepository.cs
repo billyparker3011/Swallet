@@ -6,6 +6,6 @@ namespace Lottery.Core.Repositories.CockFight
 {
     public interface ICockFightPlayerMappingRepository : IEntityFrameworkCoreRepository<long, CockFightPlayerMapping, LotteryContext>
     {
-
+        Task<CockFightPlayerMapping> FindByMemberRefId(string memberRefId);
     }
 }
