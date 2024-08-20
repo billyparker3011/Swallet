@@ -37,7 +37,7 @@ public class Central_2DDau_Processor : AbstractBetKindProcessor
         var endOfResults = new List<string>();
         rs.ForEach(f =>
         {
-            if (!f.GetEndOfResult(out string val)) return;
+            if (!f.GetStartOfResult(out string val)) return;
             endOfResults.Add(val);
         });
         var groupEndOfResults = endOfResults.GroupBy(f => f).Select(f => new { f.Key, Count = f.Count() }).ToList();
