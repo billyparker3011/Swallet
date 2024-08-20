@@ -69,7 +69,7 @@ namespace Lottery.Core.Services.Initial
             var cockFightBetKindRepository = lotteryUow.GetRepository<ICockFightBetKindRepository>();
             var cockFightBetKinds = await cockFightBetKindRepository.FindQuery().ToListAsync();
 
-            var cockFightBetKindInMemoryRepository = lotteryUow.GetRepository<ICockFightBetKindInMemoryRepository>();
+            var cockFightBetKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<ICockFightBetKindInMemoryRepository>();
             cockFightBetKindInMemoryRepository.AddRange(cockFightBetKinds.Select(f => f.ToCockFightBetKindModel()).ToList());
         }
 
