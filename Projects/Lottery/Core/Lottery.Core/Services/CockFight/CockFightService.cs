@@ -236,7 +236,7 @@ namespace Lottery.Core.Services.CockFight
 
         public async Task TransferCockFightPlayerTickets(Ga28TransferTicketModel model)
         {
-            var cockFightPlayerMapping = await GetMappingPlayer(model.MemberRefId);
+            var cockFightPlayerMapping = await GetMappingPlayer(model.MemberRefId.ToString());
             if (cockFightPlayerMapping == null) return;
 
             var player = await GetPlayer(cockFightPlayerMapping.PlayerId);
