@@ -3,6 +3,7 @@ using HnMicro.Framework.Responses;
 using Lottery.Core.Models.CockFight.UpdateCockFightAgentBetSetting;
 using Lottery.Core.Partners.Attribute.CockFight;
 using Lottery.Core.Services.CockFight;
+using Lottery.Player.PlayerService.Helpers.Converters;
 using Lottery.Player.PlayerService.Requests.CockFight;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -51,8 +52,7 @@ namespace Lottery.Player.PlayerService.Controllers
         [Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
         public async Task<IActionResult> TransferTicket([FromBody] TransferTicketRequest request)
         {
-            //  TODO Need to save ticket to DB
-            //await _cockFightService.TransferCockFightPlayerTickets();
+            await _cockFightService.TransferCockFightPlayerTickets(request.ToGa28TransferTicketModel());
             return Ok();
         }
 

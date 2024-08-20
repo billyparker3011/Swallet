@@ -1,6 +1,7 @@
 ﻿using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Configs;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
@@ -31,8 +32,9 @@ namespace Lottery.Core.Partners.Casino.Allbet
             IClockService clockService,
             IHttpClientFactory httpClientFactory,
             ILotteryUow lotteryUow,
+            IInMemoryUnitOfWork inMemoryUnitOfWork,
             IRedisCacheService redisCacheService
-            ) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
+            ) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow, inMemoryUnitOfWork)
         {
             _redisCacheService = redisCacheService;
         }

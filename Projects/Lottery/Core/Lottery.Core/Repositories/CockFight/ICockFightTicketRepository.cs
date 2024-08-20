@@ -6,6 +6,6 @@ namespace Lottery.Core.Repositories.CockFight
 {
     public interface ICockFightTicketRepository : IEntityFrameworkCoreRepository<long, CockFightTicket, LotteryContext>
     {
-
+        Task<CockFightTicket> FindBySId(string sid);
     }
 }

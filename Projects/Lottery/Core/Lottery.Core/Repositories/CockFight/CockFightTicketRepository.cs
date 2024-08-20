@@ -1,6 +1,7 @@
 ﻿using HnMicro.Modules.EntityFrameworkCore.Repositories;
 using Lottery.Data;
 using Lottery.Data.Entities.Partners.CockFight;
+using Microsoft.EntityFrameworkCore;
 
 namespace Lottery.Core.Repositories.CockFight
 {
@@ -8,6 +9,11 @@ namespace Lottery.Core.Repositories.CockFight
     {
         public CockFightTicketRepository(LotteryContext context) : base(context)
         {
+        }
+
+        public async Task<CockFightTicket> FindBySId(string sid)
+        {
+            return await DbSet.FirstOrDefaultAsync(f => f.Sid == sid);
         }
     }
 }

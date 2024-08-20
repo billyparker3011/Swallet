@@ -2,10 +2,13 @@
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Configs;
 using Lottery.Core.Enums.Partner;
-using Lottery.Core.Enums.Partner.CockFight;
 using Lottery.Core.Helpers;
+using Lottery.Core.InMemory.Bookies;
+using Lottery.Core.InMemory.Partner;
+using Lottery.Core.Partners.Helpers;
 using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;
@@ -27,12 +30,21 @@ namespace Lottery.Core.Partners.CockFight.GA28
         private const int _intervalTimeInSeconds = 30;
         private readonly IRedisCacheService _redisCacheService;
 
-        public CockFightGa28Service(ILogger<CockFightGa28Service> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow, IRedisCacheService redisCacheService) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
+        public CockFightGa28Service(ILogger<CockFightGa28Service> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow,
+            IInMemoryUnitOfWork inMemoryUnitOfWork, IRedisCacheService redisCacheService) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow, inMemoryUnitOfWork)
         {
             _redisCacheService = redisCacheService;
         }
 
         public override PartnerType PartnerType { get; set; } = PartnerType.GA28;
+
+        private Ga28BookieSettingValue GetBookieSettingFromInMemory()
+        {
+            var bookieSettingInMemoryRepository = InMemoryUnitOfWork.GetRepository<IBookieSettingInMemoryRepository>();
+            var cockFightSetting = bookieSettingInMemoryRepository.FindBy(f => f.BookieTypeId == PartnerType).FirstOrDefault() ?? throw new NotFoundException();
+            if (string.IsNullOrEmpty(cockFightSetting.SettingValue)) throw new NotFoundException();
+            return JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightSetting.SettingValue);
+        }
 
         private async Task<(Data.Entities.BookieSetting, Ga28BookieSettingValue)> GetBookieSetting()
         {
@@ -45,7 +57,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
         public override async Task CreatePlayer(object data)
         {
             if (data is null) return;
-            (_, var settingValue) = await GetBookieSetting();
+            var settingValue = GetBookieSettingFromInMemory();
             var ga28CreatePlayerModel = data as Ga28CreateMemberModel;
             var jsonContent = JsonConvert.SerializeObject(new
             {
@@ -69,17 +81,13 @@ namespace Lottery.Core.Partners.CockFight.GA28
         public override async Task UpdateBetSetting(object data)
         {
             if (data is null) return;
-
-            (_, var settingValue) = await GetBookieSetting();
-
+            var settingValue = GetBookieSettingFromInMemory();
             var httpClient = CreateClient(settingValue.AuthValue);
-
             var ga28BetSettingData = data as Ga28SyncUpBetSettingModel;
 
             var url = $"{settingValue.ApiAddress}/api/v1/members/{ga28BetSettingData.MemberRefId.ToLower()}";
-
             // Update limit amount per fight setting
-            var limitAmountPerFightSetting = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            var limitAmountPerFightSetting = JsonConvert.SerializeObject(new
             {
                 main_limit_amount_per_fight = ga28BetSettingData.MainLimitAmountPerFight,
                 draw_limit_amount_per_fight = ga28BetSettingData.DrawLimitAmountPerFight
@@ -89,7 +97,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             await httpClient.PatchAsync(url, limitAmountContent);
 
             // Update limit number ticket per fight setting
-            var limitNumbTicketPerFightSetting = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            var limitNumbTicketPerFightSetting = JsonConvert.SerializeObject(new
             {
                 limit_num_ticket_per_fight = ga28BetSettingData.LimitNumTicketPerFight
             });
@@ -101,15 +109,14 @@ namespace Lottery.Core.Partners.CockFight.GA28
         public override async Task GenerateUrl(object data)
         {
             if (data is null) return;
-
-            (_, var settingValue) = await GetBookieSetting();
+            var settingValue = GetBookieSettingFromInMemory();
             var cockFightPlayerMappingRepos = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
 
             var ga28GenerateUrlModel = data as Ga28LoginPlayerModel;
 
             var httpClient = CreateClient(settingValue.AuthValue);
 
-            var jsonContent = Newtonsoft.Json.JsonConvert.SerializeObject(new
+            var jsonContent = JsonConvert.SerializeObject(new
             {
                 member_ref_id = ga28GenerateUrlModel.MemberRefId,
                 account_id = ga28GenerateUrlModel.AccountId
@@ -125,7 +132,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             Logger.LogInformation($"Login responsed data: {stringData}");
 
-            var objectData = Newtonsoft.Json.JsonConvert.DeserializeObject<Ga28LoginPlayerDataReturnModel>(stringData);
+            var objectData = JsonConvert.DeserializeObject<Ga28LoginPlayerDataReturnModel>(stringData);
             if (objectData is null || objectData.Member is null) return;
 
             Logger.LogInformation($"MemberRefId responsed data: {objectData.Member.MemberRefId}");
@@ -156,23 +163,14 @@ namespace Lottery.Core.Partners.CockFight.GA28
             }, tokenKey.TimeSpan == TimeSpan.Zero ? null : tokenKey.TimeSpan, CachingConfigs.RedisConnectionForApp);
         }
 
-        private int ConvertTicketResult(string data)
-        {
-            if (string.IsNullOrEmpty(data)) return default;
-            return data switch
-            {
-                "win" => CockFightTicketResult.Win.ToInt(),
-                "loss" => CockFightTicketResult.Loss.ToInt(),
-                "draw" => CockFightTicketResult.Draw.ToInt(),
-                _ => default,
-            };
-        }
-
         public override async Task<Dictionary<string, object>> ScanTickets(Dictionary<string, object> metadata)
         {
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var cockFightPlayerMappingRepos = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
             var cockFightTicketRepos = LotteryUow.GetRepository<ICockFightTicketRepository>();
+
+            var cockFightBetKindInMemoryRepository = InMemoryUnitOfWork.GetRepository<ICockFightBetKindInMemoryRepository>();
+            var defaultBetKind = cockFightBetKindInMemoryRepository.GetDefaultBetKind() ?? throw new HnMicroException();
 
             (var cockFightRequestSetting, var settingValue) = await GetBookieSetting();
             var fromModifiedDate = settingValue != null && !string.IsNullOrEmpty(settingValue.ScanTicketTime) ? settingValue.ScanTicketTime : DateTime.UtcNow.ToString();
@@ -226,7 +224,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
                     updatedTicket.FightNumber = itemData.FightNumber;
                     updatedTicket.MatchDayCode = itemData.MatchDayCode;
                     updatedTicket.Odds = !string.IsNullOrEmpty(itemData.Odds) && decimal.TryParse(itemData.Odds, out var odds) ? odds : null;
-                    updatedTicket.Result = ConvertTicketResult(itemData.Result);
+                    updatedTicket.Result = itemData.Result.ToTicketResult();
                     updatedTicket.WinlossAmount = !string.IsNullOrEmpty(itemData.WinLossAmount) && decimal.TryParse(itemData.WinLossAmount, out var winlossAmount) ? winlossAmount : null;
                     updatedTicket.SettledDateTime = itemData.SettledDateTime;
                     updatedTicket.IpAddress = itemData.IpAddress;
@@ -234,7 +232,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
                     updatedTicket.TicketAmount = !string.IsNullOrEmpty(itemData.TicketAmount) && decimal.TryParse(itemData.TicketAmount, out var ticketAmount) ? ticketAmount : null;
                     updatedTicket.Status = itemData.Status;
                     updatedTicket.TicketModifiedDate = itemData.ModifiedDateTime;
-                    updatedTicket.Selection = itemData.Selection;
+                    updatedTicket.Selection = itemData.Selection.ToCockFightSelection().ToString();
                     updatedTicket.OddType = itemData.OddsType;
                     updatedTicket.ValidStake = !string.IsNullOrEmpty(itemData.ValidStake) && decimal.TryParse(itemData.ValidStake, out var validStake) ? validStake : null;
                 }
@@ -255,7 +253,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
                         FightNumber = itemData.FightNumber,
                         MatchDayCode = itemData.MatchDayCode,
                         Odds = !string.IsNullOrEmpty(itemData.Odds) && decimal.TryParse(itemData.Odds, out var odds) ? odds : null,
-                        Result = ConvertTicketResult(itemData.Result),
+                        Result = itemData.Result.ToTicketResult(),
                         WinlossAmount = !string.IsNullOrEmpty(itemData.WinLossAmount) && decimal.TryParse(itemData.WinLossAmount, out var winlossAmount) ? winlossAmount : null,
                         SettledDateTime = itemData.SettledDateTime,
                         IpAddress = itemData.IpAddress,
@@ -264,10 +262,10 @@ namespace Lottery.Core.Partners.CockFight.GA28
                         Status = itemData.Status,
                         TicketCreatedDate = itemData.CreatedDateTime,
                         TicketModifiedDate = itemData.ModifiedDateTime,
-                        Selection = itemData.Selection,
+                        Selection = itemData.Selection.ToCockFightSelection().ToString(),
                         OddType = itemData.OddsType,
                         ValidStake = !string.IsNullOrEmpty(itemData.ValidStake) && decimal.TryParse(itemData.ValidStake, out var validStake) ? validStake : null,
-                        BetKindId = 1 // need to check this later
+                        BetKindId = defaultBetKind.Id
                     });
                 }
             }

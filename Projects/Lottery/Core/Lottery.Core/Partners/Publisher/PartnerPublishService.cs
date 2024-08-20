@@ -18,10 +18,10 @@ namespace Lottery.Core.Partners.Publish
         {
             switch (model.Partner)
             {
-                case Enums.Partner.PartnerType.GA28:
+                case Lottery.Core.Enums.Partner.PartnerType.GA28:
                     await _redisCacheService.PublishAsync(Configs.PartnerChannelConfigs.Ga28Channel, JsonConvert.SerializeObject(model, CommonHelper.CreateJsonSerializerSettings()));
                     return;
-                case Enums.Partner.PartnerType.Allbet:
+                case Lottery.Core.Enums.Partner.PartnerType.Allbet:
                     await _redisCacheService.PublishAsync(Configs.PartnerChannelConfigs.AllbetChannel, JsonConvert.SerializeObject(model, CommonHelper.CreateJsonSerializerSettings()));
                     return;
                 default:

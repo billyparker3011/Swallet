@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Services;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +9,7 @@ namespace Lottery.Core.Partners
 {
     public abstract class BasePartnerType<T> : PartnerBaseService<T>, IPartnerService
     {
-        protected BasePartnerType(ILogger<T> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow)
+        protected BasePartnerType(ILogger<T> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow, IInMemoryUnitOfWork inMemoryUnitOfWork) : base(logger, serviceProvider, configuration, clockService, httpClientFactory, lotteryUow, inMemoryUnitOfWork)
         {
         }
 

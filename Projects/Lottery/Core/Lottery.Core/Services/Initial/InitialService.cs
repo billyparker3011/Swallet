@@ -1,17 +1,23 @@
 ﻿using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Helpers.Converters.BetKinds;
+using Lottery.Core.Helpers.Converters.Bookie;
 using Lottery.Core.Helpers.Converters.Channels;
 using Lottery.Core.Helpers.Converters.Odds;
+using Lottery.Core.Helpers.Converters.Partners;
 using Lottery.Core.Helpers.Converters.Prizes;
 using Lottery.Core.Helpers.Converters.Settings;
 using Lottery.Core.InMemory.BetKind;
+using Lottery.Core.InMemory.Bookies;
 using Lottery.Core.InMemory.Channel;
 using Lottery.Core.InMemory.Odds;
+using Lottery.Core.InMemory.Partner;
 using Lottery.Core.InMemory.Prize;
 using Lottery.Core.InMemory.Setting;
 using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BetKind;
+using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.Channel;
+using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.Repositories.Prize;
 using Lottery.Core.Repositories.Setting;
 using Lottery.Core.Services.Subscribe;
@@ -51,8 +57,29 @@ namespace Lottery.Core.Services.Initial
             await GetAllDefaultOdds(lotteryUow);
             await GetAllSettings(lotteryUow);
 
+            await GetBookiesSettings(lotteryUow);
+            await GetAllCockFightBetKinds(lotteryUow);
+
             _subscribeCommonService.Start();
             _scanTicketService.Start();
+        }
+
+        private async Task GetAllCockFightBetKinds(ILotteryUow lotteryUow)
+        {
+            var cockFightBetKindRepository = lotteryUow.GetRepository<ICockFightBetKindRepository>();
+            var cockFightBetKinds = await cockFightBetKindRepository.FindQuery().ToListAsync();
+
+            var cockFightBetKindInMemoryRepository = lotteryUow.GetRepository<ICockFightBetKindInMemoryRepository>();
+            cockFightBetKindInMemoryRepository.AddRange(cockFightBetKinds.Select(f => f.ToCockFightBetKindModel()).ToList());
+        }
+
+        private async Task GetBookiesSettings(ILotteryUow lotteryUow)
+        {
+            var bookieSettingRepository = lotteryUow.GetRepository<IBookiesSettingRepository>();
+            var bookies = await bookieSettingRepository.FindQuery().ToListAsync();
+
+            var bookieSettingInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBookieSettingInMemoryRepository>();
+            bookieSettingInMemoryRepository.AddRange(bookies.Select(f => f.ToBookieSettingModel()).ToList());
         }
 
         private async Task GetAllSettings(ILotteryUow lotteryUow)
@@ -86,6 +113,7 @@ namespace Lottery.Core.Services.Initial
         {
             var channelRepository = lotteryUow.GetRepository<IChannelRepository>();
             var channels = await channelRepository.FindQuery().ToListAsync();
+
             var channelInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
             channelInMemoryRepository.AddRange(channels.Select(f => f.ToChannelModel()).ToList());
         }
@@ -94,6 +122,7 @@ namespace Lottery.Core.Services.Initial
         {
             var betKindRepository = lotteryUow.GetRepository<IBetKindRepository>();
             var betKinds = await betKindRepository.FindQuery().ToListAsync();
+
             var betKindInMemoryRepository = _inMemoryUnitOfWork.GetRepository<IBetKindInMemoryRepository>();
             betKindInMemoryRepository.AddRange(betKinds.Select(f => f.ToBetKindModel()).ToList());
         }

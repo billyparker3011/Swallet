@@ -11,6 +11,7 @@ namespace Lottery.Data.Entities.Partners.CockFight
     [Index(nameof(MasterId))]
     [Index(nameof(SupermasterId))]
     [Index(nameof(BetKindId))]
+    [Index(nameof(Sid))]
     public class CockFightTicket : DefaultBaseEntity<long>
     {
         [Required]
@@ -24,7 +25,7 @@ namespace Lottery.Data.Entities.Partners.CockFight
         [Required]
         public int BetKindId { get; set; }
         public long? ParentId { get; set; }
-        [Precision(18,3)]
+        [Precision(18, 3)]
         public decimal? AnteAmount { get; set; }
         [MaxLength(8), Required]
         public string ArenaCode { get; set; }
