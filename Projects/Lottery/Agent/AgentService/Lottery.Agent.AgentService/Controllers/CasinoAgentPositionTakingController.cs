@@ -40,6 +40,17 @@ namespace Lottery.Agent.AgentService.Controllers
             await _cAAgentPositionTakingService.CreateAgentPositionTakingAsync(model);
             return Ok();
         }
+        
+        [HttpPost("agent-positions")]
+        public async Task<IActionResult> CreateAgentPositionTakings(List<CreateCasinoAgentPositionTakingModel> models)
+        {
+            foreach (var model in models)
+            {
+                await _cAAgentPositionTakingService.CreateAgentPositionTakingAsync(model);
+            }
+
+            return Ok();
+        }
 
         [HttpPut("{id:long}/agent-position")]
         public async Task<IActionResult> UpdateAgentPositionTaking([FromRoute] long id, [FromBody] UpdateCasinoAgentPositionTakingModel model)
@@ -47,6 +58,18 @@ namespace Lottery.Agent.AgentService.Controllers
             if (id < 1) return NotFound();
             model.Id = id;
             await _cAAgentPositionTakingService.UpdateAgentPositionTakingAsync(model);
+            return Ok();
+        }
+
+        [HttpPut("agent-positions")]
+        public async Task<IActionResult> UpdateAgentPositionTakings(List<UpdateCasinoAgentPositionTakingModel> models)
+        {
+            foreach (var model in models)
+            {
+                if (model.Id < 1) return NotFound(model.Id);
+                await _cAAgentPositionTakingService.UpdateAgentPositionTakingAsync(model);
+            }
+
             return Ok();
         }
 

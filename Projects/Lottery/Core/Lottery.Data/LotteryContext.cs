@@ -59,6 +59,9 @@ namespace Lottery.Data
         public virtual DbSet<CasinoPlayerBetSetting> CasinoPlayerBetSettings { get; set; }
         public virtual DbSet<CasinoPlayerBetSettingAgentHandicap> CasinoPlayerBetSettingAgentHandicaps { get; set; }
         public virtual DbSet<CasinoPlayerMapping> CasinoPlayerMappings { get; set; }
+        public virtual DbSet<CasinoTicket> CasinoTickets { get; set; }
+        public virtual DbSet<CasinoTicketBetDetail> CasinoTicketBetDetails { get; set; }
+        public virtual DbSet<CasinoTicketEventDetail> CasinoTicketEventDetails { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

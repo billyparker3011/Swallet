@@ -2,35 +2,41 @@
 using HnMicro.Framework.Responses;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.Partners.Attribute.CA;
+using Lottery.Core.Partners.Attribute.CockFight;
 using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Services.Partners.CA;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lottery.Player.PlayerService.Controllers
 {
     public class CasinoPlayerController : HnControllerBase
     {
-        private readonly ICasinoService _caService;
+        private readonly ICasinoService _casinoService;
         private readonly ICasinoGameTypeService _casinoGameTypeService;
-        public CasinoPlayerController(ICasinoService cAService,
-            ICasinoGameTypeService casinoGameTypeService
+        private readonly ICasinoTicketService _casinoTicketService;
+        public CasinoPlayerController(ICasinoService casinoService,
+            ICasinoGameTypeService casinoGameTypeService,
+            ICasinoTicketService casinoTicketService
             ) 
         {
             _casinoGameTypeService = casinoGameTypeService;
-            _caService = cAService;
+            _casinoService = casinoService;
+            _casinoTicketService = casinoTicketService;
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> PlayerLogin(CasinoAllBetPlayerLoginModel model)
         {
-            await _caService.AllBetPlayerLoginAsync(model);
+            await _casinoService.AllBetPlayerLoginAsync(model);
             return Ok();
         }
 
         [HttpGet("get-url")]
         public async Task<IActionResult> GetUrl()
         {
-            var result = await _caService.GetGameUrlAsync();
+            var result = await _casinoService.GetGameUrlAsync();
             return Ok(result);
         }
 
@@ -48,22 +54,27 @@ namespace Lottery.Player.PlayerService.Controllers
             return Ok(OkResponse.Create(await _casinoGameTypeService.GetAllGameTypesAsync()));
         }
 
-        //[HttpGet("getbalance/{player}")]
-        //public async Task<IActionResult> GetBalance(string player)
-        //{
-        //    return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, 2000, 1));
-        //}
+        [HttpGet("getbalance/{player}")]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
+        public async Task<IActionResult> GetBalance(string player)
+        {
+            return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, 2000, 1));
+        }
 
-        //[HttpPost("transfer")]
-        //public async Task<IActionResult> Transfer(Transaction transaction)
-        //{
-        //    return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, 2000 + transaction.Amount, 1));
-        //}
+        [HttpPost("transfer")]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
+        public async Task<IActionResult> Transfer(CasinoTicketModel casinoTicketModel)
+        {
+           var balance = await _casinoTicketService.ProcessTicketAsync(casinoTicketModel, 2000);
+            return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, balance, 1));
+        }
 
-        //[HttpPost("canceltransfer")]
-        //public async Task<IActionResult> CancelTransfer()
-        //{
-        //    return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, 2000, 1));
-        //}
+        [HttpPost("canceltransfer")]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
+        public async Task<IActionResult> CancelTransfer(CasinoCancelTicketModel casinoCancelTicketModel)
+        {
+            var balance = await _casinoTicketService.ProcessCancelTicketAsync(casinoCancelTicketModel, 2000);
+            return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, balance, 1));
+        }
     }
 }

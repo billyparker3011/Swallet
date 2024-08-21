@@ -10,6 +10,8 @@ namespace Lottery.Core.Services.Partners.CA
 
         Task<CasinoPlayerMapping> FindPlayerMappingByPlayerIdAsync(long playerId);
 
+        Task<CasinoPlayerMapping> FindPlayerMappingByBookiePlayerIdAsync(string bookiePlayerId);
+
         Task<IEnumerable<CasinoPlayerMapping>> GetPlayerMappingsAsync(string username);
 
         Task<IEnumerable<CasinoPlayerMapping>> GetAllPlayerMappingsAsync();

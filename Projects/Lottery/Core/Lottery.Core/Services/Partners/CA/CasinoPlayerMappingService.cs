@@ -44,6 +44,12 @@ namespace Lottery.Core.Services.Partners.CA
             return await cAPlayerMappingRepository.FindQueryBy(c=>c.PlayerId == playerId).FirstOrDefaultAsync();
         }
 
+        public async Task<CasinoPlayerMapping> FindPlayerMappingByBookiePlayerIdAsync(string bookiePlayerId)
+        {
+            var cAPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
+            return await cAPlayerMappingRepository.FindQueryBy(c => c.BookiePlayerId == bookiePlayerId).FirstOrDefaultAsync();
+        }
+
         public async Task<IEnumerable<CasinoPlayerMapping>> GetPlayerMappingsAsync(string username)
         {
             var cAPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
