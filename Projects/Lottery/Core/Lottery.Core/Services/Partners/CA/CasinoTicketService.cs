@@ -82,6 +82,16 @@ namespace Lottery.Core.Services.Partners.CA
             return repository.GetAll();
         }
 
+        public async Task<decimal> GetBalanceAsync(string player, decimal balance)
+        {
+            var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
+
+            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == player).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
+
+            return balance + ticketAmout;
+
+        }
+
         public async Task<decimal> ProcessTicketAsync(CasinoTicketModel model, decimal balance)
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();

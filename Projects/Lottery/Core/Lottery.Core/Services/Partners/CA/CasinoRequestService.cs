@@ -1,12 +1,18 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Azure.Core;
+using Lottery.Core.Repositories.Casino;
+using Lottery.Core.UnitOfWorks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using static Lottery.Core.Helpers.PartnerHelper;
 
 namespace Lottery.Core.Services.Partners.CA
 {
@@ -15,14 +21,17 @@ namespace Lottery.Core.Services.Partners.CA
         private readonly HttpClient _client;
         private readonly ILogger<CasinoRequestService> Logger;
         private readonly ICasinoBookieSettingService _casinoBookieSettingService;
+        private readonly ILotteryUow _lotteryUow;
         public CasinoRequestService(HttpClient client,
             ILogger<CasinoRequestService> logger,
-            ICasinoBookieSettingService casinoBookieSettingService
+            ICasinoBookieSettingService casinoBookieSettingService,
+            ILotteryUow lotteryUow
             )
         {
             _client = client;
             Logger = logger;
             _casinoBookieSettingService = casinoBookieSettingService;
+            _lotteryUow = lotteryUow;
         }
         public async Task<HttpResponseMessage> SendRequestAsync(HttpMethod httpMethod, string path, string requestBody)
         {
@@ -94,23 +103,49 @@ namespace Lottery.Core.Services.Partners.CA
             return md5Crp.ComputeHash(data);
         }
 
-        private async Task<bool> ValidateHeader(string authorizationHeader, string dateHeader, string player, string path)
+        public async Task<int> ValidateHeader(HttpRequest request)
         {
-            if (string.IsNullOrWhiteSpace(authorizationHeader)) return false;
-            if (string.IsNullOrWhiteSpace(dateHeader)) return false;
-            if (string.IsNullOrWhiteSpace(player)) return false;
+            var path = request.RouteValues["action"]?.ToString();
+            request.Headers.TryGetValue("Authorization", out var authorizationHeader);
+            request.Headers.TryGetValue("Date", out var dateHeader);
+            request.Headers.TryGetValue("Content-MD5", out var contentMD5);
+            request.Headers.TryGetValue("Content-Type", out var contentType);
+            request.RouteValues.TryGetValue("player", out var player );
 
+            if (string.IsNullOrWhiteSpace(authorizationHeader)) return CasinoReponseCode.Invalid_Signature;
+            if (string.IsNullOrWhiteSpace(dateHeader)) return CasinoReponseCode.Invalid_request_parameter;
+          
             var cABookieSettingValue = await _casinoBookieSettingService.GetCasinoBookieSettingValueAsync();
 
-            var signature = authorizationHeader.Substring(authorizationHeader.IndexOf(cABookieSettingValue.OperatorId) + 1);
+            if (!authorizationHeader.ToString().Contains($"AB {cABookieSettingValue.OperatorId}:")) return CasinoReponseCode.Invalid_Operator_ID;  
 
-            if (string.IsNullOrWhiteSpace(signature)) return false;
+            if (path == CasinoPartnerPath.GetBalance)
+            {
 
-            var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
+                var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, "/" + path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
 
-            if (header == authorizationHeader) return true;
+                if (header != authorizationHeader) return CasinoReponseCode.Invalid_Signature;
+            }
 
-            return false;
+            if (path.ToLowerInvariant() == CasinoPartnerPath.Transfer || path.ToLowerInvariant() == CasinoPartnerPath.CancelTranfer)
+            {
+                request.EnableBuffering();
+                var buffer = new byte[Convert.ToInt32(request.ContentLength)];
+                await request.Body.ReadAsync(buffer, 0, buffer.Length);
+                var requestBody = Encoding.UTF8.GetString(buffer);
+                request.Body.Position = 0; 
+
+                var cMD5 = Base64edMd5(requestBody);
+
+                if (cMD5 != contentMD5) return CasinoReponseCode.Invalid_Signature;
+
+                var header = GeneralAuthorizationHeader(HttpMethod.Post.Method, "/" + path, cMD5, contentType, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
+
+                if (header != authorizationHeader) return CasinoReponseCode.Invalid_Signature;
+
+            }
+
+            return CasinoReponseCode.Success;
         }
 
         public string GeneralUsername(string playerId, string suffix)

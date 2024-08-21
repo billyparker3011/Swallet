@@ -1,46 +1,58 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using Azure.Core;
+using Lottery.Core.Partners.Models.Allbet;
+using Lottery.Core.Services.Partners.CA;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Encodings.Web;
+using static Lottery.Core.Helpers.PartnerHelper;
 
 namespace Lottery.Core.Partners.Attribute.CA
 {
     public class CasinoAuthorizeAttribute : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        //private readonly ICAService _caService;
+        private readonly ICasinoRequestService _casinoRequestService;
 
         public CasinoAuthorizeAttribute(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock
-            //,ICAService caService
+            ISystemClock clock,
+            ICasinoRequestService casinoRequestService
             )
             : base(options, logger, encoder, clock)
         {
-           // _caService = caService;
+            _casinoRequestService = casinoRequestService;
         }
 
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-
-            if (!Request.Headers.ContainsKey("Authorization"))
+            var code = await _casinoRequestService.ValidateHeader(Request);
+            if(code != CasinoReponseCode.Success)
             {
-                return Task.FromResult(AuthenticateResult.Fail("Authorization Header Not Found."));
+                await RespondWithCustomModel(code);
+                return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(), Scheme.Name));
             }
 
-            if (!Request.Headers.ContainsKey("Date"))
-            {
-                return Task.FromResult(AuthenticateResult.Fail("Date Header Not Found."));
-            }
-
-            var identity = new ClaimsIdentity(null , nameof(CasinoAuthorizeAttribute));
+            var identity = new ClaimsIdentity(null, nameof(CasinoAuthorizeAttribute));
             var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name);
 
-            return Task.FromResult(AuthenticateResult.Success(ticket));
+            return AuthenticateResult.Success(ticket);
 
+        }
 
+        private async Task RespondWithCustomModel(int code)
+        {
+            var response = new CasinoBalanceResponseModel(code, null, null, null);
+
+            Response.StatusCode = StatusCodes.Status200OK;
+            Response.ContentType = "application/json";
+            var jsonResponse = JsonConvert.SerializeObject(response);
+            await Response.WriteAsync(jsonResponse);
         }
     }
 

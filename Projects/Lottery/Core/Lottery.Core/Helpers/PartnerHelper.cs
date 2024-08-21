@@ -48,6 +48,15 @@
             public static string QueryOneDaySumHistories = "/QueryOneDaySumHistories";
             public static string PagingQueryEventRecords = "/PagingQueryEventRecords";
             public static string PagingQueryBetRecordsByPlayer = "/PagingQueryBetRecordsByPlayer";
+
+        }
+
+        public static class CasinoPartnerPath
+        {
+            public static string GetBalance = "getbalance";
+            public static string Transfer = "transfer";
+            public static string CancelTranfer = "canceltranfer";
+
         }
     }
 }

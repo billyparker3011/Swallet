@@ -1,4 +1,5 @@
 ﻿using HnMicro.Core.Scopes;
+using Microsoft.AspNetCore.Http;
 
 namespace Lottery.Core.Services.Partners.CA
 {
@@ -9,6 +10,8 @@ namespace Lottery.Core.Services.Partners.CA
         string GeneralAuthorizationHeader(string httpMethod, string path, string contentMD5, string contentType, string requestTime, string allbetApiKey, string operatorId);
 
         string GeneralUsername(string playerId, string suffix);
+
+        Task<int> ValidateHeader(HttpRequest request);
 
     }
 }
