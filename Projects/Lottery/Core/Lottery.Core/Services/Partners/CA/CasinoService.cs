@@ -1,13 +1,10 @@
-﻿using HnMicro.Framework.Exceptions;
-using HnMicro.Framework.Services;
+﻿using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Configs;
 using Lottery.Core.Contexts;
-using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
 using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Partners.Publish;
-using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.Casino;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
@@ -45,19 +42,16 @@ namespace Lottery.Core.Services.Partners.CA
             await _redisCacheService.HashDeleteFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
 
             await _partnerPublishService.Publish(model);
-            return;
         }
 
         public async Task CreateAllBetPlayerAsync(CasinoAllBetPlayerModel model)
         {
             await _partnerPublishService.Publish(model);
-            return;
         }
 
         public async Task UpdateAllBetPlayerBetSettingAsync(CasinoAllBetPlayerBetSettingModel model)
         {
             await _partnerPublishService.Publish(model);
-            return;
         }
 
         public async Task<string> GetGameUrlAsync()
