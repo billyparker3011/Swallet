@@ -20,6 +20,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Text;
 
@@ -28,6 +29,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
     public class CockFightGa28Service : BasePartnerType<CockFightGa28Service>, ICockFightGa28Service
     {
         private const int _intervalTimeInSeconds = 30;
+        private const string _formatDateTimeScanTicket = "yyyy-MM-ddTHH:mm:ss";
         private readonly IRedisCacheService _redisCacheService;
 
         public CockFightGa28Service(ILogger<CockFightGa28Service> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, IHttpClientFactory httpClientFactory, ILotteryUow lotteryUow,
@@ -173,19 +175,28 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var defaultBetKind = cockFightBetKindInMemoryRepository.GetDefaultBetKind() ?? throw new HnMicroException();
 
             (var cockFightRequestSetting, var settingValue) = await GetBookieSetting();
-            var fromModifiedDate = settingValue != null && !string.IsNullOrEmpty(settingValue.ScanTicketTime) ? settingValue.ScanTicketTime : DateTime.UtcNow.ToString();
-            var toModifiedDate = DateTime.Parse(fromModifiedDate).AddSeconds(_intervalTimeInSeconds).ToString();
+            var fromModifiedDate = DateTime.MinValue;
+            var toModifiedDate = DateTime.MinValue;
+            if (settingValue != null && !string.IsNullOrEmpty(settingValue.ScanTicketTime) && DateTime.TryParseExact(settingValue.ScanTicketTime, _formatDateTimeScanTicket, CultureInfo.InvariantCulture, DateTimeStyles.None, out fromModifiedDate))
+            {
+                toModifiedDate = fromModifiedDate.AddSeconds(_intervalTimeInSeconds);
+            }
+            else
+            {
+                fromModifiedDate = DateTime.UtcNow.AddSeconds(-1 * _intervalTimeInSeconds);
+                toModifiedDate = DateTime.UtcNow;
+            }
 
             // Update scan ticket time
-            settingValue.ScanTicketTime = toModifiedDate;
+            settingValue.ScanTicketTime = toModifiedDate.ToString(_formatDateTimeScanTicket);
             cockFightRequestSetting.SettingValue = JsonConvert.SerializeObject(settingValue);
 
             // Get Ga28 tickets
             var httpClient = CreateClient(settingValue.AuthValue);
             var ticketParams = new Dictionary<string, string>
             {
-                {"from_modified_date_time", fromModifiedDate },
-                {"to_modified_date_time", toModifiedDate }
+                {"from_modified_date_time", ConvertScanTicketDateTime(fromModifiedDate) },
+                {"to_modified_date_time", ConvertScanTicketDateTime(toModifiedDate) }
             };
 
             var baseUrl = $"{settingValue.ApiAddress}/api/v1/tickets/";
@@ -197,9 +208,20 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var stringData = await response.Content.ReadAsStringAsync();
             if (!stringData.IsValidJson()) return new Dictionary<string, object>();
 
-            Logger.LogInformation($"Login responsed data: {stringData}");
+            Logger.LogInformation($"ScanTicket responsed data: {stringData}.");
 
-            var listResponseData = JsonConvert.DeserializeObject<List<Ga28RetrieveTicketDataReturnModel>>(stringData);
+            var listResponseData = new List<Ga28RetrieveTicketDataReturnModel>();
+            try
+            {
+                listResponseData.AddRange(JsonConvert.DeserializeObject<List<Ga28RetrieveTicketDataReturnModel>>(stringData));
+            }
+            catch (Exception)
+            {
+                foreach (var item in ticketParams)
+                {
+                    Logger.LogInformation($"Param {item.Key}: {item.Value}.");
+                }
+            }
 
             // AddNew or Update system tickets
             var listMemberResponseMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => listResponseData.Select(r => r.MemberRefId).Contains(x.MemberRefId)).ToListAsync();
@@ -274,6 +296,11 @@ namespace Lottery.Core.Partners.CockFight.GA28
             await LotteryUow.SaveChangesAsync();
 
             return new Dictionary<string, object>();
+        }
+
+        private string ConvertScanTicketDateTime(DateTime time)
+        {
+            return time.ToString(_formatDateTimeScanTicket) + "Z";
         }
     }
 }

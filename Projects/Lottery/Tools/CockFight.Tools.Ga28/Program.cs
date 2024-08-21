@@ -9,16 +9,24 @@ namespace CockFight.Tools.Ga28
     {
         public static async Task Main(string[] args)
         {
-            await new HostBuilder()
-                .ConfigureServices((hostContext, services) =>
-                {
-                    hostContext.CreateConfigurationRoot();
-                    services.AddCoreServices(hostContext.Configuration);
-                    services.AddPartnerServices(hostContext.Configuration);
-                    services.AddGa28Service();
-                })
-                .UseConsoleLifetime()
-                .RunConsoleAsync();
+            try
+            {
+                await new HostBuilder()
+                    .ConfigureServices((hostContext, services) =>
+                    {
+                        hostContext.CreateConfigurationRoot();
+                        services.AddCoreServices(hostContext.Configuration);
+                        services.AddPartnerServices(hostContext.Configuration);
+                        services.AddGa28Service();
+                    })
+                    .UseConsoleLifetime()
+                    .RunConsoleAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
+            }
         }
     }
 }
