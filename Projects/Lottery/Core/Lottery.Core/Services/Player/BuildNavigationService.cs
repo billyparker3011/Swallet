@@ -114,19 +114,21 @@ namespace Lottery.Core.Services.Player
                     int? noOfRemainingNumbers = null;
                     var displayLive = false;
                     var isLive = false;
-                    if (matchModel != null && matchModel.MatchResult.TryGetValue(category.Region.ToInt(), out List<ResultByRegionModel> matchResults))
+                    if (category.Region == Region.Northern)
                     {
-                        isLive = matchResults.Any(f1 => f1.IsLive);
-                        noOfRemainingNumbers = matchResults.FirstOrDefault() != null ? matchResults.FirstOrDefault().NoOfRemainingNumbers : null;
+                        if (matchModel != null && matchModel.MatchResult.TryGetValue(category.Region.ToInt(), out List<ResultByRegionModel> matchResults))
+                        {
+                            isLive = matchResults.Any(f1 => f1.IsLive);
+                            noOfRemainingNumbers = matchResults.FirstOrDefault() != null ? matchResults.FirstOrDefault().NoOfRemainingNumbers : null;
+                        }
+                        if (isLive && itemBetKindModel.ReplaceByIdWhenLive.HasValue)
+                        {
+                            itemBetKindModel = betKinds.Find(f1 => f1.Id == itemBetKindModel.ReplaceByIdWhenLive.Value);
+                            if (itemBetKindModel == null) continue;
+                            displayLive = true;
+                            replacedById = itemBetKind.ToInt();
+                        }
                     }
-                    if (isLive && itemBetKindModel.ReplaceByIdWhenLive.HasValue)
-                    {
-                        itemBetKindModel = betKinds.Find(f1 => f1.Id == itemBetKindModel.ReplaceByIdWhenLive.Value);
-                        if (itemBetKindModel == null) continue;
-                        displayLive = true;
-                        replacedById = itemBetKind.ToInt();
-                    }
-
                     itemSubNavigation.Children.Add(new SubNavigationDetailModel
                     {
                         BetKindId = itemBetKindModel.Id,

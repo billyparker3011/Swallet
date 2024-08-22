@@ -1,5 +1,6 @@
 ﻿using HnMicro.Core.Helpers;
 using HnMicro.Framework.Exceptions;
+using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.Setting;
@@ -232,7 +233,8 @@ public class Central_Mixed_Xien4_Processor : AbstractBetKindProcessor
     private List<int> ChannelCalculation(DateTime kickOffTime)
     {
         using var scope = ServiceProvider.CreateScope();
-        var settingInMemoryRepository = scope.ServiceProvider.GetService<ISettingInMemoryRepository>();
+        var inMemoryUnitOfWork = scope.ServiceProvider.GetService<IInMemoryUnitOfWork>();
+        var settingInMemoryRepository = inMemoryUnitOfWork.GetRepository<ISettingInMemoryRepository>();
         var setting = settingInMemoryRepository.FindByKey(nameof(ChannelsForCompletedTicketModel));
         if (setting == null || string.IsNullOrEmpty(setting.ValueSetting)) return new List<int>();
 
