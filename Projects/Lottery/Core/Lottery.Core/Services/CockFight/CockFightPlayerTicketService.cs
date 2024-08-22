@@ -5,6 +5,7 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.CockFight;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.Helpers.Converters.Partners;
 using Lottery.Core.Models.CockFight.GetCockFightPlayerWinlossDetail;
 using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.UnitOfWorks;
@@ -64,18 +65,14 @@ namespace Lottery.Core.Services.CockFight
                     Odds = f.Odds ?? 0m,
                     BetAmount = f.BetAmount ?? 0m,
                     MatchDayCode = f.MatchDayCode,
-                    Result = f.Result,
-                    Selection = f.Selection,
-                    Status = f.Status,
+                    Result = f.Result.ConvertTicketResult(),
+                    Selection = f.Selection.ConvertTicketSelection(),
+                    Status = f.Status.ConvertTicketStatus(),
                     TicketAmount = f.TicketAmount ?? 0m,
                     WinlossAmount = f.WinlossAmount ?? 0m,
                     IpAddress = f.IpAddress,
                     UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
                 }).ToListAsync();
-            foreach(var item in datas)
-            {
-                item.Selection = ConvertSelection(item.Selection);
-            }
             return datas;
         }
 
@@ -109,18 +106,14 @@ namespace Lottery.Core.Services.CockFight
                     Odds = f.Odds ?? 0m,
                     BetAmount = f.BetAmount ?? 0m,
                     MatchDayCode = f.MatchDayCode,
-                    Result = f.Result,
-                    Selection = f.Selection,
-                    Status = f.Status,
+                    Result = f.Result.ConvertTicketResult(),
+                    Selection = f.Selection.ConvertTicketSelection(),
+                    Status = f.Status.ConvertTicketStatus(),
                     TicketAmount = f.TicketAmount ?? 0m,
                     WinlossAmount = f.WinlossAmount ?? 0m,
                     IpAddress = f.IpAddress,
                     UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
                 }).ToListAsync();
-            foreach (var item in datas)
-            {
-                item.Selection = ConvertSelection(item.Selection);
-            }
             return datas;
         }
 
@@ -144,18 +137,14 @@ namespace Lottery.Core.Services.CockFight
                     Odds = f.Odds ?? 0m,
                     BetAmount = f.BetAmount ?? 0m,
                     MatchDayCode = f.MatchDayCode,
-                    Result = f.Result,
-                    Selection = f.Selection,
-                    Status = f.Status,
+                    Result = f.Result.ConvertTicketResult(),
+                    Selection = f.Selection.ConvertTicketSelection(),
+                    Status = f.Status.ConvertTicketStatus(),
                     TicketAmount = f.TicketAmount ?? 0m,
                     WinlossAmount = f.WinlossAmount ?? 0m,
                     IpAddress = f.IpAddress,
                     UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
                 }).ToListAsync();
-            foreach (var item in datas)
-            {
-                item.Selection = ConvertSelection(item.Selection);
-            }
             return datas;
         }
 

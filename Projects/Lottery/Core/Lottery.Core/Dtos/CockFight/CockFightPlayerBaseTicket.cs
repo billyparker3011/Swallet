@@ -1,4 +1,5 @@
 ﻿using Lottery.Core.Enums.Partner.CockFight;
+using Lottery.Core.Partners.Enums;
 
 namespace Lottery.Core.Dtos.CockFight
 {
@@ -10,9 +11,9 @@ namespace Lottery.Core.Dtos.CockFight
         public int FightNumber { get; set; }
         public string MatchDayCode { get; set; }
         public decimal Odds { get; set; }
-        public int Result { get; set; }
-        public string Selection { get; set; }
-        public int Status { get; set; }
+        public CockFightTicketResult Result { get; set; }
+        public CockFightSelection Selection { get; set; }
+        public CockFightTicketStatus Status { get; set; }
         public decimal TicketAmount { get; set; }
         public decimal WinlossAmount { get; set; }
         public string IpAddress { get; set; }
