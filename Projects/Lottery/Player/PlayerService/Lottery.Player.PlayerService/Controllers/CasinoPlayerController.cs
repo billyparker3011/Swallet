@@ -67,11 +67,9 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             var playerMapping = await _casinoPlayerMappingService.FindPlayerMappingByBookiePlayerIdAsync(player);
 
-            if (playerMapping == null) return NotFound(new CasinoBalanceResponseModel(CasinoReponseCode.Player_account_does_not_exist,null,null,null));
+            if (playerMapping == null) return Ok(new CasinoReponseModel(CasinoReponseCode.Player_account_does_not_exist));
 
-            var balance = await _casinoTicketService.GetBalanceAsync(player, 2000);
-            if (balance <= 0) return Ok(new CasinoBalanceResponseModel(CasinoReponseCode.Credit_is_not_enough, null, null, null));
-
+            var balance = await _casinoTicketService.GetBalanceAsync(player, 2000);         
             return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, balance, 1));
         }
 
@@ -81,9 +79,12 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             if (CasinoHelper.TypeTransfer.BetDetails.Contains(casinoTicketModel.Type) && casinoTicketModel.CasinoTicketBetDetailModels.Any(c=>!c.BetNum.ToString().Contains(c.GameRoundId.ToString())))
             {
-                return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Transaction_not_existed, null, null, null));
+                return Ok(new CasinoReponseModel(PartnerHelper.CasinoReponseCode.Transaction_not_existed));
             }
            var balance = await _casinoTicketService.ProcessTicketAsync(casinoTicketModel, 2000);
+
+            if (balance < 0) return Ok(new CasinoReponseModel(CasinoReponseCode.Credit_is_not_enough));
+
             return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, balance, 1));
         }
 
@@ -93,7 +94,7 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             if (casinoCancelTicketModel.OriginalDetails.Any(c => !c.BetNum.ToString().Contains(c.GameRoundId.ToString())))
             {
-                return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Transaction_not_existed, null, null, null));
+                return Ok(new CasinoReponseModel(PartnerHelper.CasinoReponseCode.Transaction_not_existed));
             }
             var balance = await _casinoTicketService.ProcessCancelTicketAsync(casinoCancelTicketModel, 2000);
             return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, balance, 1));

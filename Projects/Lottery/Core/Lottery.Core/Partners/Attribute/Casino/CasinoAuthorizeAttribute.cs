@@ -47,7 +47,7 @@ namespace Lottery.Core.Partners.Attribute.CA
 
         private async Task RespondWithCustomModel(int code)
         {
-            var response = new CasinoBalanceResponseModel(code, null, null, null);
+            var response = new CasinoReponseModel(code);
 
             Response.StatusCode = StatusCodes.Status200OK;
             Response.ContentType = "application/json";

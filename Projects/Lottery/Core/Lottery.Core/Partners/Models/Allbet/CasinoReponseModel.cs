@@ -2,6 +2,10 @@
 {
     public class CasinoReponseModel
     {
+        public CasinoReponseModel(int resultCode)
+        {
+            ResultCode = resultCode;
+        }
         public CasinoReponseModel(int resultCode, string message)
         {
             ResultCode = resultCode;

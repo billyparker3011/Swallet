@@ -96,11 +96,13 @@ namespace Lottery.Core.Services.Partners.CA
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
-            await CreateCasinoTicketAsync(model);
+            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
 
-            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player).Select(c=> c.IsCancel? 0 : c.Amount).SumAsync();
+            if ((balance + ticketAmout + model.Amount) < 0) return -1;
 
-            return balance + ticketAmout;
+            await CreateCasinoTicketAsync(model);       
+
+            return balance + ticketAmout + model.Amount;
 
         }
 
