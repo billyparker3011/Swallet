@@ -216,6 +216,14 @@ namespace Lottery.Core.Helpers
         {
             return new List<int> { CockFightTicketStatus.SettlementIsInProgress.ToInt(), CockFightTicketStatus.SettledButIsWaitingForPayout.ToInt() };
         }
+        public static List<int> RefundRejectCockFightTicketState()
+        {
+            return new List<int> { CockFightTicketStatus.TicketIsCanceled.ToInt(), CockFightTicketStatus.VoidIsInProgress.ToInt(), CockFightTicketStatus.TicketIsVoided.ToInt() };
+        }
+        public static List<int> CompletedCockFightTicketWithoutRefundOrRejectState()
+        {
+            return new List<int> { CockFightTicketStatus.TicketIsConfirm.ToInt() };
+        }
         #endregion
     }
 }

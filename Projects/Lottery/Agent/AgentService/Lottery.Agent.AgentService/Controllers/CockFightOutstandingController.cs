@@ -1,6 +1,7 @@
 ﻿using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Enums;
 using HnMicro.Framework.Responses;
+using Lottery.Agent.AgentService.Requests.Agent;
 using Lottery.Core.Enums;
 using Lottery.Core.Filters.Authorization;
 using Lottery.Core.Models.CockFight.GetCockFightAgentOutstanding;

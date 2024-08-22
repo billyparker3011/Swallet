@@ -63,5 +63,19 @@ namespace Lottery.Data.Entities.Partners.CockFight
         [MaxLength(5)]
         public string OddType { get; set; }
         public bool? ShowMore { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal AgentWinLoss { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal AgentPt { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal MasterWinLoss { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal MasterPt { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal SupermasterWinLoss { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal SupermasterPt { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal CompanyWinLoss { get; set; }
     }
 }

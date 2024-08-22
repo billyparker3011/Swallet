@@ -170,6 +170,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
             var cockFightPlayerMappingRepos = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
             var cockFightTicketRepos = LotteryUow.GetRepository<ICockFightTicketRepository>();
+            var cockFightAgentPtRepos = LotteryUow.GetRepository<ICockFightAgentPositionTakingRepository>();
 
             var cockFightBetKindInMemoryRepository = InMemoryUnitOfWork.GetRepository<ICockFightBetKindInMemoryRepository>();
             var defaultBetKind = cockFightBetKindInMemoryRepository.GetDefaultBetKind() ?? throw new HnMicroException();
@@ -226,6 +227,11 @@ namespace Lottery.Core.Partners.CockFight.GA28
             // AddNew or Update system tickets
             var listMemberResponseMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => listResponseData.Select(r => r.MemberRefId).Contains(x.MemberRefId)).ToListAsync();
             var players = await playerRepos.FindQueryBy(x => listMemberResponseMapping.Select(p => p.PlayerId).Distinct().Contains(x.PlayerId)).ToListAsync();
+            var relatedAgentIds = players.Select(x => x.AgentId).Distinct().ToList();
+            var relatedMasterIds = players.Select(x => x.MasterId).Distinct().ToList();
+            var relatedSupermasterIds = players.Select(x => x.SupermasterId).Distinct().ToList();
+            var unionAgentIds = relatedAgentIds.Union(relatedMasterIds).Union(relatedSupermasterIds).ToList();
+            var cockFightAgentPts = await cockFightAgentPtRepos.FindQuery().Include(x => x.Agent).Where(x => unionAgentIds.Contains(x.AgentId) || x.Agent.RoleId == 0L).ToListAsync();
 
             var responseTicketSid = listResponseData.Select(x => x.Sid).ToList();
             var existingTickets = await cockFightTicketRepos.FindQueryBy(x => responseTicketSid.Contains(x.Sid)).ToListAsync();
@@ -257,11 +263,18 @@ namespace Lottery.Core.Partners.CockFight.GA28
                     updatedTicket.Selection = itemData.Selection.ToCockFightSelection().ToString();
                     updatedTicket.OddType = itemData.OddsType;
                     updatedTicket.ValidStake = !string.IsNullOrEmpty(itemData.ValidStake) && decimal.TryParse(itemData.ValidStake, out var validStake) ? validStake : null;
+                    updatedTicket.AgentPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.AgentId)?.PositionTaking ?? 0m;
+                    updatedTicket.AgentWinLoss = -1 * updatedTicket.WinlossAmount ?? 0m * updatedTicket.AgentPt;
+                    updatedTicket.MasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.MasterId)?.PositionTaking ?? 0m;
+                    updatedTicket.MasterWinLoss = -1 * (updatedTicket.MasterPt - updatedTicket.AgentPt) * (updatedTicket.WinlossAmount ?? 0m);
+                    updatedTicket.SupermasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.SupermasterId)?.PositionTaking ?? 0m;
+                    updatedTicket.SupermasterWinLoss = -1 * (updatedTicket.SupermasterPt - updatedTicket.MasterPt) * (updatedTicket.WinlossAmount ?? 0m);
+                    updatedTicket.CompanyWinLoss = -1 * (1 - updatedTicket.SupermasterPt) * (updatedTicket.WinlossAmount ?? 0m);
                 }
                 else
                 {
                     // AddNew ticket
-                    listAddingItem.Add(new CockFightTicket
+                    var newCfTicket = new CockFightTicket
                     {
                         PlayerId = targetPlayer.PlayerId,
                         AgentId = targetPlayer.AgentId,
@@ -287,8 +300,16 @@ namespace Lottery.Core.Partners.CockFight.GA28
                         Selection = itemData.Selection.ToCockFightSelection().ToString(),
                         OddType = itemData.OddsType,
                         ValidStake = !string.IsNullOrEmpty(itemData.ValidStake) && decimal.TryParse(itemData.ValidStake, out var validStake) ? validStake : null,
-                        BetKindId = defaultBetKind.Id
-                    });
+                        BetKindId = defaultBetKind.Id,
+                        AgentPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.AgentId)?.PositionTaking ?? 0m,
+                        MasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.MasterId)?.PositionTaking ?? 0m,
+                        SupermasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.SupermasterId)?.PositionTaking ?? 0m
+                    };
+                    newCfTicket.AgentWinLoss = -1 * newCfTicket.WinlossAmount ?? 0m * newCfTicket.AgentPt;
+                    newCfTicket.MasterWinLoss = -1 * (newCfTicket.MasterPt - newCfTicket.AgentPt) * (newCfTicket.WinlossAmount ?? 0m);
+                    newCfTicket.SupermasterWinLoss = -1 * (newCfTicket.SupermasterPt - newCfTicket.MasterPt) * (newCfTicket.WinlossAmount ?? 0m);
+                    newCfTicket.CompanyWinLoss = -1 * (1 - newCfTicket.SupermasterPt) * (newCfTicket.WinlossAmount ?? 0m);
+                    listAddingItem.Add(newCfTicket);
                 }
             }
 

@@ -75,7 +75,7 @@ namespace Lottery.Core.Services.CockFight
                                        player.PlayerId,
                                        player.Username,
                                        ticket.ParentId,
-                                       Payout = ticket.TicketAmount ?? 0m * ticket.Odds ?? 0m,
+                                       Payout = ticket.TicketAmount ?? 0m,
                                        ticket.ShowMore
                                    })
                                    .GroupBy(x => new
@@ -115,7 +115,7 @@ namespace Lottery.Core.Services.CockFight
                                        agent.Username,
                                        agent.RoleId,
                                        ticket.ParentId,
-                                       Payout = ticket.TicketAmount ?? 0m * ticket.Odds ?? 0m,
+                                       Payout = ticket.TicketAmount ?? 0m,
                                        ticket.ShowMore
                                    })
                                    .GroupBy(x => new
@@ -156,7 +156,7 @@ namespace Lottery.Core.Services.CockFight
                                        agent.Username,
                                        agent.RoleId,
                                        ticket.ParentId,
-                                       Payout = ticket.TicketAmount ?? 0m * ticket.Odds ?? 0m,
+                                       Payout = ticket.TicketAmount ?? 0m,
                                        ticket.ShowMore
                                    })
                                    .GroupBy(x => new
@@ -197,7 +197,7 @@ namespace Lottery.Core.Services.CockFight
                                        agent.Username,
                                        agent.RoleId,
                                        ticket.ParentId,
-                                       Payout = ticket.TicketAmount ?? 0m * ticket.Odds ?? 0m,
+                                       Payout = ticket.TicketAmount ?? 0m,
                                        ticket.ShowMore
                                    })
                                    .GroupBy(x => new

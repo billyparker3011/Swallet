@@ -4,6 +4,7 @@ using Lottery.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lottery.Data.Migrations
 {
     [DbContext(typeof(LotteryContext))]
-    partial class LotteryContextModelSnapshot : ModelSnapshot
+    [Migration("20240820155704_UpdateWinlossAllLevelOfTicket")]
+    partial class UpdateWinlossAllLevelOfTicket
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -997,240 +1000,6 @@ namespace Lottery.Data.Migrations
                     b.ToTable("CasinoPlayerMappings");
                 });
 
-            modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoTicket", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<string>("BookiePlayerId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("CancelReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<long?>("CancelTransactionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<bool>("IsCancel")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsRetry")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsRetryCancel")
-                        .HasColumnType("bit");
-
-                    b.Property<long>("PlayerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Reason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<long>("TransactionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookiePlayerId");
-
-                    b.HasIndex("PlayerId");
-
-                    b.HasIndex("TransactionId")
-                        .IsUnique();
-
-                    b.ToTable("CasinoTicket");
-                });
-
-            modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoTicketBetDetail", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("AppType")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("BetAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<long>("BetMethod")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("BetNum")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("BetTime")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("BetType")
-                        .HasColumnType("int");
-
-                    b.Property<long>("CasinoTicketId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Commission")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("Deposit")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<decimal>("ExchangeRate")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<string>("GameResult")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("GameResult2")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("GameRoundEndTime")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<long>("GameRoundId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("GameRoundStartTime")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("GameType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Ip")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<bool>("IsCancel")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TableName")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("ValidAmount")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("WinOrLossAmount")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CasinoTicketId");
-
-                    b.ToTable("CasinoTicketBetDetail");
-                });
-
-            modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoTicketEventDetail", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<long>("CasinoTicketId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("EventCode")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<long>("EventRecordNum")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("EventType")
-                        .HasColumnType("int");
-
-                    b.Property<long>("ExchangeRate")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("SettleTime")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CasinoTicketId");
-
-                    b.ToTable("CasinoTicketEventDetail");
-                });
-
             modelBuilder.Entity("Lottery.Data.Entities.Partners.CockFight.CockFightAgentBetSetting", b =>
                 {
                     b.Property<long>("Id")
@@ -1585,8 +1354,6 @@ namespace Lottery.Data.Migrations
                     b.HasIndex("MasterId");
 
                     b.HasIndex("PlayerId");
-
-                    b.HasIndex("Sid");
 
                     b.HasIndex("SupermasterId");
 
@@ -2332,39 +2099,6 @@ namespace Lottery.Data.Migrations
                     b.Navigation("Player");
                 });
 
-            modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoTicket", b =>
-                {
-                    b.HasOne("Lottery.Data.Entities.Player", "Player")
-                        .WithMany()
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Player");
-                });
-
-            modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoTicketBetDetail", b =>
-                {
-                    b.HasOne("Lottery.Data.Entities.Partners.Casino.CasinoTicket", "CasinoTicket")
-                        .WithMany("CasinoTicketBetDetails")
-                        .HasForeignKey("CasinoTicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CasinoTicket");
-                });
-
-            modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoTicketEventDetail", b =>
-                {
-                    b.HasOne("Lottery.Data.Entities.Partners.Casino.CasinoTicket", "CasinoTicket")
-                        .WithMany("CasinoTicketEventDetails")
-                        .HasForeignKey("CasinoTicketId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CasinoTicket");
-                });
-
             modelBuilder.Entity("Lottery.Data.Entities.Partners.CockFight.CockFightAgentBetSetting", b =>
                 {
                     b.HasOne("Lottery.Data.Entities.Agent", "Agent")
@@ -2500,13 +2234,6 @@ namespace Lottery.Data.Migrations
             modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoPlayerBetSetting", b =>
                 {
                     b.Navigation("CasinoPlayerBetSettingAgentHandicaps");
-                });
-
-            modelBuilder.Entity("Lottery.Data.Entities.Partners.Casino.CasinoTicket", b =>
-                {
-                    b.Navigation("CasinoTicketBetDetails");
-
-                    b.Navigation("CasinoTicketEventDetails");
                 });
 
             modelBuilder.Entity("Lottery.Data.Entities.Player", b =>
