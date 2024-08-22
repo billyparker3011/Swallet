@@ -1,5 +1,8 @@
+using HnMicro.Core.Helpers;
 using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Responses;
+using HnMicro.Modules.LoggerService.Services;
+using Lottery.Core.Enums;
 using Lottery.Core.Models.CockFight.UpdateCockFightAgentBetSetting;
 using Lottery.Core.Partners.Attribute.CockFight;
 using Lottery.Core.Services.CockFight;
@@ -14,11 +17,13 @@ namespace Lottery.Player.PlayerService.Controllers
     {
         private readonly ICockFightService _cockFightService;
         private readonly ICockFightPlayerBetSettingService _cockFightPlayerBetSettingService;
+        private readonly ILoggerService _loggerService;
 
-        public CockFightPlayerController(ICockFightService cockFightService, ICockFightPlayerBetSettingService cockFightPlayerBetSettingService)
+        public CockFightPlayerController(ICockFightService cockFightService, ICockFightPlayerBetSettingService cockFightPlayerBetSettingService, ILoggerService loggerService)
         {
             _cockFightService = cockFightService;
             _cockFightPlayerBetSettingService = cockFightPlayerBetSettingService;
+            _loggerService = loggerService;
         }
 
         [HttpPost("initiate-player")]
@@ -52,6 +57,14 @@ namespace Lottery.Player.PlayerService.Controllers
         [Authorize(AuthenticationSchemes = nameof(CockFightAuthorizeAttribute))]
         public async Task<IActionResult> TransferTicket([FromBody] TransferTicketRequest request)
         {
+            await _loggerService.Info(new HnMicro.Framework.Logger.Models.LogRequestModel
+            {
+                CategoryName = "TransferCockFightPlayerTickets",
+                Message = "TransferCockFightPlayerTickets Request",
+                Stacktrace = Newtonsoft.Json.JsonConvert.SerializeObject(request),
+                RoleId = Role.Player.ToInt(),
+                CreatedBy = 0L
+            });
             await _cockFightService.TransferCockFightPlayerTickets(request.ToGa28TransferTicketModel());
             return Ok();
         }
