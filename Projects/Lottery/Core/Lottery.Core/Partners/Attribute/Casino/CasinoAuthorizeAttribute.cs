@@ -31,12 +31,12 @@ namespace Lottery.Core.Partners.Attribute.CA
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            var code = await _casinoRequestService.ValidateHeader(Request);
-            if(code != CasinoReponseCode.Success)
-            {
-                await RespondWithCustomModel(code);
-                return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(), Scheme.Name));
-            }
+            //var code = await _casinoRequestService.ValidateHeader(Request);
+            //if(code != CasinoReponseCode.Success)
+            //{
+            //    await RespondWithCustomModel(code);
+            //    return AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(), Scheme.Name));
+            //}
 
             var identity = new ClaimsIdentity(null, nameof(CasinoAuthorizeAttribute));
             var ticket = new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name);

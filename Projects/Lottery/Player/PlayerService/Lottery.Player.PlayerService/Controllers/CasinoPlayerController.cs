@@ -66,7 +66,7 @@ namespace Lottery.Player.PlayerService.Controllers
         }
 
         [HttpGet("getbalance/{player}")]
-       // [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
         public async Task<IActionResult> GetBalance(string player)
         {
             var codeValidate = await _casinoRequestService.ValidateHeader(Request, null);
@@ -82,7 +82,7 @@ namespace Lottery.Player.PlayerService.Controllers
         }
 
         [HttpPost("transfer")]
-        //[Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
         public async Task<IActionResult> Transfer(object body)
         {
             var codeValidate = await _casinoRequestService.ValidateHeader(Request, body?.ToString());
@@ -103,7 +103,7 @@ namespace Lottery.Player.PlayerService.Controllers
         }
 
         [HttpPost("canceltransfer")]
-       // [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
         public async Task<IActionResult> CancelTransfer(object body)
         {
             var codeValidate = await _casinoRequestService.ValidateHeader(Request, body?.ToString());
