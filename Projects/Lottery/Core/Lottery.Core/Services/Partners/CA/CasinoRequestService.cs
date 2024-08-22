@@ -110,6 +110,7 @@ namespace Lottery.Core.Services.Partners.CA
             request.Headers.TryGetValue("Date", out var dateHeader);
             request.Headers.TryGetValue("Content-MD5", out var contentMD5);
             request.Headers.TryGetValue("Content-Type", out var contentType);
+            request.RouteValues.TryGetValue("player", out var player);
 
             if (string.IsNullOrWhiteSpace(authorizationHeader)) return CasinoReponseCode.Invalid_Signature;
             if (string.IsNullOrWhiteSpace(dateHeader)) return CasinoReponseCode.Invalid_request_parameter;
@@ -121,7 +122,7 @@ namespace Lottery.Core.Services.Partners.CA
             if (path.ToLowerInvariant() == CasinoPartnerPath.GetBalance)
             {
 
-                var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, "/" + path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
+                var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, $"/{path}/{player}", null, contentType, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
 
                 if (header != authorizationHeader) return CasinoReponseCode.Invalid_Signature;
             }
