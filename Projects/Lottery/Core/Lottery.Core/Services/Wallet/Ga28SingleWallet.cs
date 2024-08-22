@@ -19,7 +19,7 @@ namespace Lottery.Core.Services.Wallet
             var ga28Now = ClockService.GetUtcNow().AddHours(_offSetTime);
             var startKickoffTime = new DateTime(ga28Now.Year, ga28Now.Month, ga28Now.Day, 0, 0, 0);
             var endKickoffTime = startKickoffTime.AddDays(1);
-            var tickets = await cockFightTicketRepository.FindQueryBy(f => f.PlayerId == playerId && !f.ParentId.HasValue && f.TicketModifiedDate >= startKickoffTime && f.TicketModifiedDate < endKickoffTime && !CommonHelper.RefundRejectCockFightTicketState().Contains(f.Status)).ToListAsync();
+            var tickets = await cockFightTicketRepository.FindQueryBy(f => f.PlayerId == playerId && !f.ParentId.HasValue && f.TicketCreatedDate >= startKickoffTime && f.TicketCreatedDate < endKickoffTime && !CommonHelper.RefundRejectCockFightTicketState().Contains(f.Status)).ToListAsync();
             return (tickets.Select(x => x.TicketAmount ?? 0m * 1000).Sum(x => x), tickets.Select(x => x.WinlossAmount ?? 0m * 1000).Sum(x => x));
         }
     }

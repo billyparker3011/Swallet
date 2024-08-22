@@ -14,6 +14,7 @@ using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.UnitOfWorks;
+using Lottery.Data.Entities;
 using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
@@ -205,10 +206,18 @@ namespace Lottery.Core.Partners.CockFight.GA28
             Logger.LogInformation($"ScanTicket URI: {uri}.");
 
             var response = await httpClient.GetAsync(uri);
-            if (response is null) return new Dictionary<string, object>();
+            if (response is null)
+            {
+                await UpdateBookieSetting(cockFightRequestSetting);
+                return new Dictionary<string, object>();
+            }
 
             var stringData = await response.Content.ReadAsStringAsync();
-            if (!stringData.IsValidJson()) return new Dictionary<string, object>();
+            if (!stringData.IsValidJson())
+            {
+                await UpdateBookieSetting(cockFightRequestSetting);
+                return new Dictionary<string, object>();
+            }
 
             Logger.LogInformation($"ScanTicket responsed data: {stringData}.");
 
@@ -318,6 +327,13 @@ namespace Lottery.Core.Partners.CockFight.GA28
             await LotteryUow.SaveChangesAsync();
 
             return new Dictionary<string, object>();
+        }
+
+        private async Task UpdateBookieSetting(BookieSetting cockFightRequestSetting)
+        {
+            var bookiesSettingRepository = LotteryUow.GetRepository<IBookiesSettingRepository>();
+            bookiesSettingRepository.Update(cockFightRequestSetting);
+            await LotteryUow.SaveChangesAsync();
         }
 
         private string ConvertScanTicketDateTime(DateTime time)
