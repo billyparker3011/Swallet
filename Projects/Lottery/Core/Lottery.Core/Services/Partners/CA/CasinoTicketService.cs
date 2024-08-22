@@ -9,6 +9,7 @@ using Lottery.Core.Repositories.Casino;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities.Partners.Casino;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,6 +18,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Lottery.Core.Helpers.PartnerHelper;
 
 namespace Lottery.Core.Services.Partners.CA
 {
@@ -92,56 +94,62 @@ namespace Lottery.Core.Services.Partners.CA
 
         }
 
-        public async Task<decimal> ProcessTicketAsync(CasinoTicketModel model, decimal balance)
+        public async Task<(decimal, int)> ProcessTicketAsync(CasinoTicketModel model, decimal balance)
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
             var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
 
-            if ((balance + ticketAmout + model.Amount) < 0) return -1;
+            if (model.Type == CasinoHelper.TypeTransfer.ManualSettle) return (balance + ticketAmout, CasinoReponseCode.Success);
 
-            await CreateCasinoTicketAsync(model);       
+            if ((balance + ticketAmout + model.Amount) < 0) return (-1, CasinoReponseCode.Credit_is_not_enough);
 
-            return balance + ticketAmout + model.Amount;
+            var code = await CreateCasinoTicketAsync(model);       
+
+            return (balance + ticketAmout + model.Amount,code);
 
         }
 
-        public async Task<decimal> ProcessCancelTicketAsync(CasinoCancelTicketModel model, decimal balance)
+        public async Task<(decimal, int)> ProcessCancelTicketAsync(CasinoCancelTicketModel model, decimal balance)
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
-            await CreateCasinoCancelTicketAsync(model);
+           var code = await CreateCasinoCancelTicketAsync(model);           
 
             var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
 
-            return balance + ticketAmout;
+            return (balance + ticketAmout, code);
 
         }
 
-        public async Task CreateCasinoTicketAsync(CasinoTicketModel model)
+        public async Task<int> CreateCasinoTicketAsync(CasinoTicketModel model)
         {
             var playerMapping = await _casinoPlayerMappingService.FindPlayerMappingByBookiePlayerIdAsync(model.Player);
 
-            if (playerMapping == null) throw new NotFoundException();
+            if (playerMapping == null) return CasinoReponseCode.Player_account_does_not_exist;          
 
             var casinoTicketRepository = LotteryUow.GetRepository<ICasinoTicketRepository>();
             var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
             var casinoTicketEventDetailRepository = LotteryUow.GetRepository<ICasinoTicketEventDetailRepository>();
 
-            var casinoTicket = new CasinoTicket()
-            {
-                TransactionId = model.TranId,
-                PlayerId = playerMapping.PlayerId,
-                BookiePlayerId = model.Player,
-                Amount = model.Amount,
-                Currency = model.Currency,
-                Reason = model.Reason,
-                Type = model.Type,
-                IsRetry = model.IsRetry,
-                CreatedAt = DateTime.Now,
-                CreatedBy = 0
+            var casinoTicket = await casinoTicketRepository.FindQueryBy(c => c.TransactionId == model.TranId).FirstOrDefaultAsync();
 
-            };
+            if (casinoTicket != null) return CasinoReponseCode.Invalid_status;
+
+           casinoTicket = new CasinoTicket()
+           {
+               TransactionId = model.TranId,
+               PlayerId = playerMapping.PlayerId,
+               BookiePlayerId = model.Player,
+               Amount = model.Amount,
+               Currency = model.Currency,
+               Reason = model.Reason,
+               Type = model.Type,
+               IsRetry = model.IsRetry,
+               CreatedAt = DateTime.Now,
+               CreatedBy = 0
+
+           };
 
             await casinoTicketRepository.AddAsync(casinoTicket);
 
@@ -205,15 +213,16 @@ namespace Lottery.Core.Services.Partners.CA
             }
 
             await LotteryUow.SaveChangesAsync();
+            return CasinoReponseCode.Success;
         }
 
-        public async Task CreateCasinoCancelTicketAsync(CasinoCancelTicketModel model)
+        public async Task<int> CreateCasinoCancelTicketAsync(CasinoCancelTicketModel model)
         {
             var casinoTicketRepository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
             var ticket = await casinoTicketRepository.FindQueryBy(c => c.TransactionId == model.OriginalTranId).FirstOrDefaultAsync();
 
-            if (ticket == null) throw new NotFoundException();
+            if (ticket == null) return CasinoReponseCode.Transaction_not_existed;
 
             var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
 
@@ -259,6 +268,8 @@ namespace Lottery.Core.Services.Partners.CA
             await casinoTicketBetDetailRepository.AddRangeAsync(casinoTicketBetDetails);
 
             await LotteryUow.SaveChangesAsync();
+
+            return CasinoReponseCode.Success;
         }
     }
 }

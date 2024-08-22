@@ -13,5 +13,7 @@ namespace Lottery.Core.Services.Partners.CA
 
         Task<int> ValidateHeader(HttpRequest request);
 
+        Task<int> ValidateHeader(HttpRequest request, string requestBody);
+
     }
 }

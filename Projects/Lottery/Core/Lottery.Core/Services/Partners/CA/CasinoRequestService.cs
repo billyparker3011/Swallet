@@ -103,6 +103,45 @@ namespace Lottery.Core.Services.Partners.CA
             return md5Crp.ComputeHash(data);
         }
 
+        public async Task<int> ValidateHeader(HttpRequest request, string requestBody)
+        {
+            var path = request.RouteValues["action"]?.ToString();
+            request.Headers.TryGetValue("Authorization", out var authorizationHeader);
+            request.Headers.TryGetValue("Date", out var dateHeader);
+            request.Headers.TryGetValue("Content-MD5", out var contentMD5);
+            request.Headers.TryGetValue("Content-Type", out var contentType);
+
+            if (string.IsNullOrWhiteSpace(authorizationHeader)) return CasinoReponseCode.Invalid_Signature;
+            if (string.IsNullOrWhiteSpace(dateHeader)) return CasinoReponseCode.Invalid_request_parameter;
+
+            var cABookieSettingValue = await _casinoBookieSettingService.GetCasinoBookieSettingValueAsync();
+
+            if (!authorizationHeader.ToString().Contains($"AB {cABookieSettingValue.OperatorId}:")) return CasinoReponseCode.Invalid_Operator_ID;
+
+            if (path == CasinoPartnerPath.GetBalance)
+            {
+
+                var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, "/" + path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
+
+                if (header != authorizationHeader) return CasinoReponseCode.Invalid_Signature;
+            }
+
+            if (path.ToLowerInvariant() == CasinoPartnerPath.Transfer || path.ToLowerInvariant() == CasinoPartnerPath.CancelTranfer)
+            {
+
+                var cMD5 = Base64edMd5(requestBody);
+
+                if (cMD5 != contentMD5) return CasinoReponseCode.Invalid_Signature;
+
+                var header = GeneralAuthorizationHeader(HttpMethod.Post.Method, "/" + path, cMD5, contentType, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
+
+                if (header != authorizationHeader) return CasinoReponseCode.Invalid_Signature;
+
+            }
+
+            return CasinoReponseCode.Success;
+        }
+
         public async Task<int> ValidateHeader(HttpRequest request)
         {
             var path = request.RouteValues["action"]?.ToString();
@@ -110,7 +149,6 @@ namespace Lottery.Core.Services.Partners.CA
             request.Headers.TryGetValue("Date", out var dateHeader);
             request.Headers.TryGetValue("Content-MD5", out var contentMD5);
             request.Headers.TryGetValue("Content-Type", out var contentType);
-            request.RouteValues.TryGetValue("player", out var player );
 
             if (string.IsNullOrWhiteSpace(authorizationHeader)) return CasinoReponseCode.Invalid_Signature;
             if (string.IsNullOrWhiteSpace(dateHeader)) return CasinoReponseCode.Invalid_request_parameter;
