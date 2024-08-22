@@ -118,7 +118,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             if (!authorizationHeader.ToString().Contains($"AB {cABookieSettingValue.OperatorId}:")) return CasinoReponseCode.Invalid_Operator_ID;
 
-            if (path == CasinoPartnerPath.GetBalance)
+            if (path.ToLowerInvariant() == CasinoPartnerPath.GetBalance)
             {
 
                 var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, "/" + path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
@@ -126,9 +126,8 @@ namespace Lottery.Core.Services.Partners.CA
                 if (header != authorizationHeader) return CasinoReponseCode.Invalid_Signature;
             }
 
-            if (path.ToLowerInvariant() == CasinoPartnerPath.Transfer || path.ToLowerInvariant() == CasinoPartnerPath.CancelTranfer)
+            if (path.ToLowerInvariant() == CasinoPartnerPath.Transfer || path.ToLowerInvariant() == CasinoPartnerPath.CancelTransfer)
             {
-
                 var cMD5 = Base64edMd5(requestBody);
 
                 if (cMD5 != contentMD5) return CasinoReponseCode.Invalid_Signature;
@@ -157,15 +156,14 @@ namespace Lottery.Core.Services.Partners.CA
 
             if (!authorizationHeader.ToString().Contains($"AB {cABookieSettingValue.OperatorId}:")) return CasinoReponseCode.Invalid_Operator_ID;  
 
-            if (path == CasinoPartnerPath.GetBalance)
+            if (path.ToLowerInvariant() == CasinoPartnerPath.GetBalance)
             {
-
                 var header = GeneralAuthorizationHeader(HttpMethod.Get.Method, "/" + path, null, null, dateHeader, cABookieSettingValue.PartnerApiKey, cABookieSettingValue.OperatorId);
 
                 if (header != authorizationHeader) return CasinoReponseCode.Invalid_Signature;
             }
 
-            if (path.ToLowerInvariant() == CasinoPartnerPath.Transfer || path.ToLowerInvariant() == CasinoPartnerPath.CancelTranfer)
+            if (path.ToLowerInvariant() == CasinoPartnerPath.Transfer || path.ToLowerInvariant() == CasinoPartnerPath.CancelTransfer)
             {
                 request.EnableBuffering();
                 var buffer = new byte[Convert.ToInt32(request.ContentLength)];

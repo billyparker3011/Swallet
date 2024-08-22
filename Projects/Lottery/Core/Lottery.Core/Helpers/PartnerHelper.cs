@@ -55,7 +55,7 @@
         {
             public static string GetBalance = "getbalance";
             public static string Transfer = "transfer";
-            public static string CancelTranfer = "canceltranfer";
+            public static string CancelTransfer = "canceltransfer";
 
         }
     }
