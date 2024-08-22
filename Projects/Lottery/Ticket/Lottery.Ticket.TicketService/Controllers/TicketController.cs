@@ -4,6 +4,7 @@ using Lottery.Core.Enums;
 using Lottery.Core.Filters.Authorization;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
+using Lottery.Core.Services.CockFight;
 using Lottery.Core.Services.Ticket;
 using Lottery.Ticket.TicketService.Requests.Ticket;
 using Microsoft.AspNetCore.Mvc;
@@ -16,14 +17,16 @@ namespace Lottery.Ticket.TicketService.Controllers
         private readonly IPlayerTicketService _playerTicketService;
         private readonly ICompletedMatchService _completedMatchService;
         private readonly IAdvancedSearchTicketsService _advancedSearchTicketsService;
+        private readonly ICockFightPlayerTicketService _cockFightPlayerTicketService;
 
         public TicketController(ITicketService ticketService, IPlayerTicketService playerTicketService, ICompletedMatchService completedMatchService,
-            IAdvancedSearchTicketsService advancedSearchTicketsService)
+            IAdvancedSearchTicketsService advancedSearchTicketsService, ICockFightPlayerTicketService cockFightPlayerTicketService)
         {
             _ticketService = ticketService;
             _playerTicketService = playerTicketService;
             _completedMatchService = completedMatchService;
             _advancedSearchTicketsService = advancedSearchTicketsService;
+            _cockFightPlayerTicketService = cockFightPlayerTicketService;
         }
 
         [HttpPost]
@@ -97,6 +100,12 @@ namespace Lottery.Ticket.TicketService.Controllers
         public async Task<IActionResult> RunningTickets()
         {
             return Ok(OkResponse.Create(await _playerTicketService.GetTicketsAsBetList()));
+        }
+
+        [HttpGet("cock-fight/running-tickets")]
+        public async Task<IActionResult> CockFightRunningTickets()
+        {
+            return Ok(OkResponse.Create(await _cockFightPlayerTicketService.GetCockFightTicketsAsBetList()));
         }
 
         [HttpGet("refund-reject-tickets")]

@@ -202,6 +202,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             var baseUrl = $"{settingValue.ApiAddress}/api/v1/tickets/";
             var uri = QueryHelpers.AddQueryString(baseUrl, ticketParams);
+            Logger.LogInformation($"ScanTicket URI: {uri}.");
 
             var response = await httpClient.GetAsync(uri);
             if (response is null) return new Dictionary<string, object>();
