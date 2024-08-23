@@ -32,6 +32,7 @@ namespace Lottery.Core.Partners.Helpers
             selection = string.IsNullOrEmpty(selection) ? string.Empty : selection.Trim().ToLower();
             if (selection == "player") return CockFightSelection.Player;
             if (selection == "banker") return CockFightSelection.Banker;
+            if (selection == "draw") return CockFightSelection.Draw;
             return CockFightSelection.Unknown;
         }
     }

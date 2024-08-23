@@ -305,6 +305,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
                     updatedTicket.SupermasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.SupermasterId)?.PositionTaking ?? 0m;
                     updatedTicket.SupermasterWinLoss = -1 * (updatedTicket.SupermasterPt - updatedTicket.MasterPt) * (updatedTicket.WinlossAmount ?? 0m);
                     updatedTicket.CompanyWinLoss = -1 * (1 - updatedTicket.SupermasterPt) * (updatedTicket.WinlossAmount ?? 0m);
+                    cockFightTicketRepos.Update(updatedTicket);
                 }
                 else
                 {
