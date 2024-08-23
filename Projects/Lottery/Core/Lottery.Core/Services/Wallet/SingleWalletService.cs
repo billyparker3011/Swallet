@@ -40,5 +40,10 @@ namespace Lottery.Core.Services.Wallet
             var balance = player.Credit + totalWinlose - totalOuts;
             return balance / rate;
         }
+
+        public async Task<decimal> GetBalanceForGa28(long playerId)
+        {
+            return await GetBalance(playerId, 1000m);
+        }
     }
 }
