@@ -179,9 +179,33 @@ namespace Lottery.Core.Partners.CockFight.GA28
             (var cockFightRequestSetting, var settingValue) = await GetBookieSetting();
             var fromModifiedDate = DateTime.MinValue;
             var toModifiedDate = DateTime.MinValue;
-            if (settingValue != null && !string.IsNullOrEmpty(settingValue.ScanTicketTime) && DateTime.TryParseExact(settingValue.ScanTicketTime, _formatDateTimeScanTicket, CultureInfo.InvariantCulture, DateTimeStyles.None, out fromModifiedDate))
+            if (settingValue != null)
             {
-                toModifiedDate = fromModifiedDate.AddSeconds(_intervalTimeInSeconds);
+                if (settingValue.AllowScanByRange)
+                {
+                    if (settingValue.FromScanByRange.HasValue && settingValue.ToScanByRange.HasValue)
+                    {
+                        fromModifiedDate = settingValue.FromScanByRange.Value;
+                        toModifiedDate = settingValue.ToScanByRange.Value;
+                    }
+                    else
+                    {
+                        fromModifiedDate = DateTime.UtcNow.AddMonths(-1);
+                        toModifiedDate = DateTime.UtcNow;
+                    }
+                    settingValue.FromScanByRange = fromModifiedDate;
+                    settingValue.ToScanByRange = toModifiedDate;
+                    settingValue.AllowScanByRange = !settingValue.AllowScanByRange;
+                }
+                else if (!string.IsNullOrEmpty(settingValue.ScanTicketTime) && DateTime.TryParseExact(settingValue.ScanTicketTime, _formatDateTimeScanTicket, CultureInfo.InvariantCulture, DateTimeStyles.None, out fromModifiedDate))
+                {
+                    toModifiedDate = fromModifiedDate.AddSeconds(_intervalTimeInSeconds);
+                }
+                else
+                {
+                    fromModifiedDate = DateTime.UtcNow.AddSeconds(-1 * _intervalTimeInSeconds);
+                    toModifiedDate = DateTime.UtcNow;
+                }
             }
             else
             {
@@ -195,43 +219,42 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             // Get Ga28 tickets
             var httpClient = CreateClient(settingValue.AuthValue);
+            var fromModified = ConvertScanTicketDateTime(fromModifiedDate);
+            var toModified = ConvertScanTicketDateTime(toModifiedDate);
             var ticketParams = new Dictionary<string, string>
             {
-                {"from_modified_date_time", ConvertScanTicketDateTime(fromModifiedDate) },
-                {"to_modified_date_time", ConvertScanTicketDateTime(toModifiedDate) }
+                {"from_modified_date_time", fromModified },
+                {"to_modified_date_time", toModified }
             };
 
             var baseUrl = $"{settingValue.ApiAddress}/api/v1/tickets/";
             var uri = QueryHelpers.AddQueryString(baseUrl, ticketParams);
-            Logger.LogInformation($"ScanTicket URI: {uri}.");
+
+            Logger.LogInformation($"ScanTicket URI: {uri} with params {fromModified}; {toModified}.");
 
             var response = await httpClient.GetAsync(uri);
             if (response is null)
             {
+                Logger.LogError("Response is NULL.");
+
                 await UpdateBookieSetting(cockFightRequestSetting);
                 return new Dictionary<string, object>();
             }
-
-            var stringData = await response.Content.ReadAsStringAsync();
-            if (!stringData.IsValidJson())
-            {
-                await UpdateBookieSetting(cockFightRequestSetting);
-                return new Dictionary<string, object>();
-            }
-
-            Logger.LogInformation($"ScanTicket responsed data: {stringData}.");
 
             var listResponseData = new List<Ga28RetrieveTicketDataReturnModel>();
             try
             {
+                var stringData = await response.Content.ReadAsStringAsync();
+                Logger.LogInformation($"ScanTicket responsed data: {stringData}.");
+
                 listResponseData.AddRange(JsonConvert.DeserializeObject<List<Ga28RetrieveTicketDataReturnModel>>(stringData));
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                foreach (var item in ticketParams)
-                {
-                    Logger.LogInformation($"Param {item.Key}: {item.Value}.");
-                }
+                Logger.LogError(ex, "Message {0}. Stacktrace: {1}", ex.Message, ex.StackTrace);
+
+                await UpdateBookieSetting(cockFightRequestSetting);
+                return new Dictionary<string, object>();
             }
 
             // AddNew or Update system tickets

@@ -9,5 +9,8 @@
         public string AuthValue { get; set; }
         public string ApplicationStaticToken { get; set; }
         public string ScanTicketTime { get; set; }
+        public bool AllowScanByRange { get; set; }
+        public DateTime? FromScanByRange { get; set; }
+        public DateTime? ToScanByRange { get; set; }
     }
 }

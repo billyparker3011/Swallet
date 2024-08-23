@@ -31,7 +31,7 @@ namespace Lottery.Data.Entities.Partners.CockFight
         public string ArenaCode { get; set; }
         [Precision(18, 3)]
         public decimal? BetAmount { get; set; }
-        [MaxLength(3), Required]
+        [MaxLength(15), Required]
         public string CurrencyCode { get; set; }
         [Required]
         public int FightNumber { get; set; }
@@ -53,7 +53,7 @@ namespace Lottery.Data.Entities.Partners.CockFight
         public decimal? WinlossAmount { get; set; }
         [MaxLength(255)]
         public string IpAddress { get; set; }
-        [MaxLength(512)]
+        [MaxLength(1024)]
         public string UserAgent { get; set; }
         [Required]
         public DateTime TicketCreatedDate { get; set; }
