@@ -199,7 +199,8 @@ namespace Lottery.Core.Partners.CockFight.GA28
                 }
                 else if (!string.IsNullOrEmpty(settingValue.ScanTicketTime) && DateTime.TryParseExact(settingValue.ScanTicketTime, _formatDateTimeScanTicket, CultureInfo.InvariantCulture, DateTimeStyles.None, out fromModifiedDate))
                 {
-                    toModifiedDate = fromModifiedDate.AddSeconds(_intervalTimeInSeconds);
+                    fromModifiedDate = fromModifiedDate.AddSeconds(-1 * _intervalTimeInSeconds);
+                    toModifiedDate = DateTime.UtcNow;
                 }
                 else
                 {

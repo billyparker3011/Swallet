@@ -44,7 +44,9 @@ namespace Lottery.Player.PlayerService.Requests.CockFight
         [JsonProperty("settled_date_time"), JsonPropertyName("settled_date_time")]
         public DateTime? SettledDateTime { get; set; }
 
+        [JsonProperty("sid"), JsonPropertyName("sid")]
         public string SId { get; set; }
+
         public int Status { get; set; }
 
         [JsonProperty("ticket_amount"), JsonPropertyName("ticket_amount")]
