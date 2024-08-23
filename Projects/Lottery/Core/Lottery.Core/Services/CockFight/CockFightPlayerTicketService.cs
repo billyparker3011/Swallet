@@ -7,6 +7,7 @@ using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.Helpers.Converters.Partners;
 using Lottery.Core.Models.CockFight.GetCockFightPlayerWinlossDetail;
+using Lottery.Core.Partners.Helpers;
 using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
@@ -59,36 +60,25 @@ namespace Lottery.Core.Services.CockFight
                 .Select(f => new CockFightPlayerTicketDetailDto
                 {
                     PlayerId = f.PlayerId,
-                    TicketId = f.Id,
+                    TicketId = f.Sid,
                     BetKindId = f.BetKindId,
                     FightNumber = f.FightNumber,
                     Odds = f.Odds ?? 0m,
                     BetAmount = f.BetAmount ?? 0m,
                     MatchDayCode = f.MatchDayCode,
                     Result = f.Result.ConvertTicketResult(),
-                    Selection = f.Selection.ConvertTicketSelection(),
+                    Selection = f.Selection.ToCockFightSelection(),
                     Status = f.Status.ConvertTicketStatus(),
                     TicketAmount = f.TicketAmount ?? 0m,
                     WinlossAmount = f.WinlossAmount ?? 0m,
                     IpAddress = f.IpAddress,
                     UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
+                    ArenaCode = f.ArenaCode,
+                    CurrencyCode = f.CurrencyCode,
+                    DateCreated = f.TicketCreatedDate,
+                    OddsType = f.OddsType
                 }).ToListAsync();
             return datas;
-        }
-
-        private string ConvertSelection(string selection)
-        {
-            switch (selection)
-            {
-                case "player":
-                    return "P";
-                case "draw":
-                    return "D";
-                case "bank":
-                    return "B";
-                default:
-                    return string.Empty;
-            }
         }
 
         public async Task<List<CockFightPlayerTicketDetailDto>> GetCockFightPlayerWinloseDetail(GetCockFightPlayerWinlossDetailModel model)
@@ -100,50 +90,85 @@ namespace Lottery.Core.Services.CockFight
                 .Select(f => new CockFightPlayerTicketDetailDto
                 {
                     PlayerId = f.PlayerId,
-                    TicketId = f.Id,
+                    TicketId = f.Sid,
                     BetKindId = f.BetKindId,
                     FightNumber = f.FightNumber,
                     Odds = f.Odds ?? 0m,
                     BetAmount = f.BetAmount ?? 0m,
                     MatchDayCode = f.MatchDayCode,
                     Result = f.Result.ConvertTicketResult(),
-                    Selection = f.Selection.ConvertTicketSelection(),
+                    Selection = f.Selection.ToCockFightSelection(),
                     Status = f.Status.ConvertTicketStatus(),
                     TicketAmount = f.TicketAmount ?? 0m,
                     WinlossAmount = f.WinlossAmount ?? 0m,
                     IpAddress = f.IpAddress,
                     UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
+                    ArenaCode = f.ArenaCode,
+                    CurrencyCode = f.CurrencyCode,
+                    DateCreated = f.TicketCreatedDate,
+                    OddsType = f.OddsType
                 }).ToListAsync();
             return datas;
         }
 
-        public Task<List<CockFightPlayerTicketDetailDto>> GetCockFightRefundRejectTickets()
+        public async Task<List<CockFightPlayerTicketDetailDto>> GetCockFightRefundRejectTickets()
         {
-            throw new NotImplementedException();
+            var cockFightTicketRepository = LotteryUow.GetRepository<ICockFightTicketRepository>();
+            var refundRejectState = CommonHelper.RefundRejectCockFightTicketState();
+            var lastestMatchDayCodeTicket = await cockFightTicketRepository.FindQueryBy(x => x.PlayerId == ClientContext.Player.PlayerId && !x.ParentId.HasValue).OrderByDescending(x => x.TicketCreatedDate).FirstOrDefaultAsync();
+            if (lastestMatchDayCodeTicket == null) return new List<CockFightPlayerTicketDetailDto>();
+            var datas = await cockFightTicketRepository.FindQueryBy(f => f.PlayerId == ClientContext.Player.PlayerId && !f.ParentId.HasValue && f.MatchDayCode == lastestMatchDayCodeTicket.MatchDayCode && refundRejectState.Contains(f.Status))
+                .OrderByDescending(f => f.Id)
+                .Select(f => new CockFightPlayerTicketDetailDto
+                {
+                    PlayerId = f.PlayerId,
+                    TicketId = f.Sid,
+                    BetKindId = f.BetKindId,
+                    FightNumber = f.FightNumber,
+                    Odds = f.Odds ?? 0m,
+                    BetAmount = f.BetAmount ?? 0m,
+                    MatchDayCode = f.MatchDayCode,
+                    Result = f.Result.ConvertTicketResult(),
+                    Selection = f.Selection.ToCockFightSelection(),
+                    Status = f.Status.ConvertTicketStatus(),
+                    TicketAmount = f.TicketAmount ?? 0m,
+                    WinlossAmount = f.WinlossAmount ?? 0m,
+                    IpAddress = f.IpAddress,
+                    UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
+                    ArenaCode = f.ArenaCode,
+                    CurrencyCode = f.CurrencyCode,
+                    DateCreated = f.TicketCreatedDate,
+                    OddsType = f.OddsType
+                }).ToListAsync();
+            return datas;
         }
 
         public async Task<List<CockFightPlayerTicketDetailDto>> GetCockFightTicketsAsBetList()
         {
             var cockFightTicketRepository = LotteryUow.GetRepository<ICockFightTicketRepository>();
             var runningState = CommonHelper.OutsCockFightTicketState();
-            var datas = await cockFightTicketRepository.FindQueryBy(f => f.PlayerId == ClientContext.Player.PlayerId && !f.ParentId.HasValue && runningState.Contains(f.Status))
+            var datas = await cockFightTicketRepository.FindQueryBy(f => f.PlayerId == 6 && !f.ParentId.HasValue && runningState.Contains(f.Status))
                 .OrderByDescending(f => f.Id)
                 .Select(f => new CockFightPlayerTicketDetailDto
                 {
                     PlayerId = f.PlayerId,
-                    TicketId = f.Id,
+                    TicketId = f.Sid,
                     BetKindId = f.BetKindId,
                     FightNumber = f.FightNumber,
                     Odds = f.Odds ?? 0m,
                     BetAmount = f.BetAmount ?? 0m,
                     MatchDayCode = f.MatchDayCode,
                     Result = f.Result.ConvertTicketResult(),
-                    Selection = f.Selection.ConvertTicketSelection(),
+                    Selection = f.Selection.ToCockFightSelection(),
                     Status = f.Status.ConvertTicketStatus(),
                     TicketAmount = f.TicketAmount ?? 0m,
                     WinlossAmount = f.WinlossAmount ?? 0m,
                     IpAddress = f.IpAddress,
                     UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
+                    ArenaCode = f.ArenaCode,
+                    CurrencyCode = f.CurrencyCode,
+                    DateCreated = f.TicketCreatedDate,
+                    OddsType = f.OddsType
                 }).ToListAsync();
             return datas;
         }

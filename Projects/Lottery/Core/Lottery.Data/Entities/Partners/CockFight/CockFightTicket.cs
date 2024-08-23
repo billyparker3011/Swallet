@@ -77,5 +77,7 @@ namespace Lottery.Data.Entities.Partners.CockFight
         public decimal SupermasterPt { get; set; }
         [Required, Precision(18, 3)]
         public decimal CompanyWinLoss { get; set; }
+        [MaxLength(10)]
+        public string OddsType { get; set; }
     }
 }

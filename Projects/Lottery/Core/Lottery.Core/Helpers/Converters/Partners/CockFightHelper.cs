@@ -17,21 +17,6 @@ namespace Lottery.Core.Helpers.Converters.Partners
             };
         }
 
-        public static CockFightSelection ConvertTicketSelection(this string selection)
-        {
-            switch (selection)
-            {
-                case "player":
-                    return CockFightSelection.Player;
-                case "draw":
-                    return CockFightSelection.Draw;
-                case "bank":
-                    return CockFightSelection.Banker;
-                default:
-                    return CockFightSelection.Unknown;
-            }
-        }
-
         public static CockFightTicketResult ConvertTicketResult(this int result)
         {
             return (CockFightTicketResult)Enum.ToObject(typeof(CockFightTicketResult), result);

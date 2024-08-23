@@ -5,7 +5,7 @@ namespace Lottery.Core.Dtos.CockFight
 {
     public class CockFightPlayerBaseTicket
     {
-        public long TicketId { get; set; }
+        public string TicketId { get; set; }
         public int BetKindId { get; set; }
         public decimal BetAmount { get; set; }
         public int FightNumber { get; set; }
@@ -18,5 +18,10 @@ namespace Lottery.Core.Dtos.CockFight
         public decimal WinlossAmount { get; set; }
         public string IpAddress { get; set; }
         public string UserAgent { get; set; }
+        public DateTime DateCreated { get; set; }
+        public string ArenaCode { get; set; }
+        public string CurrencyCode { get; set; }
+        public string OddsType { get; set; }
+
     }
 }

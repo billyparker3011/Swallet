@@ -6,6 +6,7 @@ using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Configs;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
+using Lottery.Core.Helpers.Converters.Partners;
 using Lottery.Core.InMemory.Bookies;
 using Lottery.Core.InMemory.Partner;
 using Lottery.Core.Partners.Helpers;

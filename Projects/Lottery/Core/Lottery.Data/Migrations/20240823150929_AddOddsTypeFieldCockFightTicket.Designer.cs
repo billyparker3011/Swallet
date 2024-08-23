@@ -4,6 +4,7 @@ using Lottery.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lottery.Data.Migrations
 {
     [DbContext(typeof(LotteryContext))]
-    partial class LotteryContextModelSnapshot : ModelSnapshot
+    [Migration("20240823150929_AddOddsTypeFieldCockFightTicket")]
+    partial class AddOddsTypeFieldCockFightTicket
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1475,8 +1478,8 @@ namespace Lottery.Data.Migrations
 
                     b.Property<string>("CurrencyCode")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<int>("FightNumber")
                         .HasColumnType("int");
@@ -1569,8 +1572,8 @@ namespace Lottery.Data.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("UserAgent")
-                        .HasMaxLength(1024)
-                        .HasColumnType("nvarchar(1024)");
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<decimal?>("ValidStake")
                         .HasPrecision(18, 3)
