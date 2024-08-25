@@ -6,13 +6,13 @@ namespace Lottery.Core.Services.Partners.CA
 {
     public interface ICasinoAgentPositionTakingService : IScopedDependency
     {
-        Task<CasinoAgentPositionTaking> FindAgentPositionTakingAsync(long id);
+        Task<CasinoAgentPositionTakingModel> FindAgentPositionTakingAsync(long id);
 
-        Task<IEnumerable<CasinoAgentPositionTaking>> GetAgentPositionTakingsAsync(long agentId);
+        Task<IEnumerable<CasinoAgentPositionTakingModel>> GetAgentPositionTakingsAsync(long agentId);
 
-        Task<IEnumerable<CasinoAgentPositionTaking>> GetAllAgentPositionTakingsAsync();
+        Task<IEnumerable<CasinoAgentPositionTakingModel>> GetAllAgentPositionTakingsAsync();
 
-        Task CreateAgentPositionTakingAsync(CreateCasinoAgentPositionTakingModel model);
+        Task CreateAgentPositionTakingAsync(UpdateCasinoAgentPositionTakingModel model);
 
         Task UpdateAgentPositionTakingAsync(UpdateCasinoAgentPositionTakingModel model);
 

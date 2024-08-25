@@ -3,9 +3,9 @@ using Lottery.Core.Partners.Models.Allbet;
 
 namespace Lottery.Agent.AgentService.Validations.Casino
 {
-    public class AllbetBookieSettingValueRequestValidator : AbstractValidator<AllbetBookieSettingValue>
+    public class AllbetBookieSettingValueValidator : AbstractValidator<AllbetBookieSettingValue>
     {
-        public AllbetBookieSettingValueRequestValidator()
+        public AllbetBookieSettingValueValidator()
         {
             RuleFor(item => item.Agent).NotNull();
             RuleFor(item => item.ApiURL).NotNull();

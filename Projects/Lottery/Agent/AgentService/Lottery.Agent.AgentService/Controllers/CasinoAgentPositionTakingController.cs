@@ -3,6 +3,7 @@ using HnMicro.Framework.Responses;
 using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Services.Partners.CA;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Lottery.Agent.AgentService.Controllers
 {
@@ -35,15 +36,17 @@ namespace Lottery.Agent.AgentService.Controllers
         }
 
         [HttpPost("agent-position")]
-        public async Task<IActionResult> CreateAgentPositionTaking(CreateCasinoAgentPositionTakingModel model)
+        public async Task<IActionResult> CreateAgentPositionTaking(UpdateCasinoAgentPositionTakingModel model)
         {
             await _cAAgentPositionTakingService.CreateAgentPositionTakingAsync(model);
             return Ok();
         }
-        
+
         [HttpPost("agent-positions")]
-        public async Task<IActionResult> CreateAgentPositionTakings(List<CreateCasinoAgentPositionTakingModel> models)
+        public async Task<IActionResult> CreateAgentPositionTakings(List<UpdateCasinoAgentPositionTakingModel> models)
         {
+            if(models.Any() && models.GroupBy(n => n.BetKindId).Any(g => g.Count() > 1)) return BadRequest("Duplicate Bet Kind");
+
             foreach (var model in models)
             {
                 await _cAAgentPositionTakingService.CreateAgentPositionTakingAsync(model);
@@ -64,6 +67,8 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpPut("agent-positions")]
         public async Task<IActionResult> UpdateAgentPositionTakings(List<UpdateCasinoAgentPositionTakingModel> models)
         {
+            if (models.Any() && models.GroupBy(n => n.BetKindId).Any(g => g.Count() > 1)) return BadRequest("Duplicate Bet Kind");
+
             foreach (var model in models)
             {
                 if (model.Id < 1) return NotFound(model.Id);
