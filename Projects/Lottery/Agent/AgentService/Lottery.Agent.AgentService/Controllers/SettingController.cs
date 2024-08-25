@@ -1,8 +1,11 @@
 ﻿using HnMicro.Framework.Controllers;
 using Lottery.Agent.AgentService.Requests.Setting.BetKind;
 using Lottery.Agent.AgentService.Requests.Setting.ProcessTicket;
+using Lottery.Core.Models.CockFight.UpdateCockFightAgentBetSetting;
+using Lottery.Core.Models.CockFight.UpdateCockFightBookieSetting;
 using Lottery.Core.Models.Setting.BetKind;
 using Lottery.Core.Models.Setting.ProcessTicket;
+using Lottery.Core.Services.CockFight;
 using Lottery.Core.Services.Setting;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +16,13 @@ namespace Lottery.Agent.AgentService.Controllers
     {
         private readonly IProcessTicketSettingService _processTicketSettingService;
         private readonly IBalanceTableSettingService _balanceTableSettingService;
+        private readonly ICockFightService _cockFightService;
 
-        public SettingController(IProcessTicketSettingService processTicketSettingService, IBalanceTableSettingService balanceTableSettingService)
+        public SettingController(IProcessTicketSettingService processTicketSettingService, IBalanceTableSettingService balanceTableSettingService, ICockFightService cockFightService)
         {
             _processTicketSettingService = processTicketSettingService;
             _balanceTableSettingService = balanceTableSettingService;
+            _cockFightService = cockFightService;
         }
 
         #region Process Ticket Setting
@@ -119,6 +124,21 @@ namespace Lottery.Agent.AgentService.Controllers
         public async Task<IActionResult> GetBetKindBalanceTableSetting([FromRoute] int betKindId)
         {
             return Ok(await _balanceTableSettingService.GetBetKindBalanceTableSetting(betKindId));
+        }
+        #endregion
+
+        #region CockFight bookie setting
+        [HttpGet("cock-fight/bookie-setting")]
+        public async Task<IActionResult> GetCockFightBookieSetting()
+        {
+            return Ok(await _cockFightService.GetCockFightBookieSetting());
+        }
+
+        [HttpPut("cock-fight/bookie-setting")]
+        public async Task<IActionResult> UpdateCockFightBookieSetting([FromBody] UpdateCockFightBookieSettingModel request)
+        {
+            await _cockFightService.UpdateCockFightBookieSetting(request);
+            return Ok();
         }
         #endregion
     }

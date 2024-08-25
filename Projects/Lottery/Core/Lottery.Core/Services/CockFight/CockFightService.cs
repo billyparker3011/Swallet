@@ -1,15 +1,19 @@
-﻿using HnMicro.Framework.Exceptions;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Configs;
 using Lottery.Core.Contexts;
 using Lottery.Core.Dtos.CockFight;
+using Lottery.Core.Enums;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
 using Lottery.Core.Models.CockFight.GetBalance;
+using Lottery.Core.Models.CockFight.UpdateCockFightBookieSetting;
 using Lottery.Core.Partners.Helpers;
 using Lottery.Core.Partners.Models.Ga28;
 using Lottery.Core.Partners.Publish;
+using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.BookiesSetting;
 using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.Repositories.Player;
@@ -19,6 +23,7 @@ using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Lottery.Core.Services.CockFight
 {
@@ -316,6 +321,64 @@ namespace Lottery.Core.Services.CockFight
             }
 
             await LotteryUow.SaveChangesAsync();
+        }
+
+        public async Task UpdateCockFightBookieSetting(UpdateCockFightBookieSettingModel model)
+        {
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var bookieSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
+
+            var agent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            if (agent.RoleId != Role.Company.ToInt()) return;
+
+            var cockFightBookieSetting = await bookieSettingRepos.FindBookieSettingByType(PartnerType.GA28) ?? throw new BadRequestException(ErrorCodeHelper.CockFight.BookieSettingIsNotBeingInitiated);
+
+            if (cockFightBookieSetting.SettingValue == null) throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
+
+            var setting = JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightBookieSetting.SettingValue);
+            if (setting == null) return;
+
+            setting.AuthValue = model.AuthValue;
+            setting.ApiAddress = model.ApiAddress;
+            setting.AllowScanByRange = model.AllowScanByRange;
+            setting.FromScanByRange = model.FromScanByRange;
+            setting.ToScanByRange = model.ToScanByRange;
+            setting.GameClientId = model.GameClientId;
+            setting.PartnerAccountId = model.PartnerAccountId;
+            setting.PrivateKey = model.PrivateKey;
+            setting.IsMaintainance = model.IsMaintainance;
+
+            cockFightBookieSetting.SettingValue = JsonConvert.SerializeObject(setting);
+            bookieSettingRepos.Update(cockFightBookieSetting);
+            await LotteryUow.SaveChangesAsync();
+        }
+
+        public async Task<UpdateCockFightBookieSettingModel> GetCockFightBookieSetting()
+        {
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var bookieSettingRepos = LotteryUow.GetRepository<IBookiesSettingRepository>();
+
+            var agent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            if (agent.RoleId != Role.Company.ToInt()) return null;
+            var cockFightBookieSetting = await bookieSettingRepos.FindBookieSettingByType(PartnerType.GA28) ?? throw new BadRequestException(ErrorCodeHelper.CockFight.BookieSettingIsNotBeingInitiated);
+
+            if (cockFightBookieSetting.SettingValue == null) throw new BadRequestException(ErrorCodeHelper.CockFight.PartnerAccountIdHasNotBeenProvided);
+
+            var setting = JsonConvert.DeserializeObject<Ga28BookieSettingValue>(cockFightBookieSetting.SettingValue);
+            if (setting == null) return new UpdateCockFightBookieSettingModel();
+
+            return new UpdateCockFightBookieSettingModel
+            {
+                AllowScanByRange = setting.AllowScanByRange,
+                ApiAddress = setting.ApiAddress,
+                AuthValue = setting.AuthValue,
+                FromScanByRange = setting.FromScanByRange,
+                GameClientId = setting.GameClientId,
+                IsMaintainance = setting.IsMaintainance ?? false,
+                PartnerAccountId = setting.PartnerAccountId,
+                PrivateKey = setting.PrivateKey,
+                ToScanByRange = setting.ToScanByRange
+            };
         }
     }
 }

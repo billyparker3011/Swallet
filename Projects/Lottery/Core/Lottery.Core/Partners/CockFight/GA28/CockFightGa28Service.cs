@@ -305,6 +305,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
                     updatedTicket.SupermasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.SupermasterId)?.PositionTaking ?? 0m;
                     updatedTicket.SupermasterWinLoss = -1 * (updatedTicket.SupermasterPt - updatedTicket.MasterPt) * (updatedTicket.WinlossAmount ?? 0m);
                     updatedTicket.CompanyWinLoss = -1 * (1 - updatedTicket.SupermasterPt) * (updatedTicket.WinlossAmount ?? 0m);
+                    updatedTicket.OddsType = itemData.OddsType;
                     cockFightTicketRepos.Update(updatedTicket);
                 }
                 else
@@ -339,7 +340,8 @@ namespace Lottery.Core.Partners.CockFight.GA28
                         BetKindId = defaultBetKind.Id,
                         AgentPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.AgentId)?.PositionTaking ?? 0m,
                         MasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.MasterId)?.PositionTaking ?? 0m,
-                        SupermasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.SupermasterId)?.PositionTaking ?? 0m
+                        SupermasterPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.SupermasterId)?.PositionTaking ?? 0m,
+                        OddsType = itemData.OddsType
                     };
                     newCfTicket.AgentWinLoss = -1 * newCfTicket.WinlossAmount ?? 0m * newCfTicket.AgentPt;
                     newCfTicket.MasterWinLoss = -1 * (newCfTicket.MasterPt - newCfTicket.AgentPt) * (newCfTicket.WinlossAmount ?? 0m);

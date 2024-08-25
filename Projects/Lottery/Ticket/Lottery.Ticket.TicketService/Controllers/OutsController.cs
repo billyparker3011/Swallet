@@ -25,7 +25,7 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok(OkResponse.Create(await _playerTicketService.GetPlayerOuts(playerId)));
         }
 
-        [HttpGet("/broad-caster/{betkindId:int}")]
+        [HttpGet("broad-caster/{betkindId:int}")]
         public async Task<IActionResult> GetBroadCasterOuts(int betkindId)
         {
             return Ok(OkResponse.Create(await _broadCasterTicketService.GetBroadCasterOuts(betkindId)));
