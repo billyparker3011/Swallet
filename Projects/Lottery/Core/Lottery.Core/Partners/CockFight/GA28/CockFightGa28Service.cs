@@ -6,7 +6,6 @@ using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Configs;
 using Lottery.Core.Enums.Partner;
 using Lottery.Core.Helpers;
-using Lottery.Core.Helpers.Converters.Partners;
 using Lottery.Core.InMemory.Bookies;
 using Lottery.Core.InMemory.Partner;
 using Lottery.Core.Partners.Helpers;
@@ -296,7 +295,6 @@ namespace Lottery.Core.Partners.CockFight.GA28
                     updatedTicket.Status = itemData.Status;
                     updatedTicket.TicketModifiedDate = itemData.ModifiedDateTime;
                     updatedTicket.Selection = itemData.Selection.ToCockFightSelection().ToString();
-                    updatedTicket.OddType = itemData.OddsType;
                     updatedTicket.ValidStake = !string.IsNullOrEmpty(itemData.ValidStake) && decimal.TryParse(itemData.ValidStake, out var validStake) ? validStake : null;
                     updatedTicket.AgentPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.AgentId)?.PositionTaking ?? 0m;
                     updatedTicket.AgentWinLoss = -1 * updatedTicket.WinlossAmount ?? 0m * updatedTicket.AgentPt;
@@ -335,7 +333,6 @@ namespace Lottery.Core.Partners.CockFight.GA28
                         TicketCreatedDate = itemData.CreatedDateTime,
                         TicketModifiedDate = itemData.ModifiedDateTime,
                         Selection = itemData.Selection.ToCockFightSelection().ToString(),
-                        OddType = itemData.OddsType,
                         ValidStake = !string.IsNullOrEmpty(itemData.ValidStake) && decimal.TryParse(itemData.ValidStake, out var validStake) ? validStake : null,
                         BetKindId = defaultBetKind.Id,
                         AgentPt = cockFightAgentPts.FirstOrDefault(x => x.AgentId == targetPlayer.AgentId)?.PositionTaking ?? 0m,

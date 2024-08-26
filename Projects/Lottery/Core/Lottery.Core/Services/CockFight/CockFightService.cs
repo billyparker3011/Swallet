@@ -242,34 +242,19 @@ namespace Lottery.Core.Services.CockFight
         public async Task TransferCockFightPlayerTickets(Ga28TransferTicketModel model)
         {
             var cockFightPlayerMapping = await GetMappingPlayer(model.MemberRefId.ToString());
-            if (cockFightPlayerMapping == null)
-            {
-                Logger.LogInformation("Cannot find MemberRefId: {0}.", model.MemberRefId);
-                return;
-            }
+            if (cockFightPlayerMapping == null) return;
 
             var player = await GetPlayer(cockFightPlayerMapping.PlayerId);
-            if (player == null)
-            {
-                Logger.LogInformation("Cannot find PlayerId: {0}.", cockFightPlayerMapping.PlayerId);
-                return;
-            }
+            if (player == null) return;
 
-            if (string.IsNullOrEmpty(model.Ticket.TicketAmount) || !decimal.TryParse(model.Ticket.TicketAmount, out decimal ticketAmount))
-            {
-                Logger.LogInformation("Cannot parse TicketAmount: {0}.", model.Ticket.TicketAmount);
-                return;
-            }
+            if (string.IsNullOrEmpty(model.Ticket.TicketAmount) || !decimal.TryParse(model.Ticket.TicketAmount, out decimal ticketAmount)) return;
+
             var balance = await _singleWalletService.GetBalanceForGa28(player.PlayerId);
             if (ticketAmount > balance) throw new HnMicroException();
 
             var betKindRepository = LotteryUow.GetRepository<ICockFightBetKindRepository>();
             var betKind = await betKindRepository.FindQueryBy(f => true).FirstOrDefaultAsync();
-            if (betKind == null)
-            {
-                Logger.LogInformation("Cannot parse BetKind.");
-                return;
-            }
+            if (betKind == null) return;
 
             //  TODO Need to storage Match & Fight
             var cockFightTicketRepository = LotteryUow.GetRepository<ICockFightTicketRepository>();
@@ -291,7 +276,7 @@ namespace Lottery.Core.Services.CockFight
                     MatchDayCode = model.Ticket.MatchDayCode,
                     Odds = string.IsNullOrEmpty(model.Ticket.Odds) || !decimal.TryParse(model.Ticket.Odds, out decimal odds) ? null : odds,
                     Result = model.Ticket.Result.ToTicketResult(),
-                    Selection = model.Ticket.Selection,
+                    Selection = model.Ticket.Selection.ToCockFightSelection().ToString(),
                     SettledDateTime = model.Ticket.SettledDateTime,
                     Sid = model.Ticket.Sid,
                     Status = model.Ticket.Status,
@@ -302,7 +287,7 @@ namespace Lottery.Core.Services.CockFight
                     TicketCreatedDate = model.Ticket.CreatedDateTime,
                     TicketModifiedDate = model.Ticket.ModifiedDateTime,
                     ValidStake = string.IsNullOrEmpty(model.Ticket.ValidStake) || !decimal.TryParse(model.Ticket.ValidStake, out decimal validStake) ? null : validStake,
-                    OddType = model.Ticket.OddsType,
+                    OddsType = model.Ticket.OddsType,
                     CreatedAt = model.Ticket.CreatedDateTime,
                     CreatedBy = player.PlayerId
                 };

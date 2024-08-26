@@ -60,8 +60,6 @@ namespace Lottery.Data.Entities.Partners.CockFight
         public DateTime? TicketModifiedDate { get; set; }
         [Precision(18, 3)]
         public decimal? ValidStake { get; set; }
-        [MaxLength(5)]
-        public string OddType { get; set; }
         public bool? ShowMore { get; set; }
         [Required, Precision(18, 3)]
         public decimal AgentWinLoss { get; set; }
