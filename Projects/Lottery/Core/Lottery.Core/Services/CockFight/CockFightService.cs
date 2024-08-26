@@ -255,7 +255,7 @@ namespace Lottery.Core.Services.CockFight
                 return;
             }
 
-            if (!string.IsNullOrEmpty(model.Ticket.TicketAmount) || !decimal.TryParse(model.Ticket.TicketAmount, out decimal ticketAmount))
+            if (string.IsNullOrEmpty(model.Ticket.TicketAmount) || !decimal.TryParse(model.Ticket.TicketAmount, out decimal ticketAmount))
             {
                 Logger.LogInformation("Cannot parse TicketAmount: {0}.", model.Ticket.TicketAmount);
                 return;
