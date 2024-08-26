@@ -17,5 +17,7 @@ namespace Lottery.Core.Services.Partners.CA
         Task UpdateAgentPositionTakingAsync(UpdateCasinoAgentPositionTakingModel model);
 
         Task DeleteAgentPositionTakingAsync(long id);
+
+        Task<decimal> GetDefaultPositionTaking(long agentId, int betKindId);
     }
 }

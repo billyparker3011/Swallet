@@ -85,5 +85,11 @@ namespace Lottery.Agent.AgentService.Controllers
             await _cAAgentPositionTakingService.DeleteAgentPositionTakingAsync(id);
             return Ok();
         }
+
+        [HttpGet("{agentId:long}/{betKindId:int}/default-agent-position")]
+        public async Task<IActionResult> GetDefaultPositionTaking(long agentId, int betKindId)
+        {
+            return Ok(await _cAAgentPositionTakingService.GetDefaultPositionTaking(agentId, betKindId));
+        }
     }
 }
