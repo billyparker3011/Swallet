@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Controllers;
+using HnMicro.Framework.Responses;
 using Lottery.Agent.AgentService.Requests.Setting.BetKind;
 using Lottery.Agent.AgentService.Requests.Setting.ProcessTicket;
 using Lottery.Core.Models.CockFight.UpdateCockFightAgentBetSetting;
@@ -131,7 +132,7 @@ namespace Lottery.Agent.AgentService.Controllers
         [HttpGet("cock-fight/bookie-setting")]
         public async Task<IActionResult> GetCockFightBookieSetting()
         {
-            return Ok(await _cockFightService.GetCockFightBookieSetting());
+            return Ok(OkResponse.Create(await _cockFightService.GetCockFightBookieSetting()));
         }
 
         [HttpPut("cock-fight/bookie-setting")]

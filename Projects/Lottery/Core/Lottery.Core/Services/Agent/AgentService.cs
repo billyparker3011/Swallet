@@ -28,6 +28,7 @@ using Lottery.Core.Services.Audit;
 using Lottery.Core.Services.Player;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities;
+using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -57,6 +58,7 @@ namespace Lottery.Core.Services.Agent
             var agentOddRepos = LotteryUow.GetRepository<IAgentOddsRepository>();
             var agentPositionTakingRepos = LotteryUow.GetRepository<IAgentPositionTakingRepository>();
             var cockFightAgentBetSettingRepos = LotteryUow.GetRepository<ICockFightAgentBetSettingRepository>();
+            var cockFightAgentPositionTakingRepos = LotteryUow.GetRepository<ICockFightAgentPositionTakingRepository>();
             var cockFightBetKindRepos = LotteryUow.GetRepository<ICockFightBetKindRepository>();
 
             var targetAgentId = ClientContext.Agent.ParentId == 0
@@ -116,16 +118,32 @@ namespace Lottery.Core.Services.Agent
             await agentPositionTakingRepos.AddRangeAsync(agentPositionTakings);
 
             //Add default cockfight agent bet setting
+            var parentCockFightAgentBetSetting = await cockFightAgentBetSettingRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId).FirstOrDefaultAsync();
+            var defaultMainLimitAmount = parentCockFightAgentBetSetting?.MainLimitAmountPerFight ?? 0m;
+            var defaultDrawLimitAmount = parentCockFightAgentBetSetting?.DrawLimitAmountPerFight ?? 0m;
+            var defaultLimitNumTicket = parentCockFightAgentBetSetting?.LimitNumTicketPerFight ?? 0m;
             var defaultCockFightAgentBetSettings = await cockFightBetKindRepos.FindQuery().Select(x => new Data.Entities.Partners.CockFight.CockFightAgentBetSetting
             {
                 Agent = newAgent,
                 BetKindId = x.Id,
-                MainLimitAmountPerFight = 0m,
-                DrawLimitAmountPerFight = 0m,
-                LimitNumTicketPerFight = 0m,
+                MainLimitAmountPerFight = defaultMainLimitAmount,
+                DrawLimitAmountPerFight = defaultDrawLimitAmount,
+                LimitNumTicketPerFight = defaultLimitNumTicket,
                 CreatedAt = createdAt
             }).ToListAsync();
             await cockFightAgentBetSettingRepos.AddRangeAsync(defaultCockFightAgentBetSettings);
+
+            //Add default cockfight agent position taking
+            var parentCockFightAgentPositionTaking = await cockFightAgentPositionTakingRepos.FindQueryBy(x => x.AgentId == clientAgent.AgentId).FirstOrDefaultAsync();
+            var defaultPositionTaking = parentCockFightAgentPositionTaking?.PositionTaking ?? 0m;
+            var defaultCockFightAgentPositionTakings = await cockFightBetKindRepos.FindQuery().Select(x => new Data.Entities.Partners.CockFight.CockFightAgentPostionTaking
+            {
+                Agent = newAgent,
+                BetKindId = x.Id,
+                PositionTaking = defaultPositionTaking,
+                CreatedAt = createdAt
+            }).ToListAsync();
+            await cockFightAgentPositionTakingRepos.AddRangeAsync(defaultCockFightAgentPositionTakings);
 
             await LotteryUow.SaveChangesAsync();
 
