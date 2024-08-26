@@ -48,14 +48,14 @@ namespace Lottery.Core.Services.Partners.CA
         public async Task<CasinoAgentPositionTakingModel> FindAgentPositionTakingAsync(long id)
         {
             var cAAgentPositionTakingRepository = LotteryUow.GetRepository<ICasinoAgentPositionTakingRepository>();
-            var item = await cAAgentPositionTakingRepository.FindByIdAsync(id) ?? throw new NotFoundException();
+            var item = await cAAgentPositionTakingRepository.FindQueryBy(c=>c.Id == id).Include(c=>c.CasinoBetKind).FirstOrDefaultAsync() ?? throw new NotFoundException();
             return await PrepareModel(item);
         }
 
         public async Task<IEnumerable<CasinoAgentPositionTakingModel>> GetAgentPositionTakingsAsync(long agentId)
         {
             var cAAgentPositionTakingRepository = LotteryUow.GetRepository<ICasinoAgentPositionTakingRepository>();
-            var items =  await cAAgentPositionTakingRepository.FindByAsync(c => c.AgentId == agentId);
+            var items =  await cAAgentPositionTakingRepository.FindQueryBy(c => c.AgentId == agentId).Include(c => c.CasinoBetKind).ToListAsync();
             var results = new List<CasinoAgentPositionTakingModel>();
             foreach (var item in items) 
             {
@@ -68,7 +68,7 @@ namespace Lottery.Core.Services.Partners.CA
         public async Task<IEnumerable<CasinoAgentPositionTakingModel>> GetAllAgentPositionTakingsAsync()
         {
             var cAAgentPositionTakingRepository = LotteryUow.GetRepository<ICasinoAgentPositionTakingRepository>();
-            var items = cAAgentPositionTakingRepository.GetAll();
+            var items = await cAAgentPositionTakingRepository.FindQuery().Include(c => c.CasinoBetKind).ToListAsync();
             var results = new List<CasinoAgentPositionTakingModel>();
             foreach (var item in items)
             {
@@ -130,28 +130,32 @@ namespace Lottery.Core.Services.Partners.CA
 
         }
 
-        public async Task<decimal> GetDefaultPositionTaking(long agentId, int betKindId)
+        public async Task<List<CasinoDefaultAgentPositionTakingModel>> GetDefaultPositionTaking(long agentId, int betKindId)
         {
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var cAAgentPositionTakingRepository = LotteryUow.GetRepository<ICasinoAgentPositionTakingRepository>();
 
             var targetAgent = await agentRepos.FindByIdAsync(agentId) ?? throw new NotFoundException();
 
-            var defaultPositionTaking = new CasinoAgentPositionTaking();
+            var defaultPositionTakings = new List<CasinoAgentPositionTaking>();
             switch (targetAgent.RoleId)
             {
                 case (int)Role.Supermaster:
-                    defaultPositionTaking = await cAAgentPositionTakingRepository.FindQueryBy(c => c.BetKindId == betKindId).Include(x => x.Agent).FirstOrDefaultAsync(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L);
+                    defaultPositionTakings = await cAAgentPositionTakingRepository.FindQueryBy(c => betKindId > 0 ? c.BetKindId == betKindId : true).Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L).ToListAsync();
                     break;
                 case (int)Role.Master:
-                    defaultPositionTaking = await cAAgentPositionTakingRepository.FindQueryBy(c => c.BetKindId == betKindId).Include(x => x.Agent).FirstOrDefaultAsync(x => x.Agent.RoleId == Role.Supermaster.ToInt() && x.AgentId == targetAgent.SupermasterId);
+                    defaultPositionTakings = await cAAgentPositionTakingRepository.FindQueryBy(c => betKindId > 0 ? c.BetKindId == betKindId : true).Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Supermaster.ToInt() && x.AgentId == targetAgent.SupermasterId).ToListAsync();
                     break;
                 case (int)Role.Agent:
-                    defaultPositionTaking = await cAAgentPositionTakingRepository.FindQueryBy(c => c.BetKindId == betKindId).Include(x => x.Agent).FirstOrDefaultAsync(x => x.Agent.RoleId == Role.Master.ToInt() && x.AgentId == targetAgent.MasterId);
+                    defaultPositionTakings = await cAAgentPositionTakingRepository.FindQueryBy(c => betKindId > 0 ? c.BetKindId == betKindId : true).Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Master.ToInt() && x.AgentId == targetAgent.MasterId).ToListAsync();
                     break;
             }
 
-            return (defaultPositionTaking != null && defaultPositionTaking.Id > 0) ? defaultPositionTaking.PositionTaking : 1M;
+            if(betKindId > 0 && !defaultPositionTakings.Any())
+            {
+               return new List<CasinoDefaultAgentPositionTakingModel> { new CasinoDefaultAgentPositionTakingModel(0, 1) };
+            }
+            return defaultPositionTakings.Select(x => new CasinoDefaultAgentPositionTakingModel(x.BetKindId, x.PositionTaking)).ToList();
         }
 
         private async Task<CasinoAgentPositionTakingModel> PrepareModel(CasinoAgentPositionTaking item)
@@ -166,7 +170,7 @@ namespace Lottery.Core.Services.Partners.CA
                 AgentId = item.AgentId,
                 BetKindId = item.BetKindId,
                 BetKindName = item.CasinoBetKind?.Name,
-                DefaultPositionTaking = defaultPositionTaking,
+                DefaultPositionTaking = defaultPositionTaking.FirstOrDefault().DefaultPositionTaking,
                 PositionTaking = item.PositionTaking
             };
 

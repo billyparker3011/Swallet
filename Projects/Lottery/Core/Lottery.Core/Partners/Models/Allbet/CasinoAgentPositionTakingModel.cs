@@ -21,4 +21,15 @@ namespace Lottery.Core.Partners.Models.Allbet
         public decimal PositionTaking { get; set; }
         public decimal DefaultPositionTaking { get; set; }
     }
+
+    public class CasinoDefaultAgentPositionTakingModel
+    {
+        public CasinoDefaultAgentPositionTakingModel(int betKindId, decimal defaultPositionTaking)
+        {
+            BetKindId = betKindId;
+            DefaultPositionTaking= defaultPositionTaking;
+        }
+        public int BetKindId { get; set; }
+        public decimal DefaultPositionTaking { get; set; }
+    }
 }
