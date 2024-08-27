@@ -3,6 +3,7 @@ using HnMicro.Framework.Exceptions;
 using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.InMemory.Channel;
 using Lottery.Core.InMemory.Setting;
 using Lottery.Core.Models.BetKind;
 using Lottery.Core.Models.MatchResult;
@@ -15,6 +16,8 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public class Central_Mixed_Xien4_Processor : AbstractBetKindProcessor
 {
+    private const int _numberOfChannels = 2;
+
     public Central_Mixed_Xien4_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
     }
@@ -226,7 +229,7 @@ public class Central_Mixed_Xien4_Processor : AbstractBetKindProcessor
             }
             break;
         }
-        var isWon = dictResults.Count == 2;
+        var isWon = dictResults.Count == _numberOfChannels;
         if (isWon) times = dictResults.Values.Max();
         return isWon;
     }
@@ -235,6 +238,7 @@ public class Central_Mixed_Xien4_Processor : AbstractBetKindProcessor
     {
         using var scope = ServiceProvider.CreateScope();
         var inMemoryUnitOfWork = scope.ServiceProvider.GetService<IInMemoryUnitOfWork>();
+        var channelInMemoryRepository = inMemoryUnitOfWork.GetRepository<IChannelInMemoryRepository>();
         var settingInMemoryRepository = inMemoryUnitOfWork.GetRepository<ISettingInMemoryRepository>();
         var setting = settingInMemoryRepository.FindByKey(nameof(ChannelsForCompletedTicketModel));
         if (setting == null || string.IsNullOrEmpty(setting.ValueSetting)) return new List<int>();
@@ -244,7 +248,12 @@ public class Central_Mixed_Xien4_Processor : AbstractBetKindProcessor
         if (data != null && data.Items.TryGetValue(Region.Central.ToInt(), out List<ChannelsForCompletedTicketDetailModel> vals))
         {
             var configData = vals.FirstOrDefault(f => f.DayOfWeek == kickOffTime.DayOfWeek.ToInt());
-            if (configData == null) return new List<int>();
+            if (configData == null)
+            {
+                var channelIdsByKickoffTime = channelInMemoryRepository.FindBy(f => f.RegionId == Region.Central.ToInt() && f.DayOfWeeks.Contains(kickOffTime.DayOfWeek.ToInt())).Select(f => f.Id).ToList();
+                if (channelIdsByKickoffTime.Count != _numberOfChannels) return new List<int>();
+                return channelIdsByKickoffTime;
+            }
             foreach (var channelId in configData.ChannelIds)
             {
                 if (channelIds.Contains(channelId)) continue;
@@ -257,7 +266,7 @@ public class Central_Mixed_Xien4_Processor : AbstractBetKindProcessor
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results)
     {
         var channelIds = ChannelCalculation(ticket.KickoffTime);
-        if (channelIds.Count != 2) return null;
+        if (channelIds.Count != _numberOfChannels) return null;
         foreach (var channelId in channelIds)
         {
             if (results.ContainsKey(channelId)) continue;

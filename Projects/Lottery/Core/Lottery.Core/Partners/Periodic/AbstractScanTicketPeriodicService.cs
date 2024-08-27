@@ -47,9 +47,16 @@ namespace Lottery.Core.Partners.Periodic
 
         protected virtual async Task InternalScanTickets()
         {
-            using var scope = ServiceProvider.CreateScope();
-            var partnerService = scope.ServiceProvider.GetService<IPartnerService>();
-            await partnerService.ScanTickets(new Dictionary<string, object>());
+            try
+            {
+                using var scope = ServiceProvider.CreateScope();
+                var partnerService = scope.ServiceProvider.GetService<IPartnerService>();
+                await partnerService.ScanTickets(new Dictionary<string, object>());
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "{0} - {1}", ex.Message, ex.StackTrace);
+            }
         }
     }
 }
