@@ -48,7 +48,7 @@ public class TicketProcessor : ITicketProcessor
         return handler.EnableStats();
     }
 
-    public decimal GetPayoutByNumber(BetKindModel betKind, int point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null)
+    public decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null)
     {
         var handler = _handlers.FirstOrDefault(f => f.BetKindId == betKind.Id);
         if (handler == null) return 0m;

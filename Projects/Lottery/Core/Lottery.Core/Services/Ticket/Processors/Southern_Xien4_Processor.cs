@@ -2,6 +2,7 @@
 using HnMicro.Framework.Exceptions;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
+using Lottery.Core.Models.BetKind;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
@@ -279,5 +280,10 @@ public class Southern_Xien4_Processor : AbstractBetKindProcessor
             }
         }
         return result;
+    }
+
+    public override decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null)
+    {
+        return 4 * 18 * point * oddsValue;
     }
 }

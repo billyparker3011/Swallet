@@ -152,19 +152,20 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
 
             if (subsets.Count == 1)
             {
-                var ticket = CreateSingleTicket(correlationId, processValidation, currentBetKind, pointByBetKind, playerOddsValue, normalizedNumbers, positionTakings);
+                var playerPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, playerOddsValue);
+                var ticket = CreateSingleTicket(correlationId, processValidation, currentBetKind, pointByBetKind, playerOddsValue, playerPayout, normalizedNumbers, positionTakings);
 
                 ticket.AgentOdds = agentOdds;
-                ticket.AgentPayout = pointByBetKind * agentOdds;
+                ticket.AgentPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, agentOdds);
 
                 ticket.MasterOdds = masterOdds;
-                ticket.MasterPayout = pointByBetKind * masterOdds;
+                ticket.MasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, masterOdds);
 
                 ticket.SupermasterOdds = supermasterOdds;
-                ticket.SupermasterPayout = pointByBetKind * supermasterOdds;
+                ticket.SupermasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, supermasterOdds);
 
                 ticket.CompanyOdds = companyOdds;
-                ticket.CompanyPayout = pointByBetKind * companyOdds;
+                ticket.CompanyPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, companyOdds);
 
                 foreach (var number in numbers)
                 {
@@ -207,19 +208,21 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
                 {
                     var subsetNumbers = itemSubsets.OrderBy(f => f).ToList();
                     var normalizedSubsetNumbers = JoinNumbers(subsetNumbers, noOfNumbers);
-                    var childTicketItem = CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, normalizedSubsetNumbers, positionTakings);
+
+                    var playerPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, playerOddsValue);
+                    var childTicketItem = CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, playerPayout, normalizedSubsetNumbers, positionTakings);
 
                     childTicketItem.AgentOdds = agentOdds;
-                    childTicketItem.AgentPayout = pointByBetKind * agentOdds;
+                    childTicketItem.AgentPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, agentOdds);
 
                     childTicketItem.MasterOdds = masterOdds;
-                    childTicketItem.MasterPayout = pointByBetKind * masterOdds;
+                    childTicketItem.MasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, masterOdds);
 
                     childTicketItem.SupermasterOdds = supermasterOdds;
-                    childTicketItem.SupermasterPayout = pointByBetKind * supermasterOdds;
+                    childTicketItem.SupermasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, supermasterOdds);
 
                     childTicketItem.CompanyOdds = companyOdds;
-                    childTicketItem.CompanyPayout = pointByBetKind * companyOdds;
+                    childTicketItem.CompanyPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, companyOdds);
 
                     valPointByPair[normalizedSubsetNumbers] = pointByBetKind;
                     valPayoutByPair[normalizedSubsetNumbers] = childTicketItem.PlayerPayout;
@@ -364,19 +367,20 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
 
             if (subsets.Count == 1)
             {
-                var ticket = CreateSingleTicketV2(correlationId, processValidation, itemModel, currentBetKind, pointByBetKind, playerOddsValue, normalizedNumbers, positionTakings);
+                var playerPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, playerOddsValue);
+                var ticket = CreateSingleTicketV2(correlationId, processValidation, itemModel, currentBetKind, pointByBetKind, playerOddsValue, playerPayout, normalizedNumbers, positionTakings);
 
                 ticket.AgentOdds = agentOdds;
-                ticket.AgentPayout = pointByBetKind * agentOdds;
+                ticket.AgentPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, agentOdds);
 
                 ticket.MasterOdds = masterOdds;
-                ticket.MasterPayout = pointByBetKind * masterOdds;
+                ticket.MasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, masterOdds);
 
                 ticket.SupermasterOdds = supermasterOdds;
-                ticket.SupermasterPayout = pointByBetKind * supermasterOdds;
+                ticket.SupermasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, supermasterOdds);
 
                 ticket.CompanyOdds = companyOdds;
-                ticket.CompanyPayout = pointByBetKind * companyOdds;
+                ticket.CompanyPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, companyOdds);
 
                 foreach (var number in numbers)
                 {
@@ -419,19 +423,21 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
                 {
                     var subsetNumbers = itemSubsets.OrderBy(f => f).ToList();
                     var normalizedSubsetNumbers = JoinNumbers(subsetNumbers, noOfNumbers);
-                    var childTicketItem = CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, normalizedSubsetNumbers, positionTakings);
+
+                    var playerPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, playerOddsValue);
+                    var childTicketItem = CreateChildrenTicket(ticket, currentBetKind, pointByBetKind, playerOddsValue, playerPayout, normalizedSubsetNumbers, positionTakings);
 
                     childTicketItem.AgentOdds = agentOdds;
-                    childTicketItem.AgentPayout = pointByBetKind * agentOdds;
+                    childTicketItem.AgentPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, agentOdds);
 
                     childTicketItem.MasterOdds = masterOdds;
-                    childTicketItem.MasterPayout = pointByBetKind * masterOdds;
+                    childTicketItem.MasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, masterOdds);
 
                     childTicketItem.SupermasterOdds = supermasterOdds;
-                    childTicketItem.SupermasterPayout = pointByBetKind * supermasterOdds;
+                    childTicketItem.SupermasterPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, supermasterOdds);
 
                     childTicketItem.CompanyOdds = companyOdds;
-                    childTicketItem.CompanyPayout = pointByBetKind * companyOdds;
+                    childTicketItem.CompanyPayout = _ticketProcessor.GetPayoutByNumber(currentBetKind, pointByBetKind, companyOdds);
 
                     valPointByPair[normalizedSubsetNumbers] = pointByBetKind;
                     valPayoutByPair[normalizedSubsetNumbers] = childTicketItem.PlayerPayout;
@@ -475,7 +481,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
         return tickets;
     }
 
-    private Data.Entities.Ticket CreateChildrenTicket(Data.Entities.Ticket parentTicket, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
+    private Data.Entities.Ticket CreateChildrenTicket(Data.Entities.Ticket parentTicket, BetKindModel betKind, decimal points, decimal playerOddsValue, decimal playerPayout, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
     {
         var agentPt = 0m;
         var agentPostionTaking = positionTakings.Find(f => f.AgentId == parentTicket.AgentId);
@@ -508,7 +514,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
             Prize = parentTicket.Prize,
             //  Player
             PlayerOdds = playerOddsValue,
-            PlayerPayout = points * playerOddsValue,
+            PlayerPayout = playerPayout,
             PlayerWinLoss = 0m,
             DraftPlayerWinLoss = 0m,
             //  Agent
@@ -612,7 +618,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
         };
     }
 
-    private Data.Entities.Ticket CreateSingleTicket(Guid correlationId, ProcessValidationTicketModel processValidation, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
+    private Data.Entities.Ticket CreateSingleTicket(Guid correlationId, ProcessValidationTicketModel processValidation, BetKindModel betKind, decimal points, decimal playerOddsValue, decimal playerPayout, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
     {
         //  PT
         var agentPt = 0m;
@@ -648,7 +654,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
             Position = processValidation.Metadata.Position,
             //  Player
             PlayerOdds = playerOddsValue,
-            PlayerPayout = points * playerOddsValue,
+            PlayerPayout = playerPayout,
             PlayerWinLoss = 0m,
             DraftPlayerWinLoss = 0m,
             //  Agent
@@ -683,7 +689,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
         };
     }
 
-    private Data.Entities.Ticket CreateSingleTicketV2(Guid correlationId, ProcessValidationTicketV2Model processValidation, ProcessValidationTicketDetailV2Model itemModel, BetKindModel betKind, decimal points, decimal playerOddsValue, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
+    private Data.Entities.Ticket CreateSingleTicketV2(Guid correlationId, ProcessValidationTicketV2Model processValidation, ProcessValidationTicketDetailV2Model itemModel, BetKindModel betKind, decimal points, decimal playerOddsValue, decimal playerPayout, string normalizedNumbers, List<AgentPositionTakingModel> positionTakings)
     {
         //  PT
         var agentPt = 0m;
@@ -719,7 +725,7 @@ public class ProcessMixedService : LotteryBaseService<ProcessMixedService>, IPro
             Position = itemModel.Metadata.Position,
             //  Player
             PlayerOdds = playerOddsValue,
-            PlayerPayout = points * playerOddsValue,
+            PlayerPayout = playerPayout,
             PlayerWinLoss = 0m,
             DraftPlayerWinLoss = 0m,
             //  Agent

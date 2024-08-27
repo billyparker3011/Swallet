@@ -4,6 +4,7 @@ using HnMicro.Modules.InMemory.UnitOfWorks;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
 using Lottery.Core.InMemory.Setting;
+using Lottery.Core.Models.BetKind;
 using Lottery.Core.Models.MatchResult;
 using Lottery.Core.Models.Setting.ProcessTicket;
 using Lottery.Core.Models.Ticket;
@@ -454,5 +455,11 @@ public class Central_Mixed_Xien2_Processor : AbstractBetKindProcessor
             }
         }
         return result;
+    }
+
+    public override decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null)
+    {
+        //  <No.of channels> * <No.of numbers> * 18 *...
+        return 2 * 2 * 18 * point * oddsValue;
     }
 }

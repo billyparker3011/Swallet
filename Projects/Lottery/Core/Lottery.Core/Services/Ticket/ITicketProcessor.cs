@@ -14,7 +14,7 @@ public interface ITicketProcessor : ISingletonDependency
     CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, List<PrizeMatchResultModel> result);
     CompletedTicketResultModel CompletedTicket(int betKindId, CompletedTicketModel ticket, Dictionary<int, List<PrizeMatchResultModel>> results);
     Dictionary<int, int> GetSubBetKindIds(int betKindId);
-    decimal GetPayoutByNumber(BetKindModel betKind, int point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null);
+    decimal GetPayoutByNumber(BetKindModel betKind, decimal point, decimal oddsValue, ProcessPayoutMetadataModel metadata = null);
     decimal? GetPlayerOdds(int betKindId, Dictionary<int, decimal> oddsValueByNumbers);
     RefundRejectTicketByNumbersResultModel RefundRejectTicketByNumbers(int betKindId, RefundRejectTicketByNumbersModel model);
     RefundRejectTicketResultModel RefundRejectTicket(int betKindId, RefundRejectTicketModel model);

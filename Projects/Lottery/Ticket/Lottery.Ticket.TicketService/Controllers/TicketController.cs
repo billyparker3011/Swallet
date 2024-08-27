@@ -72,6 +72,7 @@ namespace Lottery.Ticket.TicketService.Controllers
         [HttpPost("process-mixed")]
         public async Task<IActionResult> ProcessMixed([FromBody] ProcessMixedTicketRequest request)
         {
+            //  Xien 18A+B; Xien (MB)
             await _ticketService.ProcessMixed(new ProcessMixedTicketModel
             {
                 BetKindId = request.BetKindId,
@@ -85,6 +86,7 @@ namespace Lottery.Ticket.TicketService.Controllers
         [HttpPost("process-mixed-v2")]
         public async Task<IActionResult> ProcessMixedV2([FromBody] ProcessMixedTicketV2Request request)
         {
+            //  Xien (MT + MN)
             await _ticketService.ProcessMixedV2(new ProcessMixedTicketV2Model
             {
                 BetKindId = request.BetKindId,
