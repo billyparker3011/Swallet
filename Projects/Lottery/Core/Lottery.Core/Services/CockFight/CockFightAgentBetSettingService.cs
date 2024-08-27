@@ -181,22 +181,8 @@ namespace Lottery.Core.Services.CockFight
                 // Sync child player setting to Ga28
                 var targetChildCfPlayerMapping = childCfPlayerMappings.FirstOrDefault(x => x.PlayerId == childCfPlayerItem.PlayerId && x.IsInitial && !x.IsFreeze && x.IsEnabled);
                 if (targetChildCfPlayerMapping == null) return;
-                try
-                {
-                    await _partnerPublishService.Publish(new Ga28SyncUpBetSettingModel
-                    {
-                        Partner = PartnerType.GA28,
-                        MainLimitAmountPerFight = childCfPlayerItem.MainLimitAmountPerFight,
-                        DrawLimitAmountPerFight = childCfPlayerItem.DrawLimitAmountPerFight,
-                        LimitNumTicketPerFight = childCfPlayerItem.LimitNumTicketPerFight,
-                        AccountId = targetChildCfPlayerMapping.AccountId,
-                        MemberRefId = targetChildCfPlayerMapping.MemberRefId
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError($"Update bet setting cock fight player with id = {childCfPlayerItem.PlayerId} failed. Detail : {ex}");
-                }
+
+                targetChildCfPlayerMapping.NeedsRecalcBetSetting = true;
             });
         }
 
@@ -252,6 +238,112 @@ namespace Lottery.Core.Services.CockFight
                     return await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId && x.MasterId == agent.AgentId && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
                 default:
                     return new List<long>();
+            }
+        }
+
+        public async Task<GetCockFightAgentBetSettingResult> GetDefaultCockFightCompanyBetSetting()
+        {
+            //Init repos
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var cockFightAgentOddRepos = LotteryUow.GetRepository<ICockFightAgentBetSettingRepository>();
+
+            var targetAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            if (targetAgent.RoleId != Role.Company.ToInt()) return new GetCockFightAgentBetSettingResult();
+            var defaultCockFightCompanyOdds = await cockFightAgentOddRepos.FindQuery().Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L).ToListAsync();
+
+            return await cockFightAgentOddRepos.FindQuery()
+                                                .Include(x => x.Agent)
+                                                .Include(x => x.CockFightBetKind)
+                                                .Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L)
+                                                .Select(x => new GetCockFightAgentBetSettingResult
+                                                {
+                                                    BetKindId = x.CockFightBetKind.Id,
+                                                    BetKindName = x.CockFightBetKind.Name,
+                                                    MainLimitAmountPerFight = x.MainLimitAmountPerFight,
+                                                    DrawLimitAmountPerFight = x.DrawLimitAmountPerFight,
+                                                    LimitNumTicketPerFight = x.LimitNumTicketPerFight
+                                                })
+                                                .FirstOrDefaultAsync();
+        }
+
+        public async Task UpdateDefaultCockFightCompanyBetSetting(UpdateCockFightAgentBetSettingModel model)
+        {
+            var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
+            var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
+            var cockFightAgentOddRepository = LotteryUow.GetRepository<ICockFightAgentBetSettingRepository>();
+            var cockFightPlayerOddRepository = LotteryUow.GetRepository<ICockFightPlayerBetSettingRepository>();
+            var cockFightBetKindRepos = LotteryUow.GetRepository<ICockFightBetKindRepository>();
+            var cockFightPlayerMappingRepos = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
+
+            var agent = await agentRepository.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            if (agent.RoleId != Role.Company.ToInt()) return;
+
+            var auditBetSettings = new List<AuditSettingData>();
+            var updatedCockFightBetKind = await cockFightBetKindRepos.FindQueryBy(x => x.Id == model.BetKindId).FirstOrDefaultAsync() ?? throw new NotFoundException();
+
+            var existedCfAgentBetSetting = await cockFightAgentOddRepository.FindQuery().Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L && x.BetKindId == updatedCockFightBetKind.Id).FirstOrDefaultAsync() ?? throw new NotFoundException();
+            var childAgentIds = await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
+            var childPlayerIds = await playerRepository.FindQuery().Select(x => x.PlayerId).ToListAsync();
+            var updatedChildCfAgentBetSettings = await cockFightAgentOddRepository.FindQuery().Include(x => x.Agent).Where(x => childAgentIds.Contains(x.AgentId) && x.BetKindId == updatedCockFightBetKind.Id).OrderBy(x => x.Agent.RoleId).ThenBy(x => x.AgentId).ToListAsync();
+            var updatedChildCfPlayerBetSettings = await cockFightPlayerOddRepository.FindQuery().Include(x => x.Player).Where(x => childPlayerIds.Contains(x.PlayerId) && x.BetKindId == updatedCockFightBetKind.Id).ToListAsync();
+
+            // Update target cockfight agent bet setting
+            var oldMainLimitAmountPerFight = existedCfAgentBetSetting.MainLimitAmountPerFight;
+            var oldDrawLimitAmountPerFight = existedCfAgentBetSetting.DrawLimitAmountPerFight;
+            var oldLimitNumTicketPerFight = existedCfAgentBetSetting.LimitNumTicketPerFight;
+            existedCfAgentBetSetting.MainLimitAmountPerFight = model.MainLimitAmountPerFight;
+            existedCfAgentBetSetting.DrawLimitAmountPerFight = model.DrawLimitAmountPerFight;
+            existedCfAgentBetSetting.LimitNumTicketPerFight = model.LimitNumTicketPerFight;
+
+            // Update all children of target agent if new value of agent is lower than the oldest one
+            // Update child cockfight agent
+            UpdateChildCockFightAgentBetSetting(existedCfAgentBetSetting, updatedChildCfAgentBetSettings);
+
+            // Update child cockfight player
+            var childCfPlayerMappings = await cockFightPlayerMappingRepos.FindQueryBy(x => childPlayerIds.Contains(x.PlayerId)).ToListAsync();
+            UpdateChildCockFightPlayerBetSetting(existedCfAgentBetSetting, updatedChildCfAgentBetSettings, updatedChildCfPlayerBetSettings, childCfPlayerMappings);
+
+            if (oldMainLimitAmountPerFight != existedCfAgentBetSetting.MainLimitAmountPerFight || oldDrawLimitAmountPerFight != existedCfAgentBetSetting.DrawLimitAmountPerFight || oldLimitNumTicketPerFight != existedCfAgentBetSetting.LimitNumTicketPerFight)
+            {
+                auditBetSettings.AddRange(new List<AuditSettingData>
+                    {
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.CockFightMainLimitAmountPerFight,
+                            BetKind = updatedCockFightBetKind?.Name,
+                            OldValue = oldMainLimitAmountPerFight,
+                            NewValue = existedCfAgentBetSetting.MainLimitAmountPerFight
+                        },
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.CockFightDrawLimitAmountPerFight,
+                            BetKind = updatedCockFightBetKind?.Name,
+                            OldValue = oldDrawLimitAmountPerFight,
+                            NewValue = existedCfAgentBetSetting.DrawLimitAmountPerFight
+                        },
+                        new AuditSettingData
+                        {
+                            Title = AuditDataHelper.Setting.CockFightLimitNumTicketPerFight,
+                            BetKind = updatedCockFightBetKind?.Name,
+                            OldValue = oldLimitNumTicketPerFight,
+                            NewValue = existedCfAgentBetSetting.LimitNumTicketPerFight
+                        }
+                    });
+            }
+            await LotteryUow.SaveChangesAsync();
+
+            if (auditBetSettings.Any())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = AuditType.Setting.ToInt(),
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = agent.Username,
+                    Action = AuditDataHelper.Setting.Action.ActionUpdateBetSetting,
+                    SupermasterId = AuditDataHelper.GetAuditSupermasterId(agent),
+                    MasterId = AuditDataHelper.GetAuditMasterId(agent),
+                    AuditSettingDatas = auditBetSettings.OrderBy(x => x.BetKind).ToList()
+                });
             }
         }
     }

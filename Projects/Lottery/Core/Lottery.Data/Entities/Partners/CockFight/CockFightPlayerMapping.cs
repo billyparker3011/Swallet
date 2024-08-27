@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Data.Entities;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -24,5 +25,8 @@ namespace Lottery.Data.Entities.Partners.CockFight
 
         [Required]
         public bool IsEnabled { get; set; }
+
+        [Required, DefaultValue(false)]
+        public bool NeedsRecalcBetSetting { get; set; }
     }
 }

@@ -79,6 +79,28 @@ namespace Lottery.Core.Services.CockFight
                                                 .FirstOrDefaultAsync();
         }
 
+        public async Task<GetCockFightAgentPositionTakingResult> GetDefaultCockFightCompanyPositionTaking()
+        {
+            //Init repos
+            var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
+            var cockFightAgentPositionTakingRepos = LotteryUow.GetRepository<ICockFightAgentPositionTakingRepository>();
+
+            var targetAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            if (targetAgent.RoleId != Role.Company.ToInt()) return new GetCockFightAgentPositionTakingResult();
+
+            return await cockFightAgentPositionTakingRepos.FindQuery()
+                                                .Include(x => x.Agent)
+                                                .Include(x => x.CockFightBetKind)
+                                                .Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L)
+                                                .Select(x => new GetCockFightAgentPositionTakingResult
+                                                {
+                                                    BetKindId = x.CockFightBetKind.Id,
+                                                    BetKindName = x.CockFightBetKind.Name,
+                                                    ActualPositionTaking = x.PositionTaking
+                                                })
+                                                .FirstOrDefaultAsync();
+        }
+
         public async Task UpdateCockFightAgentPositionTaking(long agentId, UpdateCockFightAgentPositionTakingModel model)
         {
             var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
@@ -91,6 +113,58 @@ namespace Lottery.Core.Services.CockFight
             var updatedBetKind = await cockFightBetKindRepos.FindByIdAsync(model.BetKindId) ?? throw new NotFoundException();
             var existedCfAgentPositionTaking = await cockFightAgentPositionTakingRepository.FindQueryBy(x => x.AgentId == agent.AgentId && x.BetKindId == updatedBetKind.Id).FirstOrDefaultAsync() ?? throw new NotFoundException();
             var childAgentIds = await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId).Select(x => x.AgentId).ToListAsync();
+            var existedChildCfAgentPositionTakings = await cockFightAgentPositionTakingRepository.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && x.BetKindId == updatedBetKind.Id).ToListAsync();
+
+            // Update agent PT
+            var oldPTValue = existedCfAgentPositionTaking.PositionTaking;
+            existedCfAgentPositionTaking.PositionTaking = model.ActualPositionTaking;
+
+            // Update all children of target agent if new value of agent is lower than the oldest one
+            existedChildCfAgentPositionTakings.ForEach(childItem =>
+            {
+                childItem.PositionTaking = existedCfAgentPositionTaking.PositionTaking < childItem.PositionTaking ? existedCfAgentPositionTaking.PositionTaking : childItem.PositionTaking;
+            });
+
+            auditPositionTakings.AddRange(new List<AuditSettingData>
+            {
+                new AuditSettingData
+                {
+                    Title = AuditDataHelper.Setting.PositionTakingTitle,
+                    BetKind = updatedBetKind.Name,
+                    OldValue = oldPTValue,
+                    NewValue = existedCfAgentPositionTaking.PositionTaking
+                }
+            });
+            await LotteryUow.SaveChangesAsync();
+
+            if (auditPositionTakings.Any())
+            {
+                await _auditService.SaveAuditData(new AuditParams
+                {
+                    Type = AuditType.Setting.ToInt(),
+                    EditedUsername = ClientContext.Agent.UserName,
+                    AgentUserName = agent.Username,
+                    Action = AuditDataHelper.Setting.Action.ActionUpdatePositionTaking,
+                    SupermasterId = AuditDataHelper.GetAuditSupermasterId(agent),
+                    MasterId = AuditDataHelper.GetAuditMasterId(agent),
+                    AuditSettingDatas = auditPositionTakings.OrderBy(x => x.BetKind).ToList()
+                });
+            }
+        }
+
+        public async Task UpdateDefaultCockFightCompanyPositionTaking(UpdateCockFightAgentPositionTakingModel model)
+        {
+            var agentRepository = LotteryUow.GetRepository<IAgentRepository>();
+            var cockFightAgentPositionTakingRepository = LotteryUow.GetRepository<ICockFightAgentPositionTakingRepository>();
+            var cockFightBetKindRepos = LotteryUow.GetRepository<ICockFightBetKindRepository>();
+
+            var agent = await agentRepository.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            if (agent.RoleId != Role.Company.ToInt()) return;
+
+            var auditPositionTakings = new List<AuditSettingData>();
+            var updatedBetKind = await cockFightBetKindRepos.FindByIdAsync(model.BetKindId) ?? throw new NotFoundException();
+            var existedCfAgentPositionTaking = await cockFightAgentPositionTakingRepository.FindQuery().Include(x => x.Agent).Where(x => x.Agent.RoleId == Role.Company.ToInt() && x.Agent.ParentId == 0L && x.BetKindId == updatedBetKind.Id).FirstOrDefaultAsync() ?? throw new NotFoundException();
+            var childAgentIds = await agentRepository.FindQueryBy(x => x.RoleId > agent.RoleId && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
             var existedChildCfAgentPositionTakings = await cockFightAgentPositionTakingRepository.FindQueryBy(x => childAgentIds.Contains(x.AgentId) && x.BetKindId == updatedBetKind.Id).ToListAsync();
 
             // Update agent PT

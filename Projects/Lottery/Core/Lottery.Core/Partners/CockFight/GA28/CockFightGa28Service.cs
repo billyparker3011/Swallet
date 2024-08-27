@@ -114,6 +114,7 @@ namespace Lottery.Core.Partners.CockFight.GA28
             if (data is null) return;
             var settingValue = GetBookieSettingFromInMemory();
             var cockFightPlayerMappingRepos = LotteryUow.GetRepository<ICockFightPlayerMappingRepository>();
+            var cockFightPlayerOddRepos = LotteryUow.GetRepository<ICockFightPlayerBetSettingRepository>();
 
             var ga28GenerateUrlModel = data as Ga28LoginPlayerModel;
 
@@ -142,6 +143,25 @@ namespace Lottery.Core.Partners.CockFight.GA28
 
             var playerMapping = await cockFightPlayerMappingRepos.FindQueryBy(x => x.MemberRefId == objectData.Member.MemberRefId && x.IsInitial).FirstOrDefaultAsync();
             if (playerMapping is null) return;
+
+            // Sync-up bet setting
+            if (playerMapping.NeedsRecalcBetSetting)
+            {
+                var updatedBetSetting = await cockFightPlayerOddRepos.FindQueryBy(x => x.PlayerId == playerMapping.PlayerId).FirstOrDefaultAsync();
+                if (updatedBetSetting != null)
+                {
+                    Logger.LogInformation($"Start Recalc Bet Setting: {updatedBetSetting.MainLimitAmountPerFight}, {updatedBetSetting.DrawLimitAmountPerFight}, {updatedBetSetting.LimitNumTicketPerFight}");
+                    await UpdateBetSetting(new Ga28SyncUpBetSettingModel
+                    {
+                        AccountId = playerMapping.AccountId,
+                        MemberRefId = playerMapping.MemberRefId,
+                        MainLimitAmountPerFight = updatedBetSetting.MainLimitAmountPerFight,
+                        DrawLimitAmountPerFight = updatedBetSetting.DrawLimitAmountPerFight,
+                        LimitNumTicketPerFight = updatedBetSetting.LimitNumTicketPerFight,
+                        Partner = PartnerType.GA28
+                    });
+                }
+            }
 
             // Update cache
             await UpdateCacheClientUrl(playerMapping.PlayerId, objectData.GameClientUrl);

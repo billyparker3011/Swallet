@@ -35,5 +35,25 @@ namespace Lottery.Agent.AgentService.Controllers
             });
             return Ok();
         }
+
+        [HttpGet("default-bet-settings")]
+        public async Task<IActionResult> GetDefaultCockFightCompanyBetSettings()
+        {
+            var result = await _cockFightAgentBetSettingService.GetDefaultCockFightCompanyBetSetting();
+            return Ok(OkResponse.Create(result));
+        }
+
+        [HttpPut("default-bet-settings")]
+        public async Task<IActionResult> UpdateDefaultCockFightCompanyBetSetting([FromBody] UpdateDefaultCockFightCompanyBetSettingRequest request)
+        {
+            await _cockFightAgentBetSettingService.UpdateDefaultCockFightCompanyBetSetting(new UpdateCockFightAgentBetSettingModel
+            {
+                BetKindId = request.BetKindId,
+                MainLimitAmountPerFight = request.MainLimitAmountPerFight,
+                DrawLimitAmountPerFight = request.DrawLimitAmountPerFight,
+                LimitNumTicketPerFight = request.LimitNumTicketPerFight
+            });
+            return Ok();
+        }
     }
 }

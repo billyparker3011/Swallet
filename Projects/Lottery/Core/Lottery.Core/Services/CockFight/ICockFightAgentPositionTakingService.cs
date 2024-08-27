@@ -8,5 +8,7 @@ namespace Lottery.Core.Services.CockFight
     {
         Task<GetCockFightAgentPositionTakingResult> GetCockFightAgentPositionTakingDetail(long agentId);
         Task UpdateCockFightAgentPositionTaking(long agentId, UpdateCockFightAgentPositionTakingModel model);
+        Task<GetCockFightAgentPositionTakingResult> GetDefaultCockFightCompanyPositionTaking();
+        Task UpdateDefaultCockFightCompanyPositionTaking(UpdateCockFightAgentPositionTakingModel model);
     }
 }

@@ -8,5 +8,7 @@ namespace Lottery.Core.Services.CockFight
     {
         Task<GetCockFightAgentBetSettingResult> GetCockFightAgentBetSettingDetail(long agentId);
         Task UpdateCockFightAgentBetSetting(long agentId, UpdateCockFightAgentBetSettingModel model);
+        Task<GetCockFightAgentBetSettingResult> GetDefaultCockFightCompanyBetSetting();
+        Task UpdateDefaultCockFightCompanyBetSetting(UpdateCockFightAgentBetSettingModel model);
     }
 }
