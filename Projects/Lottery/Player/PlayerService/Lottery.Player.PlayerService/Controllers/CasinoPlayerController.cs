@@ -52,6 +52,7 @@ namespace Lottery.Player.PlayerService.Controllers
         }
 
         [HttpGet("game-types/{caterory}")]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
         public async Task<IActionResult> GetGameTypes([FromRoute] string caterory)
         {
 
@@ -60,6 +61,7 @@ namespace Lottery.Player.PlayerService.Controllers
         }
 
         [HttpGet("game-types")]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
         public async Task<IActionResult> GetAllGameTypes()
         {
             return Ok(OkResponse.Create(await _casinoGameTypeService.GetAllGameTypesAsync()));

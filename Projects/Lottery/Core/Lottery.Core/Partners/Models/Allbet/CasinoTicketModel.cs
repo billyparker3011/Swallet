@@ -101,8 +101,8 @@ namespace Lottery.Core.Partners.Models.Allbet
         public decimal ExchangeRate { get; set; }
         public string GameResult { get; set; }
         public string GameResult2 { get; set; }
-        public long? WinOrLossAmount { get; set; }
-        public long? ValidAmount { get; set; }
+        public decimal? WinOrLossAmount { get; set; }
+        public decimal? ValidAmount { get; set; }
         public string BetTime { get; set; }
         public string TableName { get; set; }
         public long BetMethod { get; set; }

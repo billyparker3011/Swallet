@@ -20,7 +20,7 @@ namespace Lottery.Data.Entities.Partners.Casino
         public string EventCode { get; set; }
         [Required]
         public long EventRecordNum { get; set; }
-        [Required]
+        [Required, Precision(18, 3)]
         public decimal Amount { get; set; }
         [Required]
         public long ExchangeRate { get; set; }

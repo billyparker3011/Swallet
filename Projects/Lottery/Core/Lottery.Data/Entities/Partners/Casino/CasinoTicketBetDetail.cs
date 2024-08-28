@@ -37,8 +37,10 @@ namespace Lottery.Data.Entities.Partners.Casino
         public string GameResult { get; set; }
         [MaxLength(500)]
         public string GameResult2 { get; set; }
-        public long? WinOrLossAmount { get; set; }
-        public long? ValidAmount { get; set; }
+        [Precision(18, 3)]
+        public decimal? WinOrLossAmount { get; set; }
+        [Precision(18, 3)]
+        public decimal? ValidAmount { get; set; }
         [Required, MaxLength(50)]
         public string BetTime { get; set; }
         [Required, MaxLength(10)]
@@ -59,6 +61,15 @@ namespace Lottery.Data.Entities.Partners.Casino
 
         [Required]
         public long CasinoTicketId { get; set; }
+
+        [Required, Precision(18, 3)]
+        public decimal AgentWinLoss { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal MasterWinLoss { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal SupermasterWinLoss { get; set; }
+        [Required, Precision(18, 3)]
+        public decimal CompanyWinLoss { get; set; }
 
         [ForeignKey(nameof(CasinoTicketId))]
         public virtual CasinoTicket CasinoTicket { get; set; }

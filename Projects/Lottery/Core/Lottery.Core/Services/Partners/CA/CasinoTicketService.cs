@@ -5,9 +5,11 @@ using Lottery.Core.Contexts;
 using Lottery.Core.Partners.Helpers;
 using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Partners.Publish;
+using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.Casino;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities.Partners.Casino;
+using Lottery.Data.Migrations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
@@ -98,14 +100,14 @@ namespace Lottery.Core.Services.Partners.CA
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
-            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
+            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
+
+            var code = await CreateCasinoTicketAsync(model);
 
             if (model.Type == CasinoHelper.TypeTransfer.ManualSettle) return (balance + ticketAmout, CasinoReponseCode.Success);
 
             if ((balance + ticketAmout + model.Amount) < 0) return (-1, CasinoReponseCode.Credit_is_not_enough);
-
-            var code = await CreateCasinoTicketAsync(model);       
-
+    
             return (balance + ticketAmout + model.Amount,code);
 
         }
@@ -116,7 +118,7 @@ namespace Lottery.Core.Services.Partners.CA
 
            var code = await CreateCasinoCancelTicketAsync(model);           
 
-            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
+            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
 
             return (balance + ticketAmout, code);
 
@@ -124,17 +126,30 @@ namespace Lottery.Core.Services.Partners.CA
 
         public async Task<int> CreateCasinoTicketAsync(CasinoTicketModel model)
         {
-            var playerMapping = await _casinoPlayerMappingService.FindPlayerMappingByBookiePlayerIdAsync(model.Player);
+            var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
+
+            var playerMapping = await casinoPlayerMappingRepository.FindQueryBy(c=>c.BookiePlayerId == model.Player).Include(c=>c.Player).FirstOrDefaultAsync();
 
             if (playerMapping == null) return CasinoReponseCode.Player_account_does_not_exist;          
 
             var casinoTicketRepository = LotteryUow.GetRepository<ICasinoTicketRepository>();
             var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
             var casinoTicketEventDetailRepository = LotteryUow.GetRepository<ICasinoTicketEventDetailRepository>();
+            var casinoAgentPositionTakingRepository = LotteryUow.GetRepository<ICasinoAgentPositionTakingRepository>();
 
             var casinoTicket = await casinoTicketRepository.FindQueryBy(c => c.TransactionId == model.TranId).FirstOrDefaultAsync();
 
             if (casinoTicket != null) return CasinoReponseCode.Invalid_status;
+
+            var lstAgentId = new List<long> { playerMapping.Player.AgentId, playerMapping.Player.MasterId, playerMapping.Player.SupermasterId };
+
+            var lstPositionTaking = await casinoAgentPositionTakingRepository.FindQueryBy(c=> lstAgentId.Contains(c.AgentId)).ToListAsync();
+
+            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount ?? 0m).Sum();
+
+            var agentPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.AgentId)?.PositionTaking ?? 0m;
+            var masterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.MasterId)?.PositionTaking ?? 0m;
+            var supermasterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.SupermasterId)?.PositionTaking ?? 0m;
 
            casinoTicket = new CasinoTicket()
            {
@@ -146,7 +161,23 @@ namespace Lottery.Core.Services.Partners.CA
                Reason = model.Reason,
                Type = model.Type,
                IsRetry = model.IsRetry,
-               CreatedAt = DateTime.Now,
+
+               AgentId = playerMapping.Player.AgentId,
+               BetKindId = 0,
+               MasterId = playerMapping.Player.MasterId,
+               SupermasterId = playerMapping.Player.SupermasterId,
+
+               AgentPt = agentPT,
+               AgentWinLoss = -1 * winOrLoseAmountTotal * agentPT,
+               MasterPt = masterPT,
+               MasterWinLoss = -1 * (masterPT - agentPT) * winOrLoseAmountTotal,
+               SupermasterPt = supermasterPT,
+               SupermasterWinLoss = -1 * (supermasterPT - masterPT) * winOrLoseAmountTotal,
+               CompanyWinLoss = -1 * (1 - supermasterPT) * winOrLoseAmountTotal,
+
+               WinlossAmountTotal = winOrLoseAmountTotal,
+
+               CreatedAt = DateTime.UtcNow.AddHours(8),
                CreatedBy = 0
 
            };
@@ -182,7 +213,12 @@ namespace Lottery.Core.Services.Partners.CA
                       Ip = c.Ip,
                       CasinoTicket = casinoTicket,
 
-                      CreatedAt = DateTime.Now,
+                      AgentWinLoss = -1 * (c.WinOrLossAmount ?? 0m) * agentPT,
+                      MasterWinLoss = -1 * (masterPT - agentPT) * (c.WinOrLossAmount ?? 0m),
+                      SupermasterWinLoss = -1 * (supermasterPT - masterPT) * (c.WinOrLossAmount ?? 0m),
+                      CompanyWinLoss = -1 * (1 - supermasterPT) * (c.WinOrLossAmount ?? 0m),
+
+                      CreatedAt = DateTime.UtcNow.AddHours(8),
                       CreatedBy = 0,
                   }).ToList());
 
@@ -204,7 +240,7 @@ namespace Lottery.Core.Services.Partners.CA
                       SettleTime = c.SettleTime,
                       CasinoTicket = casinoTicket,
 
-                      CreatedAt = DateTime.Now,
+                      CreatedAt = DateTime.UtcNow.AddHours(8),
                       CreatedBy = 0,
                   }).ToList());
 
@@ -261,7 +297,7 @@ namespace Lottery.Core.Services.Partners.CA
                   IsCancel = true,
                   CasinoTicket = ticket,
 
-                  CreatedAt = DateTime.Now,
+                  CreatedAt = DateTime.UtcNow.AddHours(8),
                   CreatedBy = 0,
               }).ToList());
 

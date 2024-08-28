@@ -4,6 +4,7 @@ using Lottery.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lottery.Data.Migrations
 {
     [DbContext(typeof(LotteryContext))]
-    partial class LotteryContextModelSnapshot : ModelSnapshot
+    [Migration("20240828191446_UpdateCasinoTicketBetDetail")]
+    partial class UpdateCasinoTicketBetDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

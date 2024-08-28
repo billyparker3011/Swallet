@@ -4,6 +4,7 @@ using Lottery.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lottery.Data.Migrations
 {
     [DbContext(typeof(LotteryContext))]
-    partial class LotteryContextModelSnapshot : ModelSnapshot
+    [Migration("20240828184358_UpdateCasinoTicketForPositionTaking")]
+    partial class UpdateCasinoTicketForPositionTaking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1225,13 +1228,11 @@ namespace Lottery.Data.Migrations
                     b.Property<long?>("UpdatedBy")
                         .HasColumnType("bigint");
 
-                    b.Property<decimal?>("ValidAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                    b.Property<long?>("ValidAmount")
+                        .HasColumnType("bigint");
 
-                    b.Property<decimal?>("WinOrLossAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                    b.Property<long?>("WinOrLossAmount")
+                        .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
@@ -1249,8 +1250,7 @@ namespace Lottery.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<decimal>("Amount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<long>("CasinoTicketId")
                         .HasColumnType("bigint");
