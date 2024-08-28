@@ -12,9 +12,9 @@ namespace Lottery.Core.Services.Ticket.Processors;
 public class Southern_3D7Lo_Processor : AbstractBetKindProcessor
 {
     private const int _resultPrize = 9;
-    private const int _resultFirstFourth = 4;
-    private const int _resultFromPrize = 5;
-    private const int _resultToPrize = 7;
+    private const int _resultFirstFourth = 5;
+    private const int _resultFromPrize = 2;
+    private const int _resultToPrize = 4;
 
     public Southern_3D7Lo_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
@@ -39,8 +39,10 @@ public class Southern_3D7Lo_Processor : AbstractBetKindProcessor
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
         var endOfResults = new List<string>();
+
         var fourthRs = result.Where(f => f.Prize == _resultFirstFourth).SelectMany(f => f.Results).OrderBy(f => f.Position).Select(f => f.Result).FirstOrDefault();
         if (!string.IsNullOrEmpty(fourthRs) && fourthRs.GetEndOfResult(out string fourthRsVal, 3)) endOfResults.Add(fourthRsVal);
+
         var rs = result.Where(f => f.Prize == _resultPrize || (f.Prize >= _resultFromPrize && f.Prize <= _resultToPrize)).SelectMany(f => f.Results).Select(f => f.Result).ToList();
         rs.ForEach(f =>
         {

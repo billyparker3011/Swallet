@@ -11,7 +11,7 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public class Southern_2DDau_Processor : AbstractBetKindProcessor
 {
-    private const int _startedPrize = 8;
+    private const int _startedPrize = 1;
 
     public Southern_2DDau_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {

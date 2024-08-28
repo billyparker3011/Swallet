@@ -11,9 +11,8 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public class Central_4D16Lo_Processor : AbstractBetKindProcessor
 {
-    private const int _resultPrize = 9;
-    private const int _resultFromPrize = 1;
-    private const int _resultToPrize = 6;
+    private const int _resultFromPrize = 3;
+    private const int _resultToPrize = 9;
 
     public Central_4D16Lo_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
@@ -37,7 +36,7 @@ public class Central_4D16Lo_Processor : AbstractBetKindProcessor
 
     public override CompletedTicketResultModel Completed(CompletedTicketModel ticket, List<PrizeMatchResultModel> result)
     {
-        var rs = result.Where(f => f.Prize == _resultPrize || (f.Prize >= _resultFromPrize && f.Prize <= _resultToPrize)).SelectMany(f => f.Results).Select(f => f.Result).ToList();
+        var rs = result.Where(f => f.Prize >= _resultFromPrize && f.Prize <= _resultToPrize).SelectMany(f => f.Results).Select(f => f.Result).ToList();
         var endOfResults = new List<string>();
         rs.ForEach(f =>
         {
