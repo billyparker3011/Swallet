@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static Lottery.Core.Helpers.PartnerHelper;
+using static Lottery.Core.Partners.Helpers.CasinoHelper;
 
 namespace Lottery.Core.Services.Partners.CA
 {
@@ -145,7 +146,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var lstPositionTaking = await casinoAgentPositionTakingRepository.FindQueryBy(c=> lstAgentId.Contains(c.AgentId)).ToListAsync();
 
-            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount ?? 0m).Sum();
+            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount - (model.Type == CasinoBetType.ManualSettle ? c.BetAmount : 0m) ?? 0m).Sum();
 
             var agentPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.AgentId)?.PositionTaking ?? 0m;
             var masterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.MasterId)?.PositionTaking ?? 0m;
@@ -189,37 +190,41 @@ namespace Lottery.Core.Services.Partners.CA
 
                 var casinoTicketBetDetails = new List<CasinoTicketBetDetail>();
                 casinoTicketBetDetails.AddRange(model.CasinoTicketBetDetailModels.Select(c =>
-                  new CasinoTicketBetDetail()
-                  {
-                      BetNum = c.BetNum,
-                      GameRoundId = c.GameRoundId,
-                      Status = c.Status,
-                      BetAmount = c.BetAmount,
-                      Deposit = c.Deposit,
-                      GameType = c.GameType,
-                      BetType = c.BetType,
-                      Commission = c.Commission,
-                      ExchangeRate = c.ExchangeRate,
-                      GameResult = c.GameResult,
-                      GameResult2 = c.GameResult2,
-                      WinOrLossAmount = c.WinOrLossAmount,
-                      ValidAmount = c.ValidAmount,
-                      BetTime = c.BetTime,
-                      TableName = c.TableName,
-                      BetMethod = c.BetMethod,
-                      AppType = c.AppType,
-                      GameRoundEndTime = c.GameRoundEndTime,
-                      GameRoundStartTime = c.GameRoundStartTime,
-                      Ip = c.Ip,
-                      CasinoTicket = casinoTicket,
+                {
+                    var winOrLossAmountAct = (c.WinOrLossAmount ?? 0m) - (casinoTicket.Type == TypeTransfer.ManualSettle ? c.BetAmount : 0m);
+                    return
+                    new CasinoTicketBetDetail()
+                    {
+                        BetNum = c.BetNum,
+                        GameRoundId = c.GameRoundId,
+                        Status = c.Status,
+                        BetAmount = c.BetAmount,
+                        Deposit = c.Deposit,
+                        GameType = c.GameType,
+                        BetType = c.BetType,
+                        Commission = c.Commission,
+                        ExchangeRate = c.ExchangeRate,
+                        GameResult = c.GameResult,
+                        GameResult2 = c.GameResult2,
+                        WinOrLossAmount = c.WinOrLossAmount,
+                        ValidAmount = c.ValidAmount,
+                        BetTime = c.BetTime,
+                        TableName = c.TableName,
+                        BetMethod = c.BetMethod,
+                        AppType = c.AppType,
+                        GameRoundEndTime = c.GameRoundEndTime,
+                        GameRoundStartTime = c.GameRoundStartTime,
+                        Ip = c.Ip,
+                        CasinoTicket = casinoTicket,
 
-                      AgentWinLoss = -1 * (c.WinOrLossAmount ?? 0m) * agentPT,
-                      MasterWinLoss = -1 * (masterPT - agentPT) * (c.WinOrLossAmount ?? 0m),
-                      SupermasterWinLoss = -1 * (supermasterPT - masterPT) * (c.WinOrLossAmount ?? 0m),
-                      CompanyWinLoss = -1 * (1 - supermasterPT) * (c.WinOrLossAmount ?? 0m),
+                        AgentWinLoss = -1 * winOrLossAmountAct * agentPT,
+                        MasterWinLoss = -1 * (masterPT - agentPT) * winOrLossAmountAct,
+                        SupermasterWinLoss = -1 * (supermasterPT - masterPT) * winOrLossAmountAct,
+                        CompanyWinLoss = -1 * (1 - supermasterPT) * winOrLossAmountAct,
 
-                      CreatedAt = DateTime.UtcNow.AddHours(8),
-                      CreatedBy = 0,
+                        CreatedAt = DateTime.UtcNow.AddHours(8),
+                        CreatedBy = 0,
+                    };
                   }).ToList());
 
                await casinoTicketBetDetailRepository.AddRangeAsync(casinoTicketBetDetails);

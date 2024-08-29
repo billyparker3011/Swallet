@@ -1,5 +1,11 @@
 ﻿using Lottery.Core.Partners.Helpers;
+using Lottery.Data.Entities.Partners.Casino;
+using Lottery.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
 
 namespace Lottery.Core.Partners.Models.Allbet
 {
@@ -121,5 +127,19 @@ namespace Lottery.Core.Partners.Models.Allbet
         public long ExchangeRate { get; set; }
         public string SettleTime { get; set; }
 
+    }
+
+    public class CasinoBetTableTicketModel
+    {
+        public long TicketId { get; set; }
+        public string BookiePlayerId { get; set; }
+        public Decimal Amount { get; set; }
+        public string Currency { get; set; }
+        public int Type { get; set; }
+        public long PlayerId { get; set; }
+        public int BetKindId { get; set; }
+        public decimal WinlossAmountTotal { get; set; }
+        public ICollection<CasinoTicketBetDetail> CasinoTicketBetDetails { get; set; }
+        public ICollection<CasinoTicketEventDetail> CasinoTicketEventDetails { get; set; }
     }
 }
