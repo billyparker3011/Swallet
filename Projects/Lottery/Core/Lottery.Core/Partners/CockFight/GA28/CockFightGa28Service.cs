@@ -160,6 +160,9 @@ namespace Lottery.Core.Partners.CockFight.GA28
                         LimitNumTicketPerFight = updatedBetSetting.LimitNumTicketPerFight,
                         Partner = PartnerType.GA28
                     });
+
+                    playerMapping.NeedsRecalcBetSetting = false;
+                    await LotteryUow.SaveChangesAsync();
                 }
             }
 

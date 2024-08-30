@@ -214,11 +214,28 @@ namespace Lottery.Core.Helpers
         #region CockFight
         public static List<int> OutsCockFightTicketState()
         {
-            return new List<int> { CockFightTicketStatus.SettlementIsInProgress.ToInt(), CockFightTicketStatus.SettledButIsWaitingForPayout.ToInt() };
+            return new List<int> 
+            {
+                CockFightTicketStatus.TicketIsConfirm.ToInt(),
+                CockFightTicketStatus.SettlementIsInProgress.ToInt(),
+                CockFightTicketStatus.SettledButIsWaitingForPayout.ToInt(),
+                CockFightTicketStatus.SettledButPayoutIsInProgress.ToInt(),
+                CockFightTicketStatus.UnsettledButWaitingForPayout.ToInt(),
+                CockFightTicketStatus.UnsettledButPayoutIsInProgress.ToInt(),
+                CockFightTicketStatus.UncancelledWaitingForPayout.ToInt(),
+                CockFightTicketStatus.UncancelledButPayoutIsInProgress.ToInt()
+            };
         }
         public static List<int> RefundRejectCockFightTicketState()
         {
-            return new List<int> { CockFightTicketStatus.TicketIsCanceled.ToInt(), CockFightTicketStatus.VoidIsInProgress.ToInt(), CockFightTicketStatus.TicketIsVoided.ToInt() };
+            return new List<int> 
+            { 
+                CockFightTicketStatus.CanceledButIsWaitingForPayout.ToInt(), 
+                CockFightTicketStatus.CanceledButPayoutIsInProgress.ToInt(), 
+                CockFightTicketStatus.TicketIsCanceled.ToInt(), 
+                CockFightTicketStatus.VoidIsInProgress.ToInt(), 
+                CockFightTicketStatus.TicketIsVoided.ToInt() 
+            };
         }
         public static List<int> CompletedCockFightTicketWithoutRefundOrRejectState()
         {

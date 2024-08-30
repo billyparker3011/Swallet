@@ -184,6 +184,7 @@ namespace Lottery.Core.Services.CockFight
                     IsInitial = true,
                     IsEnabled = true,
                     IsFreeze = false,
+                    NeedsRecalcBetSetting = false,
                     CreatedAt = ClockService.GetUtcNow(),
                     CreatedBy = 0
                 });
