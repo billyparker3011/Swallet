@@ -5,6 +5,7 @@ using Lottery.Core.Filters.Authorization;
 using Lottery.Core.Models.Ticket;
 using Lottery.Core.Models.Ticket.Process;
 using Lottery.Core.Services.CockFight;
+using Lottery.Core.Services.Partners.CA;
 using Lottery.Core.Services.Ticket;
 using Lottery.Ticket.TicketService.Requests.Ticket;
 using Microsoft.AspNetCore.Mvc;
@@ -18,15 +19,17 @@ namespace Lottery.Ticket.TicketService.Controllers
         private readonly ICompletedMatchService _completedMatchService;
         private readonly IAdvancedSearchTicketsService _advancedSearchTicketsService;
         private readonly ICockFightPlayerTicketService _cockFightPlayerTicketService;
+        private readonly ICasinoTicketService _casinoTicketService;
 
         public TicketController(ITicketService ticketService, IPlayerTicketService playerTicketService, ICompletedMatchService completedMatchService,
-            IAdvancedSearchTicketsService advancedSearchTicketsService, ICockFightPlayerTicketService cockFightPlayerTicketService)
+            IAdvancedSearchTicketsService advancedSearchTicketsService, ICockFightPlayerTicketService cockFightPlayerTicketService, ICasinoTicketService casinoTicketService)
         {
             _ticketService = ticketService;
             _playerTicketService = playerTicketService;
             _completedMatchService = completedMatchService;
             _advancedSearchTicketsService = advancedSearchTicketsService;
             _cockFightPlayerTicketService = cockFightPlayerTicketService;
+            _casinoTicketService = casinoTicketService;
         }
 
         [HttpPost]
@@ -110,6 +113,12 @@ namespace Lottery.Ticket.TicketService.Controllers
             return Ok(OkResponse.Create(await _cockFightPlayerTicketService.GetCockFightTicketsAsBetList()));
         }
 
+        [HttpGet("casino/running-tickets")]
+        public async Task<IActionResult> CasinoRunningTickets()
+        {
+            return Ok(OkResponse.Create(await _casinoTicketService.GetCasinoTicketsAsBetList()));
+        }
+
         [HttpGet("refund-reject-tickets")]
         public async Task<IActionResult> RefundRejectTickets()
         {
@@ -120,6 +129,12 @@ namespace Lottery.Ticket.TicketService.Controllers
         public async Task<IActionResult> CockFightRefundRejectTickets()
         {
             return Ok(OkResponse.Create(await _cockFightPlayerTicketService.GetCockFightRefundRejectTickets()));
+        }
+
+        [HttpGet("casino/refund-reject-tickets")]
+        public async Task<IActionResult> CasinoRefundRejectTickets()
+        {
+            return Ok(OkResponse.Create(await _casinoTicketService.GetCasinoRefundRejectTickets()));
         }
 
         [HttpGet("{matchId:long}/bet-list")]

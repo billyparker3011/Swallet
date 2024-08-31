@@ -134,12 +134,46 @@ namespace Lottery.Core.Partners.Models.Allbet
         public long TicketId { get; set; }
         public string BookiePlayerId { get; set; }
         public Decimal Amount { get; set; }
-        public string Currency { get; set; }
+        public string Currency { get; set; } 
         public int Type { get; set; }
+        public string TypeName { get; set; }
         public long PlayerId { get; set; }
         public int BetKindId { get; set; }
+        public string BetKindName { get; set; }
         public decimal WinlossAmountTotal { get; set; }
-        public ICollection<CasinoTicketBetDetail> CasinoTicketBetDetails { get; set; }
-        public ICollection<CasinoTicketEventDetail> CasinoTicketEventDetails { get; set; }
+        public long BetNum { get; set; }
+        public long GameRoundId { get; set; }
+        public DateTime DateCreated { get; set; }
+        public string Ip { get; set; }
+        public IEnumerable<CasinoBetTableTicketDetailModel> CasinoTicketBetDetailModels { get; set; }
+    }
+
+    public class CasinoBetTableTicketDetailModel
+    {
+        public long BetNum { get; set; }
+        public long GameRoundId { get; set; }
+        public int Status { get; set; }
+        public string StatusName { get; set; }
+        public decimal BetAmount { get; set; }
+        public decimal Deposit { get; set; }
+        public int GameType { get; set; }
+        public string GameTypeName { get; set; }
+        public int BetType { get; set; }
+        public string BetTypeName { get; set; }
+        public int Commission { get; set; }
+        public decimal ExchangeRate { get; set; }
+        public string GameResult { get; set; }
+        public string GameResult2 { get; set; }
+        public decimal? WinOrLossAmount { get; set; }
+        public decimal? ValidAmount { get; set; }
+        public string BetTime { get; set; }
+        public string TableName { get; set; }
+        public long BetMethod { get; set; }
+        public string BetMethodName { get; set; }
+        public long AppType { get; set; }
+        public string AppTypeName { get; set; }
+        public string GameRoundStartTime { get; set; }
+        public string GameRoundEndTime { get; set; }
+        public string Ip { get; set; }
     }
 }

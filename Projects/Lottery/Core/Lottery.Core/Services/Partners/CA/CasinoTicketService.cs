@@ -2,18 +2,25 @@
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Contexts;
+using Lottery.Core.Dtos.CockFight;
+using Lottery.Core.Helpers;
 using Lottery.Core.Partners.Helpers;
 using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Partners.Publish;
 using Lottery.Core.Repositories.Agent;
+using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Casino;
+using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities.Partners.Casino;
 using Lottery.Data.Migrations;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -134,6 +141,7 @@ namespace Lottery.Core.Services.Partners.CA
             if (playerMapping == null) return CasinoReponseCode.Player_account_does_not_exist;          
 
             var casinoTicketRepository = LotteryUow.GetRepository<ICasinoTicketRepository>();
+            var casinoBetKindRepository = LotteryUow.GetRepository<ICasinoBetKindRepository>();
             var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
             var casinoTicketEventDetailRepository = LotteryUow.GetRepository<ICasinoTicketEventDetailRepository>();
             var casinoAgentPositionTakingRepository = LotteryUow.GetRepository<ICasinoAgentPositionTakingRepository>();
@@ -146,11 +154,13 @@ namespace Lottery.Core.Services.Partners.CA
 
             var lstPositionTaking = await casinoAgentPositionTakingRepository.FindQueryBy(c=> lstAgentId.Contains(c.AgentId)).ToListAsync();
 
-            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount - (model.Type == CasinoBetType.ManualSettle ? c.BetAmount : 0m) ?? 0m).Sum();
+            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount - (model.Type == CasinoTransferType.ManualSettle ? c.BetAmount : 0m) ?? 0m).Sum();
 
             var agentPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.AgentId)?.PositionTaking ?? 0m;
             var masterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.MasterId)?.PositionTaking ?? 0m;
             var supermasterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.SupermasterId)?.PositionTaking ?? 0m;
+
+            var betKind = await casinoBetKindRepository.FindQuery().FirstOrDefaultAsync();
 
            casinoTicket = new CasinoTicket()
            {
@@ -164,7 +174,7 @@ namespace Lottery.Core.Services.Partners.CA
                IsRetry = model.IsRetry,
 
                AgentId = playerMapping.Player.AgentId,
-               BetKindId = 0,
+               BetKindId = betKind != null ? betKind.Id : 0,
                MasterId = playerMapping.Player.MasterId,
                SupermasterId = playerMapping.Player.SupermasterId,
 
@@ -311,6 +321,112 @@ namespace Lottery.Core.Services.Partners.CA
             await LotteryUow.SaveChangesAsync();
 
             return CasinoReponseCode.Success;
+        }
+
+        public async Task<List<CasinoBetTableTicketModel>> GetCasinoTicketsAsBetList()
+        {
+            var casinoBetKindRepository = LotteryUow.GetRepository<ICasinoBetKindRepository>();
+            var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
+
+            var betRunnings = CasinoBetStatus.BetRunning.ToList();
+            var betCompleted = CasinoBetStatus.BetCompleted.ToList();
+
+            var datas = casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).GroupBy(c => c.BetNum).AsEnumerable()
+                        .Where(g => g.All(x => betRunnings.Contains(x.Status))
+                                    && g.All(x => !betCompleted.Contains(x.Status)
+                                    && g.All(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId)))
+                        .SelectMany(g => g).ToList();
+
+            var result = new List<CasinoBetTableTicketModel>();
+            datas.ForEach(c =>
+            {
+                var details = datas.Where(x => x.BetNum == c.BetNum).ToList();
+                var betKind = casinoBetKindRepository.FindById(c.CasinoTicket.BetKindId);
+                result.Add(new CasinoBetTableTicketModel()
+                {
+                    CasinoTicketBetDetailModels = details.Select(x => ToBetTableTicketDetailModel(x)).ToList(),
+                    BetKindId = c.CasinoTicket.BetKindId,
+                    BetKindName = betKind?.Name,
+                    BookiePlayerId = c.CasinoTicket.BookiePlayerId,
+                    BetNum = c.BetNum,
+                    Currency = c.CasinoTicket.Currency,
+                    PlayerId = c.CasinoTicket.PlayerId,
+                    WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
+                    DateCreated = details.Min(c => c.CreatedAt),
+                    GameRoundId = c.GameRoundId,
+                    Ip = c.Ip,
+
+                });
+            });
+
+            return result;
+        }
+
+        public async Task<List<CasinoBetTableTicketModel>> GetCasinoRefundRejectTickets()
+        {
+            var casinoBetKindRepository = LotteryUow.GetRepository<ICasinoBetKindRepository>();
+            var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
+
+            var datas = casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).GroupBy(c => c.BetNum).AsEnumerable()
+                .Where(g => g.Any(x => CasinoBetStatus.Refund == x.Status) && g.All(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId))
+                .SelectMany(g => g).ToList();
+
+            var result = new List<CasinoBetTableTicketModel>();
+            datas.ForEach(c =>
+            {
+                var details = datas.Where(x => x.BetNum == c.BetNum).ToList();
+                var betKind = casinoBetKindRepository.FindById(c.CasinoTicket.BetKindId);
+                result.Add(new CasinoBetTableTicketModel()
+                {
+                    CasinoTicketBetDetailModels = details.Select(x => ToBetTableTicketDetailModel(x)).ToList(),
+                    BetKindId = c.CasinoTicket.BetKindId,
+                    BetKindName = betKind?.Name,
+                    BookiePlayerId = c.CasinoTicket.BookiePlayerId,
+                    BetNum = c.BetNum,
+                    Currency = c.CasinoTicket.Currency,
+                    PlayerId = c.CasinoTicket.PlayerId,
+                    WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
+                    DateCreated = details.Min(c => c.CreatedAt),
+                    GameRoundId = c.GameRoundId,
+                    Ip = c.Ip,
+
+                });
+            });
+
+            return result;
+        }
+
+        public CasinoBetTableTicketDetailModel ToBetTableTicketDetailModel(CasinoTicketBetDetail item)
+        {
+            if (item == null) return new CasinoBetTableTicketDetailModel();
+            return new CasinoBetTableTicketDetailModel()
+            {
+                BetNum = item.BetNum,
+                GameRoundId = item.GameRoundId,
+                Status = item.Status,
+                StatusName = FindStaticFieldName(typeof(CasinoBetStatus), item.Status),
+                BetAmount = item.BetAmount,
+                Deposit = item.Deposit,
+                GameType = item.GameType,
+                GameTypeName = FindStaticFieldName(typeof(PartnerHelper.CasinoGameType), item.GameType),
+                BetType = item.BetType,
+                BetTypeName = FindStaticFieldName(typeof(CasinoBetType), item.BetType),
+                Commission = item.Commission,
+                ExchangeRate = item.ExchangeRate,
+                GameResult = item.GameResult,
+                GameResult2 = item.GameResult2,
+                WinOrLossAmount = item.WinOrLossAmount,
+                ValidAmount = item.ValidAmount,
+                BetTime = item.BetTime,
+                TableName = item.TableName,
+                BetMethod = item.BetMethod,               
+                BetMethodName = FindStaticFieldName(typeof(CasinoBetMethod), (int)item.BetMethod),
+                AppType = item.AppType,
+                AppTypeName = FindStaticFieldName(typeof(PartnerHelper.CasinoAppType), (int)item.AppType),
+                GameRoundStartTime = item.GameRoundStartTime,
+                GameRoundEndTime = item.GameRoundEndTime,
+                Ip = item.Ip
+            };
         }
     }
 }

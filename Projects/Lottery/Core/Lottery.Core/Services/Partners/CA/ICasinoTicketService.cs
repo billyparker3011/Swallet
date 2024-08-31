@@ -29,5 +29,9 @@ namespace Lottery.Core.Services.Partners.CA
         Task<int> CreateCasinoTicketAsync(CasinoTicketModel model);
 
         Task<int> CreateCasinoCancelTicketAsync(CasinoCancelTicketModel model);
+
+        Task<List<CasinoBetTableTicketModel>> GetCasinoTicketsAsBetList();
+
+        Task<List<CasinoBetTableTicketModel>> GetCasinoRefundRejectTickets();
     }
 }
