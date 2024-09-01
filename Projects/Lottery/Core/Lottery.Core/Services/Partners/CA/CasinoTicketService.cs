@@ -327,39 +327,45 @@ namespace Lottery.Core.Services.Partners.CA
         {
             var casinoBetKindRepository = LotteryUow.GetRepository<ICasinoBetKindRepository>();
             var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
+            var casinoGameTypeRepository = LotteryUow.GetRepository<ICasinoGameTypeRepository>();
 
             var betRunnings = CasinoBetStatus.BetRunning.ToList();
             var betCompleted = CasinoBetStatus.BetCompleted.ToList();
 
-            var datas = casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).GroupBy(c => c.BetNum).AsEnumerable()
-                        .Where(g => g.All(x => betRunnings.Contains(x.Status))
-                                    && g.All(x => !betCompleted.Contains(x.Status)
-                                    && g.All(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId)))
-                        .SelectMany(g => g).ToList();
+            var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).Where(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).OrderByDescending(c => c.Id).ToListAsync();
 
+            var betEnums = casinoTicketBetDetails.Select(c=>c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
-            datas.ForEach(c =>
+            betEnums.ForEach(c =>
             {
-                var details = datas.Where(x => x.BetNum == c.BetNum).ToList();
-                var betKind = casinoBetKindRepository.FindById(c.CasinoTicket.BetKindId);
+                var details = casinoTicketBetDetails.Where(x => x.GameRoundId == c).ToList();
+                var casinoTicketBetDetail = details.FirstOrDefault();
+                var betKind = casinoBetKindRepository.FindById(casinoTicketBetDetail.CasinoTicket.BetKindId);
+                var casinoTicketBetDetailModels = details.Select(x => ToBetTableTicketDetailModel(x)).ToList();
                 result.Add(new CasinoBetTableTicketModel()
                 {
-                    CasinoTicketBetDetailModels = details.Select(x => ToBetTableTicketDetailModel(x)).ToList(),
-                    BetKindId = c.CasinoTicket.BetKindId,
-                    BetKindName = betKind?.Name,
-                    BookiePlayerId = c.CasinoTicket.BookiePlayerId,
-                    BetNum = c.BetNum,
-                    Currency = c.CasinoTicket.Currency,
-                    PlayerId = c.CasinoTicket.PlayerId,
-                    WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
+
+                    GameRoundId = c,
                     DateCreated = details.Min(c => c.CreatedAt),
-                    GameRoundId = c.GameRoundId,
-                    Ip = c.Ip,
+                    TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
+                    BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
+                    BetAmount = details.Select(c => c.BetAmount).Sum(),
+                    WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
+                    Ip = casinoTicketBetDetail.Ip,
+
+                    BetKindId = casinoTicketBetDetail.CasinoTicket.BetKindId,
+                    BetKindName = betKind?.Name,
+                    BookiePlayerId = casinoTicketBetDetail.CasinoTicket.BookiePlayerId,
+                    BetNum = casinoTicketBetDetail.BetNum,
+                    Currency = casinoTicketBetDetail.CasinoTicket.Currency,
+                    PlayerId = casinoTicketBetDetail.CasinoTicket.PlayerId,
+                    CasinoTicketBetDetailModels = casinoTicketBetDetailModels,
 
                 });
+
             });
 
-            return result;
+            return result.ToList();
         }
 
         public async Task<List<CasinoBetTableTicketModel>> GetCasinoRefundRejectTickets()
@@ -367,28 +373,36 @@ namespace Lottery.Core.Services.Partners.CA
             var casinoBetKindRepository = LotteryUow.GetRepository<ICasinoBetKindRepository>();
             var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
 
-            var datas = casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).GroupBy(c => c.BetNum).AsEnumerable()
+            var casinoTicketBetDetails = casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).GroupBy(c => c.BetNum).AsEnumerable()
                 .Where(g => g.Any(x => CasinoBetStatus.Refund == x.Status) && g.All(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId))
                 .SelectMany(g => g).ToList();
 
+            var betEnums = casinoTicketBetDetails.Select(c => c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
-            datas.ForEach(c =>
+            betEnums.ForEach(c =>
             {
-                var details = datas.Where(x => x.BetNum == c.BetNum).ToList();
-                var betKind = casinoBetKindRepository.FindById(c.CasinoTicket.BetKindId);
+                var details = casinoTicketBetDetails.Where(x => x.GameRoundId == c).ToList();
+                var casinoTicketBetDetail = details.FirstOrDefault();
+                var betKind = casinoBetKindRepository.FindById(casinoTicketBetDetail.CasinoTicket.BetKindId);
+                var casinoTicketBetDetailModels = details.Select(x => ToBetTableTicketDetailModel(x)).ToList();
                 result.Add(new CasinoBetTableTicketModel()
                 {
-                    CasinoTicketBetDetailModels = details.Select(x => ToBetTableTicketDetailModel(x)).ToList(),
-                    BetKindId = c.CasinoTicket.BetKindId,
-                    BetKindName = betKind?.Name,
-                    BookiePlayerId = c.CasinoTicket.BookiePlayerId,
-                    BetNum = c.BetNum,
-                    Currency = c.CasinoTicket.Currency,
-                    PlayerId = c.CasinoTicket.PlayerId,
-                    WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
+
+                    GameRoundId = c,
                     DateCreated = details.Min(c => c.CreatedAt),
-                    GameRoundId = c.GameRoundId,
-                    Ip = c.Ip,
+                    TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
+                    BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
+                    BetAmount = details.Select(c => c.BetAmount).Sum(),
+                    WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
+                    Ip = casinoTicketBetDetail.Ip,
+
+                    BetKindId = casinoTicketBetDetail.CasinoTicket.BetKindId,
+                    BetKindName = betKind?.Name,
+                    BookiePlayerId = casinoTicketBetDetail.CasinoTicket.BookiePlayerId,
+                    BetNum = casinoTicketBetDetail.BetNum,
+                    Currency = casinoTicketBetDetail.CasinoTicket.Currency,
+                    PlayerId = casinoTicketBetDetail.CasinoTicket.PlayerId,
+                    CasinoTicketBetDetailModels = casinoTicketBetDetailModels,
 
                 });
             });

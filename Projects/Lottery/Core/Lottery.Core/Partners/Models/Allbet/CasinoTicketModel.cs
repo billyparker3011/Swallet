@@ -131,6 +131,14 @@ namespace Lottery.Core.Partners.Models.Allbet
 
     public class CasinoBetTableTicketModel
     {
+        public long GameRoundId { get; set; }
+        public DateTime DateCreated { get; set; }
+        public string TableName { get; set; }
+        public string BetTypeName { get; set; }
+        public Decimal BetAmount { get; set; }
+        public decimal WinlossAmountTotal { get; set; }
+
+
         public long TicketId { get; set; }
         public string BookiePlayerId { get; set; }
         public Decimal Amount { get; set; }
@@ -139,11 +147,8 @@ namespace Lottery.Core.Partners.Models.Allbet
         public string TypeName { get; set; }
         public long PlayerId { get; set; }
         public int BetKindId { get; set; }
-        public string BetKindName { get; set; }
-        public decimal WinlossAmountTotal { get; set; }
-        public long BetNum { get; set; }
-        public long GameRoundId { get; set; }
-        public DateTime DateCreated { get; set; }
+        public string BetKindName { get; set; }       
+        public long BetNum { get; set; }      
         public string Ip { get; set; }
         public IEnumerable<CasinoBetTableTicketDetailModel> CasinoTicketBetDetailModels { get; set; }
     }
