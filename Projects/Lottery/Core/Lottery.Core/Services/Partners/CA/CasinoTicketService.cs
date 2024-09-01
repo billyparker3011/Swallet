@@ -12,6 +12,7 @@ using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Casino;
 using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.UnitOfWorks;
+using Lottery.Data.Entities;
 using Lottery.Data.Entities.Partners.Casino;
 using Lottery.Data.Migrations;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -332,7 +333,7 @@ namespace Lottery.Core.Services.Partners.CA
             var betRunnings = CasinoBetStatus.BetRunning.ToList();
             var betCompleted = CasinoBetStatus.BetCompleted.ToList();
 
-            var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).Where(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).OrderByDescending(c => c.Id).ToListAsync();
+            var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).Include(c => c.CasinoTicket).OrderByDescending(c => c.Id).ToListAsync();
 
             var betEnums = casinoTicketBetDetails.Select(c=>c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
@@ -373,9 +374,9 @@ namespace Lottery.Core.Services.Partners.CA
             var casinoBetKindRepository = LotteryUow.GetRepository<ICasinoBetKindRepository>();
             var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
 
-            var casinoTicketBetDetails = casinoTicketBetDetailRepository.FindQuery().Include(c => c.CasinoTicket).GroupBy(c => c.BetNum).AsEnumerable()
-                .Where(g => g.Any(x => CasinoBetStatus.Refund == x.Status) && g.All(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId))
-                .SelectMany(g => g).ToList();
+            var query = casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).Include(c => c.CasinoTicket);
+            var queryTicketRefund = query.Where(c => CasinoBetStatus.Refund == c.Status).Select(c => c.GameRoundId).Distinct();
+            var casinoTicketBetDetails = await query.Where(c => queryTicketRefund.Contains(c.GameRoundId)).OrderByDescending(c=> c.Id).ToListAsync();
 
             var betEnums = casinoTicketBetDetails.Select(c => c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
