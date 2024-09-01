@@ -11,7 +11,7 @@ namespace Lottery.Core.Services.Ticket.Processors;
 
 public class Southern_3DDau_Processor : AbstractBetKindProcessor
 {
-    private const int _resultPrize = 7;
+    private const int _resultPrize = 2;
 
     public Southern_3DDau_Processor(IServiceProvider serviceProvider) : base(serviceProvider)
     {
