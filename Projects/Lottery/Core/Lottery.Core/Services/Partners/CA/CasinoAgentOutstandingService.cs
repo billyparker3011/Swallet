@@ -43,7 +43,7 @@ namespace Lottery.Core.Services.Partners.CA
                                                     ? ClientContext.Agent.AgentId
                                                     : ClientContext.Agent.ParentId;
             var targetRoleId = model.RoleId.HasValue ? model.RoleId.Value : ClientContext.Agent.RoleId;
-            if (targetRoleId < 3/*ClientContext.Agent.RoleId*/) return new CasinoAgentOutstandingResultModel();
+            if (targetRoleId < ClientContext.Agent.RoleId) return new CasinoAgentOutstandingResultModel();
             var outsState = PartnerHelper.CasinoBetStatus.BetRunning.ToList();
             switch (targetRoleId)
             {
