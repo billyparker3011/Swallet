@@ -146,6 +146,7 @@ namespace Lottery.Core.Partners.Models.Allbet
         public int Type { get; set; }
         public string TypeName { get; set; }
         public long PlayerId { get; set; }
+        public string PlayerName { get; set; }
         public int BetKindId { get; set; }
         public string BetKindName { get; set; }       
         public long BetNum { get; set; }      

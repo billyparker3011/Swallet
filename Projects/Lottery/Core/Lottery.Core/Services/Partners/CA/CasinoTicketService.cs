@@ -1,45 +1,30 @@
 ﻿using HnMicro.Framework.Exceptions;
+using HnMicro.Framework.Helpers;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Contexts;
-using Lottery.Core.Dtos.CockFight;
 using Lottery.Core.Helpers;
 using Lottery.Core.Partners.Helpers;
 using Lottery.Core.Partners.Models.Allbet;
-using Lottery.Core.Partners.Publish;
-using Lottery.Core.Repositories.Agent;
-using Lottery.Core.Repositories.BetKind;
 using Lottery.Core.Repositories.Casino;
-using Lottery.Core.Repositories.CockFight;
 using Lottery.Core.UnitOfWorks;
-using Lottery.Data.Entities;
 using Lottery.Data.Entities.Partners.Casino;
-using Lottery.Data.Migrations;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 using static Lottery.Core.Helpers.PartnerHelper;
 using static Lottery.Core.Partners.Helpers.CasinoHelper;
 
 namespace Lottery.Core.Services.Partners.CA
 {
-    public class CasinoTicketService : LotteryBaseService<CasinoTicket>, ICasinoTicketService
+    public class CasinoTicketService : LotteryBaseService<CasinoTicketService>, ICasinoTicketService
     {
         private readonly IRedisCacheService _redisCacheService;
         private readonly ICasinoPlayerMappingService _casinoPlayerMappingService;
 
         public CasinoTicketService(
-           ILogger<CasinoTicket> logger,
+           ILogger<CasinoTicketService> logger,
            IServiceProvider serviceProvider,
            IConfiguration configuration,
            IClockService clockService,

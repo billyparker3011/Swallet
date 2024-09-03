@@ -76,7 +76,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        x.Username,
                                        x.GameRoundId,
                                    })
-                                   .Select(x => new CasinoWinlossModel
+                                   .Select(x => new CasinoAgentWinlossModel
                                    {
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
@@ -154,7 +154,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        x.RoleId,
                                        x.GameRoundId
                                    })
-                                   .Select(x => new CasinoWinlossModel
+                                   .Select(x => new CasinoAgentWinlossModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
@@ -238,7 +238,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        x.RoleId,
                                        x.GameRoundId,
                                    })
-                                   .Select(x => new CasinoWinlossModel
+                                   .Select(x => new CasinoAgentWinlossModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
@@ -328,7 +328,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        x.RoleId,
                                        x.GameRoundId
                                    })
-                                   .Select(x => new CasinoWinlossModel
+                                   .Select(x => new CasinoAgentWinlossModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,

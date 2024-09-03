@@ -1,7 +1,7 @@
 ﻿
 namespace Lottery.Core.Partners.Models.Allbet
 {
-    public class CasinoWinlossModel
+    public class CasinoAgentWinlossModel
     {
         public long AgentId { get; set; }
         public int RoleId { get; set; }
@@ -24,7 +24,7 @@ namespace Lottery.Core.Partners.Models.Allbet
 
     public class GetCasinoAgentWinLossSummaryResultModel
     {
-        public List<CasinoWinlossModel> CasinoAgentWinlossSummaries { get; set; }
+        public List<CasinoAgentWinlossModel> CasinoAgentWinlossSummaries { get; set; }
         public long TotalBetCount { get; set; }
         public decimal TotalPayout { get; set; }
         public decimal TotalWinLose { get; set; }
