@@ -21,7 +21,7 @@ namespace Lottery.Core.Repositories.Agent
             switch (role)
             {
                 case Role.Company:
-                    return await FindQueryBy(x => typeIds.Contains(x.SupermasterId) && typeIds.Contains(x.MasterId) && x.RoleId == (int)role + 1 && x.State == (int)state).CountAsync();
+                    return await FindQueryBy(x => x.SupermasterId == 0L && x.MasterId == 0L && x.RoleId == (int)role + 1 && x.State == (int)state).CountAsync();
                 case Role.Supermaster:
                     return await FindQueryBy(x => typeIds.Contains(x.SupermasterId) && x.RoleId == (int)role + 1 && x.State == (int)state).CountAsync();
                 case Role.Master:

@@ -764,7 +764,7 @@ namespace Lottery.Core.Services.Agent
         {
             //Add Supermaster State Info
             result.Add(await GetTargetAgentStateInfo(agentRepos, playerRepos, Role.Supermaster.ToString(), new List<long> { clientAgent.AgentId }, Role.Company));
-            var listSuperMasterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == clientAgent.AgentId && x.MasterId == clientAgent.AgentId && x.RoleId == (int)Role.Supermaster)
+            var listSuperMasterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == 0L && x.MasterId == 0L && x.RoleId == (int)Role.Supermaster)
                                                      .Select(x => x.AgentId)
                                                      .ToListAsync();
 
