@@ -72,47 +72,55 @@ public class FirstNorthern_Northern_De_Processor : AbstractBetKindProcessor
             {
                 dataResult.State = TicketState.Won;
 
-                dataResult.PlayerWinLoss = ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
-
-                dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
+                //  Commission
                 var agentComm = (ticket.PlayerOdds ?? 0m) - (ticket.AgentOdds ?? 0m);
                 if (agentComm < 0m) agentComm = 0m;
-                dataResult.AgentCommission = agentComm * ticket.Stake;
 
-                dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
                 var masterComm = (ticket.AgentOdds ?? 0m) - (ticket.MasterOdds ?? 0m);
                 if (masterComm < 0m) masterComm = 0m;
-                dataResult.MasterCommission = masterComm * ticket.Stake;
 
-                dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
                 var supermasterComm = (ticket.MasterOdds ?? 0m) - (ticket.SupermasterOdds ?? 0m);
                 if (supermasterComm < 0m) supermasterComm = 0m;
-                dataResult.SupermasterCommission = supermasterComm * ticket.Stake;
 
-                dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
+                var commission = GetCommission(ticket.Stake, agentComm, masterComm, supermasterComm);
+                dataResult.AgentCommission = commission.Item1;
+                dataResult.MasterCommission = commission.Item2;
+                dataResult.SupermasterCommission = commission.Item3;
+
+                //  Winlose
+                dataResult.PlayerWinLoss = ticket.Stake * ticket.RewardRate.Value - ticket.PlayerPayout;
+                var winlose = GetWinlose(dataResult.PlayerWinLoss, ticket.AgentPt, ticket.MasterPt, ticket.SupermasterPt);
+                dataResult.AgentWinLoss = winlose.Item1;
+                dataResult.MasterWinLoss = winlose.Item2;
+                dataResult.SupermasterWinLoss = winlose.Item3;
+                dataResult.CompanyWinLoss = winlose.Item4;
             }
             else
             {
                 dataResult.State = TicketState.Lose;
 
-                dataResult.PlayerWinLoss = -1 * ticket.PlayerPayout;
-
-                dataResult.AgentWinLoss = -1 * dataResult.PlayerWinLoss * ticket.AgentPt;
+                //  Commission
                 var agentComm = (ticket.PlayerOdds ?? 0m) - (ticket.AgentOdds ?? 0m);
                 if (agentComm < 0m) agentComm = 0m;
-                dataResult.AgentCommission = agentComm * ticket.Stake;
 
-                dataResult.MasterWinLoss = -1 * (ticket.MasterPt - ticket.AgentPt) * dataResult.PlayerWinLoss;
                 var masterComm = (ticket.AgentOdds ?? 0m) - (ticket.MasterOdds ?? 0m);
                 if (masterComm < 0m) masterComm = 0m;
-                dataResult.MasterCommission = masterComm * ticket.Stake;
 
-                dataResult.SupermasterWinLoss = -1 * (ticket.SupermasterPt - ticket.MasterPt) * dataResult.PlayerWinLoss;
                 var supermasterComm = (ticket.MasterOdds ?? 0m) - (ticket.SupermasterOdds ?? 0m);
                 if (supermasterComm < 0m) supermasterComm = 0m;
-                dataResult.SupermasterCommission = supermasterComm * ticket.Stake;
 
-                dataResult.CompanyWinLoss = -1 * (1 - ticket.SupermasterPt) * dataResult.PlayerWinLoss;
+                var commission = GetCommission(ticket.Stake, agentComm, masterComm, supermasterComm);
+                dataResult.AgentCommission = commission.Item1;
+                dataResult.MasterCommission = commission.Item2;
+                dataResult.SupermasterCommission = commission.Item3;
+
+                //  Winlose
+                dataResult.PlayerWinLoss = -1 * ticket.PlayerPayout;
+                var winlose = GetWinlose(dataResult.PlayerWinLoss, ticket.AgentPt, ticket.MasterPt, ticket.SupermasterPt);
+                dataResult.AgentWinLoss = winlose.Item1;
+                dataResult.MasterWinLoss = winlose.Item2;
+                dataResult.SupermasterWinLoss = winlose.Item3;
+                dataResult.CompanyWinLoss = winlose.Item4;
             }
         }
         else
@@ -166,24 +174,28 @@ public class FirstNorthern_Northern_De_Processor : AbstractBetKindProcessor
                 {
                     if (item.ChoosenNumbers.Equals(val, StringComparison.OrdinalIgnoreCase))
                     {
-                        playerWinlose = item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
-
-                        agentWinlose = -1 * playerWinlose * item.AgentPt;
+                        //  Commission
                         var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
                         if (agentComm < 0m) agentComm = 0m;
-                        agentCommission = agentComm * item.Stake;
 
-                        masterWinlose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
                         var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
                         if (masterComm < 0m) masterComm = 0m;
-                        masterCommission = masterComm * item.Stake;
 
-                        supermasterWinlose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
                         var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
                         if (supermasterComm < 0m) supermasterComm = 0m;
-                        supermasterCommission = supermasterComm * item.Stake;
 
-                        companyWinlose = -1 * (1 - item.SupermasterPt) * playerWinlose;
+                        var commission = GetCommission(item.Stake, agentComm, masterComm, supermasterComm);
+                        agentCommission = commission.Item1;
+                        masterCommission = commission.Item2;
+                        supermasterCommission = commission.Item3;
+
+                        //  Winlose
+                        playerWinlose = item.Stake * ticket.RewardRate.Value - item.PlayerPayout;
+                        var winlose = GetWinlose(playerWinlose, item.AgentPt, item.MasterPt, item.SupermasterPt);
+                        agentWinlose = winlose.Item1;
+                        masterWinlose = winlose.Item2;
+                        supermasterWinlose = winlose.Item3;
+                        companyWinlose = winlose.Item4;
 
                         dataResult.Children.Add(new CompletedChildrenTicketResultModel
                         {
@@ -201,24 +213,28 @@ public class FirstNorthern_Northern_De_Processor : AbstractBetKindProcessor
                     }
                     else
                     {
-                        playerWinlose = -1 * item.PlayerPayout;
-
-                        agentWinlose = -1 * playerWinlose * item.AgentPt;
+                        //  Commission
                         var agentComm = (item.PlayerOdds ?? 0m) - (item.AgentOdds ?? 0m);
                         if (agentComm < 0m) agentComm = 0m;
-                        agentCommission = agentComm * item.Stake;
 
-                        masterWinlose = -1 * (item.MasterPt - item.AgentPt) * playerWinlose;
                         var masterComm = (item.AgentOdds ?? 0m) - (item.MasterOdds ?? 0m);
                         if (masterComm < 0m) masterComm = 0m;
-                        masterCommission = masterComm * item.Stake;
 
-                        supermasterWinlose = -1 * (item.SupermasterPt - item.MasterPt) * playerWinlose;
                         var supermasterComm = (item.MasterOdds ?? 0m) - (item.SupermasterOdds ?? 0m);
                         if (supermasterComm < 0m) supermasterComm = 0m;
-                        supermasterCommission = supermasterComm * item.Stake;
 
-                        companyWinlose = -1 * (1 - item.SupermasterPt) * playerWinlose;
+                        var commission = GetCommission(item.Stake, agentComm, masterComm, supermasterComm);
+                        agentCommission = commission.Item1;
+                        masterCommission = commission.Item2;
+                        supermasterCommission = commission.Item3;
+
+                        //  Winlose
+                        playerWinlose = -1 * item.PlayerPayout;
+                        var winlose = GetWinlose(playerWinlose, item.AgentPt, item.MasterPt, item.SupermasterPt);
+                        agentWinlose = winlose.Item1;
+                        masterWinlose = winlose.Item2;
+                        supermasterWinlose = winlose.Item3;
+                        companyWinlose = winlose.Item4;
 
                         dataResult.Children.Add(new CompletedChildrenTicketResultModel
                         {

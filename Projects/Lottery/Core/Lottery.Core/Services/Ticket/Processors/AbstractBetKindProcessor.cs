@@ -170,4 +170,18 @@ public abstract class AbstractBetKindProcessor : IBetKindProcessor
     {
         return 0;
     }
+
+    protected virtual (decimal, decimal, decimal) GetCommission(decimal stake, decimal agentCommission, decimal masterCommission, decimal supermasterCommission)
+    {
+        return (agentCommission * stake, masterCommission * stake, supermasterCommission * stake);
+    }
+
+    protected virtual (decimal, decimal, decimal, decimal) GetWinlose(decimal playerWinlose, decimal agentPt, decimal masterPt, decimal supermasterPt)
+    {
+        var agentWinlose = -1 * agentPt * playerWinlose;
+        var masterWinlose = -1 * (masterPt - agentPt) * playerWinlose;
+        var supermasterWinlose = -1 * (supermasterPt - masterPt) * playerWinlose;
+        var companyWinlose = -1 * (1 - supermasterPt) * playerWinlose;
+        return (agentWinlose, masterWinlose, supermasterWinlose, companyWinlose);
+    }
 }
