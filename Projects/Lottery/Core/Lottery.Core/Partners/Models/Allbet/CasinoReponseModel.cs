@@ -5,6 +5,7 @@
         public CasinoReponseModel(int resultCode)
         {
             ResultCode = resultCode;
+            Message = resultCode > 10006 ? GetMessage(resultCode): string.Empty;
         }
         public CasinoReponseModel(int resultCode, string message)
         {

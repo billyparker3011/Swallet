@@ -4,6 +4,7 @@ namespace Lottery.Core.Partners.Models.Allbet
     public class CasinoAgentWinlossModel
     {
         public long AgentId { get; set; }
+        public long PlayerId { get; set; }
         public int RoleId { get; set; }
         public string Username { get; set; }
         public long BetCount { get; set; }

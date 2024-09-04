@@ -3,7 +3,7 @@ using HnMicro.Framework.Models;
 using HnMicro.Framework.Responses;
 using Lottery.Core.Enums;
 using Lottery.Core.Filters.Authorization;
-using Lottery.Core.Partners.Models.Allbet;
+using Lottery.Core.Services.Partners.CA;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lottery.Agent.AgentService.Controllers

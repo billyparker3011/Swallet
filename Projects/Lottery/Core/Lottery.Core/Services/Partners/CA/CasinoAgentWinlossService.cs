@@ -78,8 +78,9 @@ namespace Lottery.Core.Services.Partners.CA
                                    })
                                    .Select(x => new CasinoAgentWinlossModel
                                    {
-                                       AgentId = x.Key.PlayerId,
+                                       PlayerId = x.Key.PlayerId,
                                        Username = x.Key.Username,
+                                       AgentId = targetAgentId,
                                        RoleId = Role.Player.ToInt(),
                                        BetCount = x.LongCount(),
                                        Payout = x.Sum(s => s.BetAmount),

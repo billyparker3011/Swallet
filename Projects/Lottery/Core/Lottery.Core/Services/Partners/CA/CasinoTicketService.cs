@@ -96,11 +96,11 @@ namespace Lottery.Core.Services.Partners.CA
 
             var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
 
+            if ((balance + ticketAmout + model.Amount) < 0) return (-1, CasinoReponseCode.Credit_is_not_enough);
+
             var code = await CreateCasinoTicketAsync(model);
 
             if (model.Type == CasinoHelper.TypeTransfer.ManualSettle) return (balance + ticketAmout, CasinoReponseCode.Success);
-
-            if ((balance + ticketAmout + model.Amount) < 0) return (-1, CasinoReponseCode.Credit_is_not_enough);
     
             return (balance + ticketAmout + model.Amount,code);
 
