@@ -84,7 +84,7 @@ namespace Lottery.Core.Services.Partners.CA
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
-            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == player).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
+            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
 
             return balance + ticketAmout;
 
@@ -101,8 +101,8 @@ namespace Lottery.Core.Services.Partners.CA
             var code = await CreateCasinoTicketAsync(model);
 
             if (model.Type == CasinoHelper.TypeTransfer.ManualSettle) return (balance + ticketAmout, CasinoReponseCode.Success);
-    
-            return (balance + ticketAmout + model.Amount,code);
+
+            return (balance + ticketAmout + model.Amount, code);
 
         }
 
@@ -110,7 +110,7 @@ namespace Lottery.Core.Services.Partners.CA
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
-           var code = await CreateCasinoCancelTicketAsync(model);           
+            var code = await CreateCasinoCancelTicketAsync(model);
 
             var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
 
@@ -122,9 +122,9 @@ namespace Lottery.Core.Services.Partners.CA
         {
             var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
-            var playerMapping = await casinoPlayerMappingRepository.FindQueryBy(c=>c.BookiePlayerId == model.Player).Include(c=>c.Player).FirstOrDefaultAsync();
+            var playerMapping = await casinoPlayerMappingRepository.FindQueryBy(c => c.BookiePlayerId == model.Player).Include(c => c.Player).FirstOrDefaultAsync();
 
-            if (playerMapping == null) return CasinoReponseCode.Player_account_does_not_exist;          
+            if (playerMapping == null) return CasinoReponseCode.Player_account_does_not_exist;
 
             var casinoTicketRepository = LotteryUow.GetRepository<ICasinoTicketRepository>();
             var casinoBetKindRepository = LotteryUow.GetRepository<ICasinoBetKindRepository>();
@@ -138,7 +138,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var lstAgentId = new List<long> { playerMapping.Player.AgentId, playerMapping.Player.MasterId, playerMapping.Player.SupermasterId };
 
-            var lstPositionTaking = await casinoAgentPositionTakingRepository.FindQueryBy(c=> lstAgentId.Contains(c.AgentId)).ToListAsync();
+            var lstPositionTaking = await casinoAgentPositionTakingRepository.FindQueryBy(c => lstAgentId.Contains(c.AgentId)).ToListAsync();
 
             var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount - (model.Type == CasinoTransferType.ManualSettle ? c.BetAmount : 0m) ?? 0m).Sum();
 
@@ -148,36 +148,36 @@ namespace Lottery.Core.Services.Partners.CA
 
             var betKind = await casinoBetKindRepository.FindQuery().FirstOrDefaultAsync();
 
-           casinoTicket = new CasinoTicket()
-           {
-               TransactionId = model.TranId,
-               PlayerId = playerMapping.PlayerId,
-               BookiePlayerId = model.Player,
-               Amount = model.Amount,
-               Currency = model.Currency,
-               Reason = model.Reason,
-               Type = model.Type,
-               IsRetry = model.IsRetry,
+            casinoTicket = new CasinoTicket()
+            {
+                TransactionId = model.TranId,
+                PlayerId = playerMapping.PlayerId,
+                BookiePlayerId = model.Player,
+                Amount = model.Amount,
+                Currency = model.Currency,
+                Reason = model.Reason,
+                Type = model.Type,
+                IsRetry = model.IsRetry,
 
-               AgentId = playerMapping.Player.AgentId,
-               BetKindId = betKind != null ? betKind.Id : 0,
-               MasterId = playerMapping.Player.MasterId,
-               SupermasterId = playerMapping.Player.SupermasterId,
+                AgentId = playerMapping.Player.AgentId,
+                BetKindId = betKind != null ? betKind.Id : 0,
+                MasterId = playerMapping.Player.MasterId,
+                SupermasterId = playerMapping.Player.SupermasterId,
 
-               AgentPt = agentPT,
-               AgentWinLoss = -1 * winOrLoseAmountTotal * agentPT,
-               MasterPt = masterPT,
-               MasterWinLoss = -1 * (masterPT - agentPT) * winOrLoseAmountTotal,
-               SupermasterPt = supermasterPT,
-               SupermasterWinLoss = -1 * (supermasterPT - masterPT) * winOrLoseAmountTotal,
-               CompanyWinLoss = -1 * (1 - supermasterPT) * winOrLoseAmountTotal,
+                AgentPt = agentPT,
+                AgentWinLoss = -1 * winOrLoseAmountTotal * agentPT,
+                MasterPt = masterPT,
+                MasterWinLoss = -1 * (masterPT - agentPT) * winOrLoseAmountTotal,
+                SupermasterPt = supermasterPT,
+                SupermasterWinLoss = -1 * (supermasterPT - masterPT) * winOrLoseAmountTotal,
+                CompanyWinLoss = -1 * (1 - supermasterPT) * winOrLoseAmountTotal,
 
-               WinlossAmountTotal = winOrLoseAmountTotal,
+                WinlossAmountTotal = winOrLoseAmountTotal,
 
-               CreatedAt = DateTime.UtcNow.AddHours(8),
-               CreatedBy = 0
+                CreatedAt = DateTime.UtcNow.AddHours(8),
+                CreatedBy = 0
 
-           };
+            };
 
             await casinoTicketRepository.AddAsync(casinoTicket);
 
@@ -221,9 +221,9 @@ namespace Lottery.Core.Services.Partners.CA
                         CreatedAt = DateTime.UtcNow.AddHours(8),
                         CreatedBy = 0,
                     };
-                  }).ToList());
+                }).ToList());
 
-               await casinoTicketBetDetailRepository.AddRangeAsync(casinoTicketBetDetails);
+                await casinoTicketBetDetailRepository.AddRangeAsync(casinoTicketBetDetails);
             }
 
             if (CasinoHelper.TypeTransfer.EventDetails.Contains(casinoTicket.Type) && model.CasinoTicketEventDetailModels.Any())
@@ -320,7 +320,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).Include(c => c.CasinoTicket).OrderByDescending(c => c.Id).ToListAsync();
 
-            var betEnums = casinoTicketBetDetails.Select(c=>c.GameRoundId).Distinct().ToList();
+            var betEnums = casinoTicketBetDetails.Select(c => c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
             betEnums.ForEach(c =>
             {
@@ -361,7 +361,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var query = casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).Include(c => c.CasinoTicket);
             var queryTicketRefund = query.Where(c => CasinoBetStatus.Refund == c.Status).Select(c => c.GameRoundId).Distinct();
-            var casinoTicketBetDetails = await query.Where(c => queryTicketRefund.Contains(c.GameRoundId)).OrderByDescending(c=> c.Id).ToListAsync();
+            var casinoTicketBetDetails = await query.Where(c => queryTicketRefund.Contains(c.GameRoundId)).OrderByDescending(c => c.Id).ToListAsync();
 
             var betEnums = casinoTicketBetDetails.Select(c => c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
@@ -419,7 +419,7 @@ namespace Lottery.Core.Services.Partners.CA
                 ValidAmount = item.ValidAmount,
                 BetTime = item.BetTime,
                 TableName = item.TableName,
-                BetMethod = item.BetMethod,               
+                BetMethod = item.BetMethod,
                 BetMethodName = FindStaticFieldName(typeof(CasinoBetMethod), (int)item.BetMethod),
                 AppType = item.AppType,
                 AppTypeName = FindStaticFieldName(typeof(PartnerHelper.CasinoAppType), (int)item.AppType),
