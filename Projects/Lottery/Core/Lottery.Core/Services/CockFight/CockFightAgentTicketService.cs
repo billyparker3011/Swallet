@@ -41,7 +41,7 @@ namespace Lottery.Core.Services.CockFight
             var clientAgent = await agentRepos.FindByIdAsync(targetAgentId) ?? throw new NotFoundException();
             var lastestMatchDayCodeTicket = await GetLastestMatchDayCodeTicketByAgentRole(cockFightTicketRepository, clientAgent);
             if (lastestMatchDayCodeTicket == null) return new CockFightAgentTicketResult();
-            var rejectRefundState = CommonHelper.RefundRejectTicketState();
+            var rejectRefundState = CommonHelper.RefundRejectCockFightTicketState();
             return await InternalGetCockFightTickets(rejectRefundState, model, lastestMatchDayCodeTicket.MatchDayCode);
         }
 
@@ -100,7 +100,7 @@ namespace Lottery.Core.Services.CockFight
                 TicketAmount = f.TicketAmount ?? 0m,
                 WinlossAmount = f.WinlossAmount ?? 0m,
                 IpAddress = f.IpAddress,
-                UserAgent = string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
+                UserAgent = !string.IsNullOrEmpty(f.UserAgent) ? f.UserAgent.GetPlatform() : f.UserAgent,
                 ArenaCode = f.ArenaCode,
                 CurrencyCode = f.CurrencyCode,
                 DateCreated = f.TicketCreatedDate,
