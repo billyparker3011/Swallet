@@ -2,6 +2,7 @@ using HnMicro.Framework.Helpers;
 using HnMicro.Module.Caching.ByRedis.Helpers;
 using HnMicro.Modules.LoggerService.Helpers;
 using Lottery.Core.Helpers;
+using Lottery.Core.Partners.Attribute.Bti;
 using Lottery.Core.Partners.Attribute.CA;
 using Lottery.Core.Partners.Attribute.CockFight;
 using Lottery.Player.PlayerService.Helpers;
@@ -17,6 +18,7 @@ builder.BuildClientLoggerService();
 
 builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, CasinoAuthorizeAttribute>(nameof(CasinoAuthorizeAttribute), null);
 builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, CockFightAuthorizeAttribute>(nameof(CockFightAuthorizeAttribute), null);
+builder.Services.AddAuthentication().AddScheme<AuthenticationSchemeOptions, BtiAuthorizeAttribute>(nameof(BtiAuthorizeAttribute), null);
 
 var app = builder.Build();
 
