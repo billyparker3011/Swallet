@@ -12,6 +12,7 @@ using Lottery.Core.UnitOfWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using static Lottery.Core.Helpers.PartnerHelper;
 
 namespace Lottery.Core.Services.Partners.CA
 {
@@ -57,7 +58,7 @@ namespace Lottery.Core.Services.Partners.CA
             var playerIds = await playerRepos.FindQueryBy(x => x.AgentId == targetAgentId).Select(x => x.PlayerId).ToListAsync();
             var queryTicketCompleted = casinoTicketBetDetailRepos.FindQueryBy(c => ticketStates.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoAgentWinlossSummaries = await playerRepos.FindQueryBy(x => playerIds.Contains(x.PlayerId))
-                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
+                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && !y.IsCancel && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
                                    x => x.PlayerId, y => y.CasinoTicket.PlayerId, (player, ticket) => new
                                    {
                                        player.PlayerId,
@@ -68,7 +69,9 @@ namespace Lottery.Core.Services.Partners.CA
                                        ticket.AgentWinLoss,
                                        ticket.MasterWinLoss,
                                        ticket.SupermasterWinLoss,
-                                       ticket.CompanyWinLoss
+                                       ticket.CompanyWinLoss,
+                                       ticket.Status,
+                                       ticket.CasinoTicket.Type
                                    })
                                    .GroupBy(x => new
                                    {
@@ -83,7 +86,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        AgentId = targetAgentId,
                                        RoleId = Role.Player.ToInt(),
                                        BetCount = x.LongCount(),
-                                       Payout = x.Sum(s => s.BetAmount),
+                                       Payout = x.Sum(s => (s.Status == CasinoTransferType.Settle && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId <= Role.Agent.ToInt()
                                                        ? new CasinoWinlossInfoModel
@@ -134,7 +137,7 @@ namespace Lottery.Core.Services.Partners.CA
             var agentIds = await agentRepos.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
             var queryTicketCompleted = casinoTicketBetDetailRepos.FindQueryBy(c => ticketStates.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoAgentWinlossSummaries = await agentRepos.FindQueryBy(x => agentIds.Contains(x.AgentId))
-                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
+                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && !y.IsCancel && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
                                    x => x.AgentId, y => y.CasinoTicket.AgentId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
@@ -146,7 +149,9 @@ namespace Lottery.Core.Services.Partners.CA
                                        ticket.AgentWinLoss,
                                        ticket.MasterWinLoss,
                                        ticket.SupermasterWinLoss,
-                                       ticket.CompanyWinLoss
+                                       ticket.CompanyWinLoss,
+                                       ticket.Status,
+                                       ticket.CasinoTicket.Type
                                    })
                                    .GroupBy(x => new
                                    {
@@ -161,7 +166,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
                                        BetCount = x.LongCount(),
-                                       Payout = x.Sum(s => s.BetAmount ),
+                                       Payout = x.Sum(s => (s.Status == CasinoTransferType.Settle && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new CasinoWinlossInfoModel
@@ -218,7 +223,7 @@ namespace Lottery.Core.Services.Partners.CA
             var masterIds = await agentRepos.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
             var queryTicketCompleted = casinoTicketBetDetailRepos.FindQueryBy(c => ticketStates.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoAgentWinlossSummaries = await agentRepos.FindQueryBy(x => masterIds.Contains(x.AgentId))
-                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
+                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && !y.IsCancel && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
                                    x => x.AgentId, y => y.CasinoTicket.MasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
@@ -230,7 +235,9 @@ namespace Lottery.Core.Services.Partners.CA
                                        ticket.AgentWinLoss,
                                        ticket.MasterWinLoss,
                                        ticket.SupermasterWinLoss,
-                                       ticket.CompanyWinLoss
+                                       ticket.CompanyWinLoss,
+                                       ticket.Status,
+                                       ticket.CasinoTicket.Type
                                    })
                                    .GroupBy(x => new
                                    {
@@ -245,7 +252,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
                                        BetCount = x.LongCount(),
-                                       Payout = x.Sum(s => s.BetAmount),
+                                       Payout = x.Sum(s => (s.Status == CasinoTransferType.Settle && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new CasinoWinlossInfoModel
@@ -308,7 +315,7 @@ namespace Lottery.Core.Services.Partners.CA
             var supermasterIds = await agentRepos.FindQueryBy(x => x.RoleId == loginAgent.RoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
             var queryTicketCompleted = casinoTicketBetDetailRepos.FindQueryBy(c => ticketStates.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoAgentWinlossSummaries = await agentRepos.FindQueryBy(x => supermasterIds.Contains(x.AgentId))
-                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
+                                   .Join(casinoTicketBetDetailRepos.FindQueryBy(y => queryTicketCompleted.Contains(y.GameRoundId) && !y.IsCancel && y.CreatedAt >= from.Date && y.CreatedAt <= to.AddDays(1).AddTicks(-1)).Include(c=>c.CasinoTicket),
                                    x => x.AgentId, y => y.CasinoTicket.SupermasterId, (agent, ticket) => new
                                    {
                                        agent.AgentId,
@@ -320,7 +327,9 @@ namespace Lottery.Core.Services.Partners.CA
                                        ticket.AgentWinLoss,
                                        ticket.MasterWinLoss,
                                        ticket.SupermasterWinLoss,
-                                       ticket.CompanyWinLoss
+                                       ticket.CompanyWinLoss,
+                                       ticket.Status,
+                                       ticket.CasinoTicket.Type
                                    })
                                    .GroupBy(x => new
                                    {
@@ -335,7 +344,7 @@ namespace Lottery.Core.Services.Partners.CA
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
                                        BetCount = x.LongCount(),
-                                       Payout = x.Sum(s => s.BetAmount),
+                                       Payout = x.Sum(s => (s.Status == CasinoTransferType.Settle && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
                                                        ? new CasinoWinlossInfoModel

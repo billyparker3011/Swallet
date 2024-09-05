@@ -180,6 +180,8 @@ namespace Lottery.Core.Partners.Models.Allbet
         public string AppTypeName { get; set; }
         public string GameRoundStartTime { get; set; }
         public string GameRoundEndTime { get; set; }
+        public int Type { get; set; }
+        public string TypeName { get; set; }
         public string Ip { get; set; }
     }
 }

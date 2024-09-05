@@ -47,7 +47,7 @@ namespace Lottery.Core.Services.Partners.CA
             var betCompleted = CasinoBetStatus.BetCompleted.ToList();
 
             var queryTicketCompleted = casinoTicketBetDetailRepository.FindQueryBy(c => betCompleted.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
-            var queryData = casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == playerId && betRunning.Contains(c.Status) && !queryTicketCompleted.Contains(c.GameRoundId)).Include(c => c.CasinoTicket).ThenInclude(c=>c.Player).AsQueryable();
+            var queryData = casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == playerId && !c.IsCancel && betRunning.Contains(c.Status) && !queryTicketCompleted.Contains(c.GameRoundId)).Include(c => c.CasinoTicket).ThenInclude(c=>c.Player).AsQueryable();
             if (ClientContext.Agent.RoleId == Role.Supermaster.ToInt())
             {
                 var supermasterId = ClientContext.Agent.ParentId == 0L ? ClientContext.Agent.AgentId : ClientContext.Agent.ParentId;
@@ -84,7 +84,7 @@ namespace Lottery.Core.Services.Partners.CA
                     DateCreated = details.Min(c => c.CreatedAt),
                     TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
                     BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
-                    BetAmount = details.Select(c => c.BetAmount).Sum(),
+                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoTransferType.Settle && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
                     WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
                     Ip = casinoTicketBetDetail.Ip,
 
@@ -113,7 +113,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var queryTicketCompleted = casinoTicketBetDetailRepository.FindQueryBy(c => betCompleted.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
 
-            var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == model.PlayerId && c.CreatedAt >= model.FromDate && c.CreatedAt <= model.ToDate).Include(c => c.CasinoTicket).ThenInclude(c=>c.Player).OrderByDescending(c => c.Id).ToListAsync();
+            var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == model.PlayerId && !c.IsCancel && c.CreatedAt >= model.FromDate && c.CreatedAt <= model.ToDate).Include(c => c.CasinoTicket).ThenInclude(c=>c.Player).OrderByDescending(c => c.Id).ToListAsync();
 
             var betEnums = casinoTicketBetDetails.Select(c => c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
@@ -130,7 +130,7 @@ namespace Lottery.Core.Services.Partners.CA
                     DateCreated = details.Min(c => c.CreatedAt),
                     TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
                     BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
-                    BetAmount = details.Select(c => c.BetAmount).Sum(),
+                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoTransferType.Settle && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
                     WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
                     Ip = casinoTicketBetDetail.Ip,
 
@@ -179,6 +179,8 @@ namespace Lottery.Core.Services.Partners.CA
                 AppTypeName = FindStaticFieldName(typeof(PartnerHelper.CasinoAppType), (int)item.AppType),
                 GameRoundStartTime = item.GameRoundStartTime,
                 GameRoundEndTime = item.GameRoundEndTime,
+                Type = item.CasinoTicket?.Type ?? 0,
+                TypeName = FindStaticFieldName(typeof(PartnerHelper.CasinoTransferType), item.CasinoTicket?.Type ?? 0),
                 Ip = item.Ip
             };
         }

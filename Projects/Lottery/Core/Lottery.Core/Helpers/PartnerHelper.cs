@@ -74,23 +74,23 @@ namespace Lottery.Core.Helpers
         public static class CasinoBetStatus
         {
             public static int Betting = 100;
-            public static int BetFailed = 101;
-            public static int NotSettled = 110;
+            public static int Bet_Failed = 101;
+            public static int Not_Settled = 110;
             public static int Settled = 111;
             public static int Refund = 120;
 
-            public static int[] BetRunning = new int[] { Betting, NotSettled };
-            public static int[] BetCompleted = new int[] { BetFailed, Settled, Refund };
+            public static int[] BetRunning = new int[] { Betting, Not_Settled };
+            public static int[] BetCompleted = new int[] { Bet_Failed, Settled, Refund };
         }
 
         public static class CasinoTransferType
         {
             public static int Bet = 10;
             public static int Settle = 20;
-            public static int ManualSettle = 21;
-            public static int TransferIn = 30;
-            public static int TransferOut = 31;
-            public static int EventSettle = 40;
+            public static int Manual_Settle = 21;
+            public static int Transfer_In = 30;
+            public static int Transfer_Out = 31;
+            public static int Event_Settle = 40;
         }
 
         public static class CasinoBetMethod

@@ -140,7 +140,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var lstPositionTaking = await casinoAgentPositionTakingRepository.FindQueryBy(c => lstAgentId.Contains(c.AgentId)).ToListAsync();
 
-            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount - (model.Type == CasinoTransferType.ManualSettle ? c.BetAmount : 0m) ?? 0m).Sum();
+            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount - (model.Type == CasinoTransferType.Manual_Settle ? c.BetAmount : 0m) ?? 0m).Sum();
 
             var agentPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.AgentId)?.PositionTaking ?? 0m;
             var masterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.MasterId)?.PositionTaking ?? 0m;
@@ -318,7 +318,7 @@ namespace Lottery.Core.Services.Partners.CA
             var betRunnings = CasinoBetStatus.BetRunning.ToList();
             var betCompleted = CasinoBetStatus.BetCompleted.ToList();
 
-            var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).Include(c => c.CasinoTicket).OrderByDescending(c => c.Id).ToListAsync();
+            var casinoTicketBetDetails = await casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId && !c.IsCancel).Include(c => c.CasinoTicket).OrderByDescending(c => c.Id).ToListAsync();
 
             var betEnums = casinoTicketBetDetails.Select(c => c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
@@ -335,7 +335,7 @@ namespace Lottery.Core.Services.Partners.CA
                     DateCreated = details.Min(c => c.CreatedAt),
                     TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
                     BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
-                    BetAmount = details.Select(c => c.BetAmount).Sum(),
+                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoTransferType.Settle && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
                     WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
                     Ip = casinoTicketBetDetail.Ip,
 
@@ -361,7 +361,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var query = casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == ClientContext.Player.PlayerId).Include(c => c.CasinoTicket);
             var queryTicketRefund = query.Where(c => CasinoBetStatus.Refund == c.Status).Select(c => c.GameRoundId).Distinct();
-            var casinoTicketBetDetails = await query.Where(c => queryTicketRefund.Contains(c.GameRoundId)).OrderByDescending(c => c.Id).ToListAsync();
+            var casinoTicketBetDetails = await query.Where(c => queryTicketRefund.Contains(c.GameRoundId) && !c.IsCancel).OrderByDescending(c => c.Id).ToListAsync();
 
             var betEnums = casinoTicketBetDetails.Select(c => c.GameRoundId).Distinct().ToList();
             var result = new List<CasinoBetTableTicketModel>();
@@ -378,7 +378,7 @@ namespace Lottery.Core.Services.Partners.CA
                     DateCreated = details.Min(c => c.CreatedAt),
                     TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
                     BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
-                    BetAmount = details.Select(c => c.BetAmount).Sum(),
+                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoTransferType.Settle && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
                     WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
                     Ip = casinoTicketBetDetail.Ip,
 
@@ -425,6 +425,8 @@ namespace Lottery.Core.Services.Partners.CA
                 AppTypeName = FindStaticFieldName(typeof(PartnerHelper.CasinoAppType), (int)item.AppType),
                 GameRoundStartTime = item.GameRoundStartTime,
                 GameRoundEndTime = item.GameRoundEndTime,
+                Type = item.CasinoTicket?.Type ?? 0,
+                TypeName = FindStaticFieldName(typeof(PartnerHelper.CasinoTransferType), item.CasinoTicket?.Type ?? 0),
                 Ip = item.Ip
             };
         }
