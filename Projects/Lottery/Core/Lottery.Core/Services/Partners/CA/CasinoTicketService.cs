@@ -335,7 +335,7 @@ namespace Lottery.Core.Services.Partners.CA
                     DateCreated = details.Min(c => c.CreatedAt),
                     TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
                     BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
-                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoTransferType.Settle && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
+                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoBetStatus.Settled && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
                     WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
                     Ip = casinoTicketBetDetail.Ip,
 
@@ -378,7 +378,7 @@ namespace Lottery.Core.Services.Partners.CA
                     DateCreated = details.Min(c => c.CreatedAt),
                     TableName = casinoTicketBetDetailModels.FirstOrDefault().GameTypeName + " " + casinoTicketBetDetail.TableName,
                     BetTypeName = casinoTicketBetDetailModels.FirstOrDefault().BetTypeName,
-                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoTransferType.Settle && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
+                    BetAmount = casinoTicketBetDetailModels.Select(c => (c.Status == CasinoBetStatus.Settled && c.Type != CasinoTransferType.Manual_Settle) ? 0m : c.BetAmount).Sum(),
                     WinlossAmountTotal = details.Select(c => c.CasinoTicket.WinlossAmountTotal).Sum(),
                     Ip = casinoTicketBetDetail.Ip,
 
