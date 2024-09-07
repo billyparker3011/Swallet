@@ -26,5 +26,13 @@ namespace Lottery.Agent.AgentService.Controllers
             await _casinoBookieSettingService.CreateCasinoBookieSettingValueAsync(model);
             return Ok();
         }
+
+        [HttpPut("{id:int}/bookie-setting")]
+        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] AllbetBookieSettingValue model)
+        {
+            if (id < 1) return NotFound();
+            await _casinoBookieSettingService.UpdateCasinoBookieSettingValueAsync(id, model);
+            return Ok();
+        }
     }
 }

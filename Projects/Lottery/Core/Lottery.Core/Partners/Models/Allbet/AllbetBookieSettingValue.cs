@@ -9,5 +9,11 @@
         public string AllbetApiKey { get; set; }
         public string PartnerApiKey { get; set; }
         public string Suffix { get; set; }
+        public bool AllowScanByRange { get; set; }
+        public DateTime? FromScanByRange { get; set; }
+        public DateTime? ToScanByRange { get; set; }
+        public bool IsMaintainance { get; set; }
+        public DateTime? FromMaintainance { get; set; }
+        public DateTime? ToMaintainance { get; set; }
     }
 }
