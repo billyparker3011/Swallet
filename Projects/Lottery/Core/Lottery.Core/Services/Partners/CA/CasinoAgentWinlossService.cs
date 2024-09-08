@@ -77,15 +77,13 @@ namespace Lottery.Core.Services.Partners.CA
                                    {
                                        x.PlayerId,
                                        x.Username,
-                                       x.GameRoundId,
                                    })
                                    .Select(x => new CasinoAgentWinlossModel
                                    {
-                                       PlayerId = x.Key.PlayerId,
+                                       AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
-                                       AgentId = targetAgentId,
                                        RoleId = Role.Player.ToInt(),
-                                       BetCount = x.LongCount(),
+                                       BetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        Payout = x.Sum(s => (s.Status == CasinoBetStatus.Settled && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId <= Role.Agent.ToInt()
@@ -157,15 +155,14 @@ namespace Lottery.Core.Services.Partners.CA
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.GameRoundId
+                                       x.RoleId
                                    })
                                    .Select(x => new CasinoAgentWinlossModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(),
+                                       BetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        Payout = x.Sum(s => (s.Status == CasinoBetStatus.Settled && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
@@ -244,14 +241,13 @@ namespace Lottery.Core.Services.Partners.CA
                                        x.AgentId,
                                        x.Username,
                                        x.RoleId,
-                                       x.GameRoundId,
                                    })
                                    .Select(x => new CasinoAgentWinlossModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(),
+                                       BetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        Payout = x.Sum(s => (s.Status == CasinoBetStatus.Settled && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()
@@ -335,15 +331,14 @@ namespace Lottery.Core.Services.Partners.CA
                                    {
                                        x.AgentId,
                                        x.Username,
-                                       x.RoleId,
-                                       x.GameRoundId
+                                       x.RoleId
                                    })
                                    .Select(x => new CasinoAgentWinlossModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        RoleId = x.Key.RoleId,
-                                       BetCount = x.LongCount(),
+                                       BetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        Payout = x.Sum(s => (s.Status == CasinoBetStatus.Settled && s.Type != CasinoTransferType.Manual_Settle) ? 0m : s.BetAmount),
                                        WinLose = x.Sum(s => s.WinOrLossAmount ?? 0m),
                                        AgentWinlose = loginAgent.RoleId < Role.Agent.ToInt()

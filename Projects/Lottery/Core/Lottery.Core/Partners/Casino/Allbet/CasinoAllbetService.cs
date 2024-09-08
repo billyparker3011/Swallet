@@ -1,4 +1,5 @@
-﻿using HnMicro.Framework.Exceptions;
+﻿using Azure;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using HnMicro.Modules.InMemory.UnitOfWorks;
@@ -15,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
@@ -128,9 +130,11 @@ namespace Lottery.Core.Partners.Casino.Allbet
             Logger.LogInformation($"Player {casinoPartnerLoginModel.PlayerId}");
             await RemoveCacheClientUrl(casinoPartnerLoginModel.PlayerId);
 
-            var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
-            var casinoPlayerBetSettingRepository = LotteryUow.GetRepository<ICasinoPlayerBetSettingRepository>();
-            var casinoAgentBetSettingRepository = LotteryUow.GetRepository<ICasinoAgentBetSettingRepository>();
+            // Check player can play
+            var isPlay = await CheckMaxWinLose(casinoPartnerLoginModel.PlayerId);
+            if(!isPlay) return;
+
+            var casinoPlayerMappingRepository = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();           
 
             //  Check player is synced
             var casinoPlayerMapping = await casinoPlayerMappingRepository.FindQueryBy(c => c.PlayerId == casinoPartnerLoginModel.PlayerId).FirstOrDefaultAsync();
@@ -305,6 +309,51 @@ namespace Lottery.Core.Partners.Casino.Allbet
                 Logger.LogError($"SendRequest failed with errors {e.Message}.");
                 return null;
             }
+        }
+
+        private async Task<bool> CheckMaxWinLose(long playerId)
+        {
+            if(playerId < 0) return false;
+
+
+            var casinoPlayerBetSettingRepository = LotteryUow.GetRepository<ICasinoPlayerBetSettingRepository>();
+            var casinoAgentBetSettingRepository = LotteryUow.GetRepository<ICasinoAgentBetSettingRepository>();
+            var casinoTicketBetDetailRepository = LotteryUow.GetRepository<ICasinoTicketBetDetailRepository>();
+            var playerRepository = LotteryUow.GetRepository<IPlayerRepository>();
+            var dateTime = DateTime.UtcNow.AddHours(8);
+
+            var playerBetSetting = await casinoPlayerBetSettingRepository.FindQueryBy(c => c.PlayerId == playerId).FirstOrDefaultAsync();
+
+            if (playerBetSetting != null && (playerBetSetting.MaxWin.HasValue || playerBetSetting.MaxLose.HasValue))
+            {                
+                var winlossAmount = casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == playerId && !c.IsCancel && c.CreatedAt >= new DateTime(dateTime.Day, dateTime.Month, dateTime.Year) && c.CreatedAt < new DateTime(dateTime.Day, dateTime.Month, dateTime.Year).AddDays(1)).Select(c => c.WinOrLossAmount ?? 0m).Sum();
+
+                if (winlossAmount >= playerBetSetting.MaxWin.Value || winlossAmount <= -1 * playerBetSetting.MaxLose.Value)
+                {
+                    await UpdateCacheClientUrl(playerId, "Tài khoản bị khống tiền");
+                    return false;
+                }
+            }
+            else
+            {
+                var player = await playerRepository.FindQueryBy(c => c.PlayerId == playerId).FirstOrDefaultAsync();
+                if (player != null)
+                {
+                    var casinoAgentBetSetting = await casinoAgentBetSettingRepository.FindQueryBy(c => c.AgentId == player.AgentId).FirstOrDefaultAsync();
+                    if (casinoAgentBetSetting != null && (casinoAgentBetSetting.MaxWin.HasValue || casinoAgentBetSetting.MaxLose.HasValue))
+                    {
+                        var winlossAmount = casinoTicketBetDetailRepository.FindQueryBy(c => c.CasinoTicket.PlayerId == playerId && !c.IsCancel && c.CreatedAt >= new DateTime(dateTime.Day, dateTime.Month, dateTime.Year) && c.CreatedAt < new DateTime(dateTime.Day, dateTime.Month, dateTime.Year).AddDays(1)).Select(c => c.WinOrLossAmount ?? 0m).Sum();
+
+                        if (winlossAmount >= casinoAgentBetSetting.MaxWin.Value || winlossAmount <= -1 * casinoAgentBetSetting.MaxLose.Value)
+                        {
+                            await UpdateCacheClientUrl(playerId, "Tài khoản bị khống tiền");
+                            return false;
+                        }
+                    }
+                }
+
+            }
+            return true;
         }
 
         public override async Task<Dictionary<string, object>> ScanTickets(Dictionary<string, object> data)

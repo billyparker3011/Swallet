@@ -75,7 +75,7 @@ namespace Lottery.Core.Services.Partners.CA
         {
 
             var playerIds = await playerRepository.FindQueryBy(x => x.AgentId == targetAgentId).Select(x => x.PlayerId).ToListAsync();
-            var query = casinoTicketBetDetailRepository.FindQueryBy(c => playerIds.Contains(c.CasinoTicket.PlayerId)).Include(c => c.CasinoTicket).ThenInclude(c => c.Player); 
+            var query = casinoTicketBetDetailRepository.FindQueryBy(c => playerIds.Contains(c.CasinoTicket.PlayerId) && !c.IsCancel).Include(c => c.CasinoTicket).ThenInclude(c => c.Player); 
             var queryTicketCompleted = query.Where(c => PartnerHelper.CasinoBetStatus.BetCompleted.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoTicketBetDetail = query.Where(c => PartnerHelper.CasinoBetStatus.BetRunning.Contains(c.Status) && !queryTicketCompleted.Contains(c.GameRoundId));
 
@@ -89,34 +89,33 @@ namespace Lottery.Core.Services.Partners.CA
                                    .GroupBy(x => new
                                    {
                                        x.PlayerId,
-                                       x.Username,
-                                       x.GameRoundId
+                                       x.Username
                                    })
                                    .Select(x => new CasinoAgentOutstandingModel
                                    {
                                        AgentId = x.Key.PlayerId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
-                                       TotalBetCount = x.LongCount(),
+                                       TotalBetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        TotalPayout = x.Sum(s => s.Payout)
                                    }).AsQueryable();
 
             if (model.SortType == SortType.Descending)
             {
-                return casinoAgentOutsQuery.OrderByDescending(GetSortCockFightAgentOutsProperty(model)).ToList();
+                casinoAgentOutsQuery.OrderByDescending(GetSortCockFightAgentOutsProperty(model));
             }
             else
             {
-                return casinoAgentOutsQuery.OrderBy(GetSortCockFightAgentOutsProperty(model)).ToList();
+                casinoAgentOutsQuery.OrderBy(GetSortCockFightAgentOutsProperty(model));
             }
 
-            return casinoAgentOutsQuery.ToList();
+            return await casinoAgentOutsQuery.ToListAsync();
         }
 
         private async Task<List<CasinoAgentOutstandingModel>> GetCasinoAgentOutstandingsOfMaster(IAgentRepository agentRepository, ICasinoTicketRepository casinoTicketRepository, ICasinoTicketBetDetailRepository casinoTicketBetDetailRepository, long targetAgentId, int targetRoleId, GetCasinoAgentOutstandingModel model)
         {
             var agentIds = await agentRepository.FindQueryBy(x => x.MasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
-            var query = casinoTicketBetDetailRepository.FindQueryBy(c => agentIds.Contains(c.CasinoTicket.AgentId)).Include(c => c.CasinoTicket);             
+            var query = casinoTicketBetDetailRepository.FindQueryBy(c => agentIds.Contains(c.CasinoTicket.AgentId) && !c.IsCancel).Include(c => c.CasinoTicket);             
             var queryTicketCompleted = query.Where(c => PartnerHelper.CasinoBetStatus.BetCompleted.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoTicketBetDetail = query.Where(c => PartnerHelper.CasinoBetStatus.BetRunning.Contains(c.Status) && !queryTicketCompleted.Contains(c.GameRoundId));
 
@@ -131,15 +130,14 @@ namespace Lottery.Core.Services.Partners.CA
                                    .GroupBy(x => new
                                    {
                                        x.AgentId,
-                                       x.Username,
-                                       x.GameRoundId
+                                       x.Username
                                    })
                                    .Select(x => new CasinoAgentOutstandingModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
-                                       TotalBetCount = x.LongCount(),
+                                       TotalBetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        TotalPayout = x.Sum(s => s.Payout)
                                    })
                                    .AsQueryable();
@@ -159,7 +157,7 @@ namespace Lottery.Core.Services.Partners.CA
         private async Task<List<CasinoAgentOutstandingModel>> GetCasinoAgentOutstandingsOfSupermaster(IAgentRepository agentRepository, ICasinoTicketRepository casinoTicketRepository, ICasinoTicketBetDetailRepository casinoTicketBetDetailRepository, long targetAgentId, int targetRoleId, GetCasinoAgentOutstandingModel model)
         {
             var masterIds = await agentRepository.FindQueryBy(x => x.SupermasterId == targetAgentId && x.RoleId == targetRoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
-            var query = casinoTicketBetDetailRepository.FindQueryBy(c => masterIds.Contains(c.CasinoTicket.AgentId)).Include(c => c.CasinoTicket);
+            var query = casinoTicketBetDetailRepository.FindQueryBy(c => masterIds.Contains(c.CasinoTicket.AgentId) && !c.IsCancel).Include(c => c.CasinoTicket);
             var queryTicketCompleted = query.Where(c => PartnerHelper.CasinoBetStatus.BetCompleted.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoTicketBetDetail = query.Where(c => PartnerHelper.CasinoBetStatus.BetRunning.Contains(c.Status) && !queryTicketCompleted.Contains(c.GameRoundId));
 
@@ -174,15 +172,14 @@ namespace Lottery.Core.Services.Partners.CA
                                    .GroupBy(x => new
                                    {
                                        x.AgentId,
-                                       x.Username,
-                                       x.GameRoundId
+                                       x.Username
                                    })
                                    .Select(x => new CasinoAgentOutstandingModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
-                                       TotalBetCount = x.LongCount(),
+                                       TotalBetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        TotalPayout = x.Sum(s => s.Payout)
                                    })
                                    .AsQueryable();
@@ -202,7 +199,7 @@ namespace Lottery.Core.Services.Partners.CA
         private async Task<List<CasinoAgentOutstandingModel>> GetCasinoAgentOutstandingsOfCompany(IAgentRepository agentRepository, ICasinoTicketRepository casinoTicketRepository, ICasinoTicketBetDetailRepository casinoTicketBetDetailRepository, long targetAgentId, int targetRoleId, GetCasinoAgentOutstandingModel model)
         {
             var supermasterIds = await agentRepository.FindQueryBy(x => x.RoleId == targetRoleId + 1 && x.ParentId == 0L).Select(x => x.AgentId).ToListAsync();
-            var query = casinoTicketBetDetailRepository.FindQueryBy(c => supermasterIds.Contains(c.CasinoTicket.AgentId)).Include(c => c.CasinoTicket);
+            var query = casinoTicketBetDetailRepository.FindQueryBy(c => supermasterIds.Contains(c.CasinoTicket.AgentId) && !c.IsCancel).Include(c => c.CasinoTicket);
             var queryTicketCompleted = query.Where(c => PartnerHelper.CasinoBetStatus.BetCompleted.Contains(c.Status)).Select(c => c.GameRoundId).Distinct();
             var casinoTicketBetDetail = query.Where(c => PartnerHelper.CasinoBetStatus.BetRunning.Contains(c.Status) && !queryTicketCompleted.Contains(c.GameRoundId));
 
@@ -217,15 +214,14 @@ namespace Lottery.Core.Services.Partners.CA
                                    .GroupBy(x => new
                                    {
                                        x.AgentId,
-                                       x.Username,
-                                       x.GameRoundId
+                                       x.Username
                                    })
                                    .Select(x => new CasinoAgentOutstandingModel
                                    {
                                        AgentId = x.Key.AgentId,
                                        Username = x.Key.Username,
                                        AgentRole = Role.Player,
-                                       TotalBetCount = x.LongCount(),
+                                       TotalBetCount = x.Select(c => c.GameRoundId).Distinct().LongCount(),
                                        TotalPayout = x.Sum(s => s.Payout)
                                    })
                                    .AsQueryable();
