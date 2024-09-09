@@ -5,7 +5,7 @@ namespace Lottery.Core.Services.Partners.CA
 {
     public interface ICasinoGameTypeService : IScopedDependency
     {
-        Task<IEnumerable<CasinoGameType>> GetGameTypesAsync(string caterory);
+        Task<IEnumerable<CasinoGameType>> GetGameTypesAsync(string category);
 
         Task<IEnumerable<CasinoGameType>> GetAllGameTypesAsync();
     }

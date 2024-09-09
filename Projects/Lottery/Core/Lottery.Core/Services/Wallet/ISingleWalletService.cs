@@ -6,5 +6,6 @@ namespace Lottery.Core.Services.Wallet
     {
         Task<decimal> GetBalance(long playerId, decimal rate = 1m);
         Task<decimal> GetBalanceForGa28(long playerId);
+        Task<decimal> GetBalanceForCasinoAllBet(long playerId);
     }
 }

@@ -55,11 +55,8 @@ namespace Lottery.Core.Services.Partners.CA
             {
                 Name = model.Name,
                 Code = model.Code,
-                RegionId = model.RegionId,
                 CategoryId = model.CategoryId,
                 IsLive = model.IsLive,
-                OrderInCategory = model.OrderInCategory,
-                Award = model.Award,
                 Enabled = model.Enabled,
             };
 
@@ -76,11 +73,8 @@ namespace Lottery.Core.Services.Partners.CA
 
             betKind.Name = model.Name;
             betKind.Code = model.Code;
-            betKind.RegionId = model.RegionId;
             betKind.CategoryId = model.CategoryId;
             betKind.IsLive = model.IsLive;
-            betKind.OrderInCategory = model.OrderInCategory;
-            betKind.Award = model.Award;
             betKind.Enabled = model.Enabled;
 
             cABetKindRepository.Update(betKind);

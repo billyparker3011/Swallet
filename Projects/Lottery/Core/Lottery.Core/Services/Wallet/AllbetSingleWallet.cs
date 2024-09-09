@@ -27,14 +27,14 @@ namespace Lottery.Core.Services.Wallet
             var ticketBetDetails = new List<CasinoTicketBetDetail>();
             tickets.ForEach(c => ticketBetDetails.AddRange(c.CasinoTicketBetDetails?.ToList())); 
 
-            return (GetOuts(ticketBetDetails) * 1000 , tickets.Select(x => x.WinlossAmountTotal * 1000).Sum(x => x));
+            return (GetOuts(ticketBetDetails) * 1000 , tickets.Select(x => x.Amount * 1000).Sum(x => x) - GetOuts(ticketBetDetails) * 1000);
         }
 
         private decimal GetOuts(List<CasinoTicketBetDetail> items)
         {
             if (items == null || !items.Any()) return 0m;
-            var betted = items.Where(c => CasinoBetStatus.BetCompleted.Contains(c.Status)).Select(x => x.BetNum)?.Distinct()?.ToList();
-            return items.Where(c => !betted.Contains(c.BetNum)).Select(c => -1 * c.BetAmount).Sum();
+            var betted = items.Where(c => CasinoBetStatus.BetCompleted.Contains(c.Status)).Select(x => x.GameRoundId)?.Distinct()?.ToList();
+            return items.Where(c => !betted.Contains(c.GameRoundId)).Select(c => -1 * (c.BetAmount + c.Deposit)).Sum();
         }
     }
 }

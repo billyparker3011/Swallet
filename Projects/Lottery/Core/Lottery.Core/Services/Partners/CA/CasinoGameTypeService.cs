@@ -30,10 +30,10 @@ namespace Lottery.Core.Services.Partners.CA
             _redisCacheService = redisCacheService;
         }
 
-        public async Task<IEnumerable<CasinoGameType>> GetGameTypesAsync(string caterory)
+        public async Task<IEnumerable<CasinoGameType>> GetGameTypesAsync(string category)
         {
             var cAGameTypeService = LotteryUow.GetRepository<ICasinoGameTypeRepository>();
-            return await cAGameTypeService.FindByAsync(c => c.Caterory == caterory);
+            return await cAGameTypeService.FindByAsync(c => c.Category == category);
         }
 
         public async Task<IEnumerable<CasinoGameType>> GetAllGameTypesAsync()

@@ -20,11 +20,11 @@ namespace Lottery.Core.Services.Partners.CA
 
         Task<IEnumerable<CasinoTicket>> GetAllAsync();
 
-        Task<decimal> GetBalanceAsync(string player, decimal balance);
+        Task<decimal> GetBalanceAsync(string player, decimal balance = 0);
 
-        Task<(decimal, int)> ProcessTicketAsync(CasinoTicketModel model, decimal balance);
+        Task<(decimal, int)> ProcessTicketAsync(CasinoTicketModel model, decimal balance = 0);
 
-        Task<(decimal, int)> ProcessCancelTicketAsync(CasinoCancelTicketModel model, decimal balance);
+        Task<(decimal, int)> ProcessCancelTicketAsync(CasinoCancelTicketModel model, decimal balance = 0);
 
         Task<int> CreateCasinoTicketAsync(CasinoTicketModel model);
 

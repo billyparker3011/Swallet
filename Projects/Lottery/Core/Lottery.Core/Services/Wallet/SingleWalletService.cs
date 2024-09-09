@@ -45,5 +45,10 @@ namespace Lottery.Core.Services.Wallet
         {
             return await GetBalance(playerId, 1000m);
         }
+
+        public async Task<decimal> GetBalanceForCasinoAllBet(long playerId)
+        {
+            return await GetBalance(playerId, 1000m);
+        }
     }
 }

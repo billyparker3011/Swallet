@@ -51,13 +51,13 @@ namespace Lottery.Player.PlayerService.Controllers
             return Ok(result);
         }
 
-        [HttpGet("game-types/{caterory}")]
+        [HttpGet("game-types/{category}")]
         [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
-        public async Task<IActionResult> GetGameTypes([FromRoute] string caterory)
+        public async Task<IActionResult> GetGameTypes([FromRoute] string category)
         {
 
-            if (string.IsNullOrWhiteSpace(caterory)) return NotFound();
-            return Ok(OkResponse.Create(await _casinoGameTypeService.GetGameTypesAsync(caterory)));
+            if (string.IsNullOrWhiteSpace(category)) return NotFound();
+            return Ok(OkResponse.Create(await _casinoGameTypeService.GetGameTypesAsync(category)));
         }
 
         [HttpGet("game-types")]
@@ -79,7 +79,7 @@ namespace Lottery.Player.PlayerService.Controllers
 
             if (playerMapping == null) return Ok(new CasinoReponseModel(CasinoReponseCode.Player_account_does_not_exist));
 
-            var balance = await _casinoTicketService.GetBalanceAsync(player, 2000);         
+            var balance = await _casinoTicketService.GetBalanceAsync(player, 0);         
             return Ok(new CasinoBalanceResponseModel(PartnerHelper.CasinoReponseCode.Success, null, balance, 1));
         }
 
@@ -97,7 +97,7 @@ namespace Lottery.Player.PlayerService.Controllers
             {
                 return Ok(new CasinoReponseModel(PartnerHelper.CasinoReponseCode.Transaction_not_existed));
             }
-           (var balance, var code) = await _casinoTicketService.ProcessTicketAsync(casinoTicketModel, 2000);
+           (var balance, var code) = await _casinoTicketService.ProcessTicketAsync(casinoTicketModel, 0);
 
             if (code != CasinoReponseCode.Success) return Ok(new CasinoReponseModel(code));
 
@@ -119,7 +119,7 @@ namespace Lottery.Player.PlayerService.Controllers
                 return Ok(new CasinoReponseModel(PartnerHelper.CasinoReponseCode.Transaction_not_existed));
             }
 
-            (var balance, var code) = await _casinoTicketService.ProcessCancelTicketAsync(casinoCancelTicketModel, 2000);
+            (var balance, var code) = await _casinoTicketService.ProcessCancelTicketAsync(casinoCancelTicketModel, 0);
 
             if (code != CasinoReponseCode.Success) return Ok(new CasinoReponseModel(code));
 

@@ -11,18 +11,12 @@ namespace Lottery.Data.Entities.Partners.Casino
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int Id { get; set; }
-
         [Required, MaxLength(500)]
         public string Name { get; set; }
-
         [Required, MaxLength(10)]
         public string Code { get; set; }
-
-        public int? RegionId { get; set; }
         public int? CategoryId { get; set; }
         public bool? IsLive { get; set; }
-        public int? OrderInCategory { get; set; }
-        public decimal? Award { get; set; }
         public bool? Enabled { get; set; }
     }
 }

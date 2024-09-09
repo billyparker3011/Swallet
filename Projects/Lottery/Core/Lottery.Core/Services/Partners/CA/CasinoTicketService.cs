@@ -7,8 +7,11 @@ using Lottery.Core.Helpers;
 using Lottery.Core.Partners.Helpers;
 using Lottery.Core.Partners.Models.Allbet;
 using Lottery.Core.Repositories.Casino;
+using Lottery.Core.Services.Wallet;
 using Lottery.Core.UnitOfWorks;
+using Lottery.Data.Entities;
 using Lottery.Data.Entities.Partners.Casino;
+using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -22,6 +25,8 @@ namespace Lottery.Core.Services.Partners.CA
     {
         private readonly IRedisCacheService _redisCacheService;
         private readonly ICasinoPlayerMappingService _casinoPlayerMappingService;
+        private readonly ISingleWalletService _singleWalletService;
+        private const int _offSetTime = 8;
 
         public CasinoTicketService(
            ILogger<CasinoTicketService> logger,
@@ -31,11 +36,13 @@ namespace Lottery.Core.Services.Partners.CA
            ILotteryClientContext clientContext,
            ILotteryUow lotteryUow,
            IRedisCacheService redisCacheService,
-           ICasinoPlayerMappingService casinoPlayerMappingService)
+           ICasinoPlayerMappingService casinoPlayerMappingService,
+             ISingleWalletService singleWalletService)
            : base(logger, serviceProvider, configuration, clockService, clientContext, lotteryUow)
         {
             _redisCacheService = redisCacheService;
             _casinoPlayerMappingService = casinoPlayerMappingService;
+            _singleWalletService = singleWalletService;
         }
 
         public async Task<CasinoTicket> FindAsync(long id)
@@ -80,41 +87,59 @@ namespace Lottery.Core.Services.Partners.CA
             return repository.GetAll();
         }
 
-        public async Task<decimal> GetBalanceAsync(string player, decimal balance)
+        public async Task<decimal> GetBalanceAsync(string player, decimal balance = 0m)
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
+            var playerMappingRepos = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
-            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
+            var playerMapping = await playerMappingRepos.FindQueryBy(c=>c.BookiePlayerId == player).FirstOrDefaultAsync();
 
-            return balance + ticketAmout;
+            if (playerMapping != null)
+            {
+                balance = await _singleWalletService.GetBalanceForCasinoAllBet(playerMapping.PlayerId);
+            }
+
+            return balance;
 
         }
 
-        public async Task<(decimal, int)> ProcessTicketAsync(CasinoTicketModel model, decimal balance)
+        public async Task<(decimal, int)> ProcessTicketAsync(CasinoTicketModel model, decimal balance = 0)
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
-            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
+            var playerMappingRepos = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
 
-            if ((balance + ticketAmout + model.Amount) < 0) return (-1, CasinoReponseCode.Credit_is_not_enough);
+            var playerMapping = await playerMappingRepos.FindQueryBy(c => c.BookiePlayerId == model.Player).FirstOrDefaultAsync();
+
+            if (playerMapping == null) return (balance, CasinoReponseCode.Player_account_does_not_exist);
+
+            balance = await _singleWalletService.GetBalanceForCasinoAllBet(playerMapping.PlayerId);
+            
+            if ((balance + model.Amount) < 0) return (-1, CasinoReponseCode.Credit_is_not_enough);
 
             var code = await CreateCasinoTicketAsync(model);
 
-            if (model.Type == CasinoHelper.TypeTransfer.ManualSettle) return (balance + ticketAmout, CasinoReponseCode.Success);
+            if (model.Type == CasinoHelper.TypeTransfer.ManualSettle) return (balance , CasinoReponseCode.Success);
 
-            return (balance + ticketAmout + model.Amount, code);
+            return (balance + model.Amount, code);
 
         }
 
-        public async Task<(decimal, int)> ProcessCancelTicketAsync(CasinoCancelTicketModel model, decimal balance)
+        public async Task<(decimal, int)> ProcessCancelTicketAsync(CasinoCancelTicketModel model, decimal balance = 0)
         {
             var repository = LotteryUow.GetRepository<ICasinoTicketRepository>();
 
+            var playerMappingRepos = LotteryUow.GetRepository<ICasinoPlayerMappingRepository>();
+
+            var playerMapping = await playerMappingRepos.FindQueryBy(c => c.BookiePlayerId == model.Player).FirstOrDefaultAsync();
+
+            if (playerMapping == null) return (balance, CasinoReponseCode.Player_account_does_not_exist);
+
+            balance = await _singleWalletService.GetBalanceForCasinoAllBet(playerMapping.PlayerId);
+
             var code = await CreateCasinoCancelTicketAsync(model);
 
-            var ticketAmout = await repository.FindQueryBy(c => c.BookiePlayerId == model.Player && c.Type != CasinoHelper.TypeTransfer.ManualSettle).Select(c => c.IsCancel ? 0 : c.Amount).SumAsync();
-
-            return (balance + ticketAmout, code);
+            return (balance, code);
 
         }
 
@@ -140,7 +165,7 @@ namespace Lottery.Core.Services.Partners.CA
 
             var lstPositionTaking = await casinoAgentPositionTakingRepository.FindQueryBy(c => lstAgentId.Contains(c.AgentId)).ToListAsync();
 
-            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount - (model.Type == CasinoTransferType.Manual_Settle ? c.BetAmount : 0m) ?? 0m).Sum();
+            var winOrLoseAmountTotal = model.CasinoTicketBetDetailModels.Select(c => c.WinOrLossAmount ?? 0m - (model.Type == CasinoTransferType.Manual_Settle ? c.BetAmount : 0m)).Sum();
 
             var agentPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.AgentId)?.PositionTaking ?? 0m;
             var masterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.MasterId)?.PositionTaking ?? 0m;
