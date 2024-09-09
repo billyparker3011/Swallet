@@ -11,5 +11,7 @@
         public DateTime? FromScanByRange { get; set; }
         public DateTime? ToScanByRange { get; set; }
         public bool IsMaintainance { get; set; }
+        public DateTime? FromMaintainance { get; set; }
+        public DateTime? ToMaintainance { get; set; }
     }
 }

@@ -32,7 +32,7 @@ namespace Lottery.Core.Services.CockFight
         {
         }
 
-        public async Task<CockFightAgentTicketResult> CockFightLatestTickets(AgentTicketModel model)
+        public async Task<CockFightAgentTicketResult> GetCockFightRefundRejectTickets(AgentTicketModel model)
         {
             var cockFightTicketRepository = LotteryUow.GetRepository<ICockFightTicketRepository>();
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
@@ -62,9 +62,9 @@ namespace Lottery.Core.Services.CockFight
             }
         }
 
-        public async Task<CockFightAgentTicketResult> GetCockFightRefundRejectTickets(AgentTicketModel model)
+        public async Task<CockFightAgentTicketResult> CockFightLatestTickets(AgentTicketModel model)
         {
-            var runningState = CommonHelper.OutsTicketState();
+            var runningState = CommonHelper.OutsCockFightTicketState();
             return await InternalGetCockFightTickets(runningState, model);
         }
 

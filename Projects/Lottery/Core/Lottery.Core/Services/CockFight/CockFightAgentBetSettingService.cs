@@ -191,6 +191,13 @@ namespace Lottery.Core.Services.CockFight
             updatedChildCfAgentBetSettings.ForEach(childCfAgentItem =>
             {
                 CockFightAgentBetSetting parentItem = null;
+                if (existedCfAgentBetSetting.Agent.RoleId == Role.Company.ToInt())
+                {
+                    if (childCfAgentItem.Agent.RoleId == Role.Supermaster.ToInt()) parentItem = existedCfAgentBetSetting;
+                    else if (childCfAgentItem.Agent.RoleId == Role.Master.ToInt()) parentItem = updatedChildCfAgentBetSettings.FirstOrDefault(f => f.AgentId == childCfAgentItem.Agent.SupermasterId);
+                    else if (childCfAgentItem.Agent.RoleId == Role.Agent.ToInt()) parentItem = updatedChildCfAgentBetSettings.FirstOrDefault(f => f.AgentId == childCfAgentItem.Agent.MasterId);
+                    if (parentItem == null) return;
+                }
                 if (existedCfAgentBetSetting.Agent.RoleId == Role.Supermaster.ToInt())
                 {
                     if (childCfAgentItem.Agent.RoleId == Role.Master.ToInt()) parentItem = existedCfAgentBetSetting;

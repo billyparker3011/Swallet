@@ -183,8 +183,25 @@ namespace HnMicro.Core.Helpers
 
                 if (lastIdx == source.Count - 1)
                 {
-                    if (firstIdx == source.Count - 1) rs = "00";
-                    else rs = string.Format("{0}0", source[++firstIdx]);
+                    if (firstIdx == source.Count - 1)
+                    {
+                        for (int i = 0; i < source.Count - 1; i++)
+                        {
+                            for (int j = 0; j < source.Count - 1; j++)
+                            {
+                                lastIdx--;
+                                var degradeNumb = string.Format("{0}{1}", firstIdx, lastIdx);
+                                if (!suffix.Contains(degradeNumb)) return degradeNumb;
+                            }
+                            firstIdx--;
+                        }
+
+                        rs = "00";
+                    }
+                    else
+                    {
+                        rs = string.Format("{0}0", source[++firstIdx]);
+                    }
                 }
                 else
                 {

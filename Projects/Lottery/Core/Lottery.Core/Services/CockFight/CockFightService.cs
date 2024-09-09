@@ -333,6 +333,8 @@ namespace Lottery.Core.Services.CockFight
             setting.PartnerAccountId = model.PartnerAccountId;
             setting.PrivateKey = model.PrivateKey;
             setting.IsMaintainance = model.IsMaintainance;
+            setting.FromMaintainance = model.FromMaintainance;
+            setting.ToMaintainance = model.ToMaintainance;
 
             cockFightBookieSetting.SettingValue = JsonConvert.SerializeObject(setting);
             bookieSettingRepos.Update(cockFightBookieSetting);
@@ -363,7 +365,9 @@ namespace Lottery.Core.Services.CockFight
                 IsMaintainance = setting.IsMaintainance ?? false,
                 PartnerAccountId = setting.PartnerAccountId,
                 PrivateKey = setting.PrivateKey,
-                ToScanByRange = setting.ToScanByRange
+                ToScanByRange = setting.ToScanByRange,
+                FromMaintainance = setting.FromMaintainance,
+                ToMaintainance = setting.ToMaintainance
             };
         }
     }

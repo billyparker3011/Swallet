@@ -28,7 +28,6 @@ using Lottery.Core.Services.Audit;
 using Lottery.Core.Services.Player;
 using Lottery.Core.UnitOfWorks;
 using Lottery.Data.Entities;
-using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
