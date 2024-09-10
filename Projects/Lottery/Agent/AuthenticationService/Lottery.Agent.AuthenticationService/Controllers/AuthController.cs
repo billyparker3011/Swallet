@@ -20,7 +20,6 @@ namespace Lottery.Agent.AuthenticationService.Controllers
         [HttpPost]
         public async Task<IActionResult> Auth([FromBody] AuthRequest request)
         {
-            //  Generate token
             var token = await _authenticationService.Auth(new AuthModel { Username = request.Username, Password = request.Password });
             return Ok(token);
         }
