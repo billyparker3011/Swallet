@@ -26,9 +26,10 @@ namespace Lottery.Core.Services.CockFight
         {
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var cockfightBetKindRepos = LotteryUow.GetRepository<ICockFightBetKindRepository>();
-            var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            _ = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
             return await cockfightBetKindRepos.FindQuery().Select(x => new GetCockFightAgentBetKindModel 
             { 
+                Id = x.Id,
                 Name = x.Name,
                 Enabled = x.Enabled
             }).FirstOrDefaultAsync();
@@ -39,8 +40,8 @@ namespace Lottery.Core.Services.CockFight
         {
             var agentRepos = LotteryUow.GetRepository<IAgentRepository>();
             var cockfightBetKindRepos = LotteryUow.GetRepository<ICockFightBetKindRepository>();
-            var clientAgent = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
-            var masterCockFightBetKind = await cockfightBetKindRepos.FindQuery().FirstOrDefaultAsync() ?? throw new NotFoundException();
+            _ = await agentRepos.FindByIdAsync(ClientContext.Agent.AgentId) ?? throw new NotFoundException();
+            var masterCockFightBetKind = await cockfightBetKindRepos.FindByIdAsync(model.Id) ?? throw new NotFoundException();
 
             masterCockFightBetKind.Name = model.Name ?? masterCockFightBetKind.Name;
             masterCockFightBetKind.Enabled = model.Enabled ?? masterCockFightBetKind.Enabled;
