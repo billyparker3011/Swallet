@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HnMicro.Framework.Exceptions
+﻿namespace HnMicro.Framework.Exceptions
 {
     public class ForbiddenException : Exception
     {

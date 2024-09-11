@@ -1,7 +1,9 @@
 ﻿using HnMicro.Framework.Contexts;
 using HnMicro.Framework.Exceptions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Net.Http.Headers;
 using SWallet.Core.Configs;
+using SWallet.Core.Consts;
 using SWallet.Core.Models.Clients;
 
 namespace SWallet.Core.Contexts
@@ -96,6 +98,13 @@ namespace SWallet.Core.Contexts
                     Hash = claimHash.Value
                 };
             }
+        }
+
+        public void ValidationPrepareToken()
+        {
+            Microsoft.Extensions.Primitives.StringValues sToken;
+            if (!HttpContextAccessor.HttpContext.Request.Headers.TryGetValue(HeaderNames.Authorization, out sToken)) throw new ForbiddenException();
+            if (sToken.ToString() != OtherConsts.PrepareToken) throw new ForbiddenException();
         }
     }
 }

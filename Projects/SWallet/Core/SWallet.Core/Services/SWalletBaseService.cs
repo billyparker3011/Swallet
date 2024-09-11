@@ -16,5 +16,10 @@ namespace SWallet.Core.Services
             ClientContext = clientContext;
             SWalletUow = sWalletUow;
         }
+
+        protected void ValidationPrepareToken()
+        {
+            ClientContext.ValidationPrepareToken();
+        }
     }
 }

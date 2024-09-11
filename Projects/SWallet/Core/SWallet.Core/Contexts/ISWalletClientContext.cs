@@ -8,5 +8,7 @@ namespace SWallet.Core.Contexts
     {
         ClientOfManagerModel Manager { get; }
         ClientOfCustomerModel Customer { get; }
+
+        void ValidationPrepareToken();
     }
 }
