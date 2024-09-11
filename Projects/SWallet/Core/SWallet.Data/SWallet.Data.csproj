@@ -11,8 +11,4 @@
     <ProjectReference Include="..\SWallet.Data.Core\SWallet.Data.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repositories\Managers\" />
-  </ItemGroup>
-
 </Project>
