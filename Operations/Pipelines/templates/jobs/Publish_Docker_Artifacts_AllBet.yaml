@@ -4,8 +4,8 @@ jobs:
     name: "$(AgentPool)"
   displayName: "Publish Docker Artifact to ${{ variables.environment }} Environment"
   strategy:
-    AllBet:
-      Ticket:
+    matrix:
+      AllBet:
         WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
         application: "Casino.Tools.AllBet"
         repository: "allBet"
