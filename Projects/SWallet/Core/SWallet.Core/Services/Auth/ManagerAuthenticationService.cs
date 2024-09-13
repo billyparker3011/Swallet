@@ -66,10 +66,11 @@ namespace SWallet.Core.Services.Auth
 
             var claims = new List<Claim>
             {
-                new(ClaimConfigs.ManagerClaimConfig.ManagerId, manager.ToString()),
+                new(ClaimConfigs.ManagerClaimConfig.ManagerId, manager.ManagerId.ToString()),
                 new(ClaimConfigs.ManagerClaimConfig.ParentId, manager.ParentId.ToString()),
                 new(ClaimConfigs.Username, manager.Username),
                 new(ClaimConfigs.RoleId, manager.RoleId.ToString()),
+                new(ClaimConfigs.ManagerClaimConfig.ManagerRole, manager.ManagerRole.ToString()),
                 new(ClaimConfigs.FullName, manager.FullName ?? string.Empty),
                 //new(ClaimConfigs.NeedToChangePassword, isExpiredPassword.ToString().ToLower()),
                 //new(ClaimConfigs.NeedToChangeSecurityCode, isExpiredSecurityCode.ToString().ToLower()),

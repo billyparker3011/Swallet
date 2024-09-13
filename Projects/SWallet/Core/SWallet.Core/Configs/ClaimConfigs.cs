@@ -18,6 +18,7 @@
         {
             public const string ManagerId = "ManagerId";
             public const string ParentId = "ParentId";
+            public const string ManagerRole = "ManagerRole";
             public const string Permissions = "Permissions";
         }
 

@@ -1,6 +1,6 @@
-﻿namespace SWallet.Core.Dtos
+﻿namespace SWallet.Core.Models.Bank
 {
-    public class BankDto
+    public class BankModel
     {
         public int BankId { get; set; }
         public string BankName { get; set; }

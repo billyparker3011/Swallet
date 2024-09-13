@@ -45,9 +45,13 @@ namespace SWallet.Core.Contexts
                 if (claimRole == null || string.IsNullOrEmpty(claimRole.Value) || !int.TryParse(claimRole.Value, out int roleId))
                     throw new HnMicroException("Cannot parse Role.");
 
-                var claimPermissions = HttpContextAccessor.HttpContext.User.Claims.Where(f => f.Type == ClaimConfigs.ManagerClaimConfig.Permissions).Select(f => f.Value).ToList();
-                if (claimPermissions.Count == 0)
-                    throw new HnMicroException("Cannot parse Permissions.");
+                var claimManagerRole = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.ManagerClaimConfig.ManagerRole);
+                if (claimManagerRole == null || string.IsNullOrEmpty(claimManagerRole.Value) || !int.TryParse(claimManagerRole.Value, out int managerRole))
+                    throw new HnMicroException("Cannot parse ManagerRole.");
+
+                //var claimPermissions = HttpContextAccessor.HttpContext.User.Claims.Where(f => f.Type == ClaimConfigs.ManagerClaimConfig.Permissions).Select(f => f.Value).ToList();
+                //if (claimPermissions.Count == 0)
+                //    throw new HnMicroException("Cannot parse Permissions.");
 
                 var claimHash = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.Hash);
                 if (claimHash == null || string.IsNullOrEmpty(claimHash.Value))
@@ -61,7 +65,8 @@ namespace SWallet.Core.Contexts
                     ParentId = parentId,
                     MasterId = masterId,
                     SupermasterId = supermasterId,
-                    Permissions = claimPermissions,
+                    ManagerRole = managerRole,
+                    //Permissions = claimPermissions,
                     Hash = claimHash.Value
                 };
             }

@@ -1,6 +1,5 @@
 ﻿using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Responses;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SWallet.Core.Models;
 using SWallet.Core.Models.Bank.GetBanks;
@@ -9,7 +8,6 @@ using SWallet.ManagerService.Requests;
 
 namespace SWallet.ManagerService.Controllers
 {
-    [AllowAnonymous]
     public class BankController : HnControllerBase
     {
         private readonly IBankService _bankService;
@@ -21,7 +19,7 @@ namespace SWallet.ManagerService.Controllers
         [HttpGet]
         public async Task<IActionResult> GetBanks([FromQuery] GetBanksRequest request)
         {
-            return Ok(OkResponse.Create(await _bankService.GetBanks(new GetBanksModel 
+            return Ok(OkResponse.Create(await _bankService.GetBanks(new GetBanksModel
             {
                 SearchName = request.SearchName,
                 PageIndex = request.PageIndex,
@@ -34,7 +32,7 @@ namespace SWallet.ManagerService.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBank([FromBody] CreateBankRequest request)
         {
-            await _bankService.CreateBank(new CreateBankModel 
+            await _bankService.CreateBank(new CreateBankModel
             {
                 Name = request.Name,
                 Icon = request.Icon,
@@ -45,7 +43,7 @@ namespace SWallet.ManagerService.Controllers
         }
 
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> UpdateBank([FromRoute] int id, [FromBody] CreateBankRequest request) 
+        public async Task<IActionResult> UpdateBank([FromRoute] int id, [FromBody] CreateBankRequest request)
         {
             await _bankService.UpdateBank(id, new CreateBankModel
             {
