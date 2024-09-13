@@ -1,0 +1,5 @@
+stages:
+- stage: Publish_Artifacts
+  displayName: "Publish Artifacts"
+  jobs:
+  - template: ../jobs/Publish_Docker_Artifacts_AllBet.yaml
