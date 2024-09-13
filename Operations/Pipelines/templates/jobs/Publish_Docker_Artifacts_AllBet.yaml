@@ -7,7 +7,7 @@ jobs:
     matrix:
       Ticket:
         WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
-        application: "AllBet"
+        application: "Casino.Tools.AllBet"
         repository: "allBet"
         Dockerfile: "Projects/Lottery/Tool/Casino.Tools.AllBet/Dockerfile"
         AppSettings: "Projects/Lottery/Tool/Casino.Tools.AllBet"
