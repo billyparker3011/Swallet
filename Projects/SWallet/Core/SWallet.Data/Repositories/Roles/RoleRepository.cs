@@ -15,5 +15,10 @@ namespace SWallet.Data.Repositories.Roles
         {
             return await DbSet.Where(f => roleCode.Contains(f.RoleCode)).ToListAsync();
         }
+
+        public async Task<Role> GetRoleByRoleCode(string roleCode)
+        {
+            return await DbSet.FirstOrDefaultAsync(f => f.RoleCode == roleCode);
+        }
     }
 }

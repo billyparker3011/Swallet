@@ -1,7 +1,10 @@
-﻿using HnMicro.Framework.Services;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Services;
 using SWallet.Core.Consts;
 using SWallet.Core.Contexts;
+using SWallet.Core.Enums;
 using SWallet.Core.Services;
+using SWallet.Data.Repositories.Customers;
 using SWallet.Data.Repositories.Managers;
 using SWallet.Data.Repositories.Roles;
 using SWallet.Data.UnitOfWorks;
@@ -15,24 +18,82 @@ namespace SWallet.ManagerService.Services.Prepare
         {
         }
 
-        public async Task<CreateRootManagerResponseModel> CreateRootManager(CreateRootManagerModel createRootManagerModel)
+        public async Task<CreateRootManagerResponseModel> CreateRootManager(CreateRootManagerModel model)
         {
             ValidationPrepareToken();
+
+            var roleRepository = SWalletUow.GetRepository<IRoleRepository>();
+            var role = await roleRepository.GetRoleByRoleCode(RoleConsts.RoleAsRoot);
+            if (role == null) return null;
 
             var managerRepository = SWalletUow.GetRepository<IManagerRepository>();
             var managerSessionRepository = SWalletUow.GetRepository<IManagerSessionRepository>();
 
-            managerRepository.Add(new Data.Core.Entities.Manager
-            {
-                ManagerRole = 0,
-                Username = "",
-                Password = "",
-                FullName = "",
-                State = 0,
-                RoleId = 0
-            });
+            var anyRoot = await managerRepository.AnyRoot(ManagerRole.Root.ToInt(), role.RoleId);
+            if (anyRoot) return null;
 
-            throw new NotImplementedException();
+            var username = model.LengthOfUsername.RandomString().ToUpper();
+            var password = model.LengthOfPassword.RandomString(true);
+
+            var manager = new Data.Core.Entities.Manager
+            {
+                ManagerRole = ManagerRole.Root.ToInt(),
+                Username = username,
+                Password = password.Md5(),
+                FullName = ManagerRole.Root.ToString(),
+                State = ManagerState.Open.ToInt(),
+                Role = role,
+                CreatedAt = ClockService.GetUtcNow(),
+                CreatedBy = 0L
+            };
+
+            var managerSession = new Data.Core.Entities.ManagerSession
+            {
+                State = SessionState.Initial.ToInt()
+            };
+
+            manager.ManagerSession = managerSession;
+            managerSession.Manager = manager;
+
+            managerSessionRepository.Add(managerSession);
+            managerRepository.Add(manager);
+
+            await SWalletUow.SaveChangesAsync();
+
+            return new CreateRootManagerResponseModel
+            {
+                Username = username,
+                Password = password,
+                Fullname = manager.FullName
+            };
+        }
+
+        public async Task<bool> InitialCustomerLevels()
+        {
+            ValidationPrepareToken();
+
+            var items = Core.Helpers.EnumHelper.GetListCustomerLevelInfo();
+            if (items.Count == 0) return false;
+
+            var levelRepository = SWalletUow.GetRepository<ILevelRepository>();
+
+            var currentLevels = await levelRepository.GetLevelByIds(items.Select(f => f.Value.ToInt()).ToList());
+            if (currentLevels.Count > 0) return false;
+
+            foreach (var item in items)
+            {
+                levelRepository.Add(new Data.Core.Entities.Level
+            {
+                    LevelId = item.Value.ToInt(),
+                    LevelName = item.Code,
+                    LevelCode = item.Code,
+                    ShortDescription = item.Code,
+                    FullDescription = item.Code,
+                    CreatedAt = ClockService.GetUtcNow(),
+                    CreatedBy = 0L
+            });
+            }
+            return (await SWalletUow.SaveChangesAsync()) > 0;
         }
 
         public async Task<bool> InitialRoles()

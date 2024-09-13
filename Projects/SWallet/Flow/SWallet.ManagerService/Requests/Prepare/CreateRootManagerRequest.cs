@@ -2,6 +2,7 @@
 {
     public class CreateRootManagerRequest
     {
-
+        public int LengthOfUsername { get; set; }
+        public int LengthOfPassword { get; set; }
     }
 }

@@ -6,6 +6,7 @@ namespace SWallet.ManagerService.Services.Prepare
     public interface IPrepareService : IScopedDependency
     {
         Task<bool> InitialRoles();
-        Task<CreateRootManagerResponseModel> CreateRootManager(CreateRootManagerModel createRootManagerModel);
+        Task<bool> InitialCustomerLevels();
+        Task<CreateRootManagerResponseModel> CreateRootManager(CreateRootManagerModel model);
     }
 }

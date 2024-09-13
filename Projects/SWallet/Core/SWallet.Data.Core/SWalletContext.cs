@@ -16,5 +16,7 @@ namespace SWallet.Data.Core
         public DbSet<Feature> Features { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<Manager> Managers { get; set; }
+        public DbSet<ManagerSession> ManagerSessions { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using SWallet.Core.Consts;
 using SWallet.ManagerService.Requests.Prepare;
 
 namespace SWallet.ManagerService.Validations.Prepare
@@ -7,9 +8,15 @@ namespace SWallet.ManagerService.Validations.Prepare
     {
         public CreateRootManagerRequestValidator()
         {
-            //RuleFor(f => f.Token)
-            //    .NotEmpty()
-            //    .WithMessage(CommonMessageConsts.PrepareTokenIsRequired);
+            RuleFor(f => f.LengthOfUsername)
+                .GreaterThanOrEqualTo(OtherConsts.MinLengthOfUsername)
+                .WithMessage(CommonMessageConsts.LengthOfUserNameAtLeast)
+                .LessThanOrEqualTo(OtherConsts.MaxLengthOfUsername)
+                .WithMessage(CommonMessageConsts.LengthOfUserNameExceed);
+
+            RuleFor(f => f.LengthOfPassword)
+                .GreaterThanOrEqualTo(OtherConsts.MinLengthOfPassword)
+                .WithMessage(CommonMessageConsts.LengthOfPasswordAtLeast);
         }
     }
 }

@@ -6,6 +6,7 @@ namespace SWallet.Data.Repositories.Managers
 {
     public interface IManagerRepository : IEntityFrameworkCoreRepository<long, Manager, SWalletContext>
     {
+        Task<bool> AnyRoot(int managerRole, int roleId);
         Task<Manager> FindByUsername(string username);
         Task<Manager> FindByUsernameAndPassword(string username, string password);
     }
