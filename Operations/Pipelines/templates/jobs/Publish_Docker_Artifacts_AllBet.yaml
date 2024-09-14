@@ -1,0 +1,17 @@
+jobs:
+- job: Publish_Docker_Artifacts
+  pool:
+    name: "$(AgentPool)"
+  displayName: "Publish Docker Artifact to ${{ variables.environment }} Environment"
+  strategy:
+    matrix:
+      AllBet:
+        WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
+        application: "Casino.Tools.AllBet"
+        repository: "allBet"
+        Dockerfile: "Projects/Lottery/Tools/Casino.Tools.AllBet/Dockerfile"
+        AppSettings: "Projects/Lottery/Tools/Casino.Tools.AllBet"
+  steps:
+  - template: ../steps/Replace_AppSettings_Files.yaml
+  - template: ../steps/Publish_Docker_Artifacts.yaml
+  - template: ../steps/Publish_Image_To_App_Service.yaml
