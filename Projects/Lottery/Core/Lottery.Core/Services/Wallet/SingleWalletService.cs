@@ -22,6 +22,7 @@ namespace Lottery.Core.Services.Wallet
             _bookies.Add(new M8XsSingleWallet(ClockService, LotteryUow));
             _bookies.Add(new Ga28SingleWallet(ClockService, LotteryUow));
             _bookies.Add(new AllbetSingleWallet(ClockService, LotteryUow));
+           // _bookies.Add(new BtiSingleWallet(ClockService, LotteryUow));
         }
 
         public async Task<decimal> GetBalance(long playerId, decimal rate = 1m)
@@ -47,6 +48,11 @@ namespace Lottery.Core.Services.Wallet
         }
 
         public async Task<decimal> GetBalanceForCasinoAllBet(long playerId)
+        {
+            return await GetBalance(playerId, 1000m);
+        }
+
+        public async Task<decimal> GetBalanceForBti(long playerId)
         {
             return await GetBalance(playerId, 1000m);
         }
