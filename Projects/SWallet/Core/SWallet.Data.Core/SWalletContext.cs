@@ -18,5 +18,6 @@ namespace SWallet.Data.Core
         public DbSet<Customer> Customers { get; set; }
         public DbSet<Manager> Managers { get; set; }
         public DbSet<ManagerSession> ManagerSessions { get; set; }
+        public DbSet<Discount> Discounts { get; set; }
     }
 }

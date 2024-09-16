@@ -7,6 +7,7 @@ namespace SWallet.ManagerService.Services.Prepare
     {
         Task<bool> InitialRoles();
         Task<bool> InitialCustomerLevels();
+        Task<bool> InitialFeaturesAndPermissions();
         Task<CreateRootManagerResponseModel> CreateRootManager(CreateRootManagerModel model);
     }
 }

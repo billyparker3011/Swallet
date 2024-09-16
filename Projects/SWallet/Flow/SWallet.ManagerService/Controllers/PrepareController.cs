@@ -39,5 +39,11 @@ namespace SWallet.ManagerService.Controllers
                 LengthOfPassword = request.LengthOfPassword
             })));
         }
+
+        [HttpGet("100/initial-features-permissions")]
+        public async Task<IActionResult> InitialFeaturesAndPermissions()
+        {
+            return Ok(OkResponse.Create(await _prepareService.InitialFeaturesAndPermissions()));
+        }
     }
 }

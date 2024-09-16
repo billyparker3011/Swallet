@@ -11,6 +11,10 @@ namespace SWallet.Data.Core.Entities
         public int FeatureId { get; set; }
 
         [Required]
+        [MaxLength(500)]
+        public string FeatureCode { get; set; }
+
+        [Required]
         [MaxLength(2000)]
         public string FeatureName { get; set; }
 

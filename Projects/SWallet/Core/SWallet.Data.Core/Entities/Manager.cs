@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,6 +7,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SWallet.Data.Core.Entities
 {
     [Table("Managers")]
+    [Index(nameof(Username), nameof(ManagerCode), IsUnique = true)]
+    [Index(nameof(SupermasterId))]
+    [Index(nameof(MasterId))]
+    [Index(nameof(RoleId))]
     public class Manager : BaseEntity
     {
         [Key]
@@ -16,6 +21,9 @@ namespace SWallet.Data.Core.Entities
 
         [Required]
         public int ManagerRole { get; set; }
+
+        [MaxLength(250)]
+        public string ManagerCode { get; set; }
 
         [Required]
         [MaxLength(300)]

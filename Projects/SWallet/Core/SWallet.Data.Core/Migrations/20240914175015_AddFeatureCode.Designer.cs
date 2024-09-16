@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SWallet.Data.Core;
 
@@ -11,9 +12,11 @@ using SWallet.Data.Core;
 namespace SWallet.Data.Core.Migrations
 {
     [DbContext(typeof(SWalletContext))]
-    partial class SWalletContextModelSnapshot : ModelSnapshot
+    [Migration("20240914175015_AddFeatureCode")]
+    partial class AddFeatureCode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -211,45 +214,6 @@ namespace SWallet.Data.Core.Migrations
                     b.ToTable("CustomerSessions");
                 });
 
-            modelBuilder.Entity("SWallet.Data.Core.Entities.Discount", b =>
-                {
-                    b.Property<int>("DiscountId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DiscountId"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DiscountName")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsStatic")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Setting")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("DiscountId");
-
-                    b.ToTable("Discounts");
-                });
-
             modelBuilder.Entity("SWallet.Data.Core.Entities.Feature", b =>
                 {
                     b.Property<int>("FeatureId")
@@ -345,10 +309,6 @@ namespace SWallet.Data.Core.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
-                    b.Property<string>("ManagerCode")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
                     b.Property<int>("ManagerRole")
                         .HasColumnType("int");
 
@@ -385,15 +345,7 @@ namespace SWallet.Data.Core.Migrations
 
                     b.HasKey("ManagerId");
 
-                    b.HasIndex("MasterId");
-
                     b.HasIndex("RoleId");
-
-                    b.HasIndex("SupermasterId");
-
-                    b.HasIndex("Username", "ManagerCode")
-                        .IsUnique()
-                        .HasFilter("[ManagerCode] IS NOT NULL");
 
                     b.ToTable("Managers");
                 });

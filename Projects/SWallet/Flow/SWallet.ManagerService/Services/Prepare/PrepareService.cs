@@ -1,10 +1,13 @@
 ﻿using HnMicro.Core.Helpers;
 using HnMicro.Framework.Services;
+using Microsoft.EntityFrameworkCore;
 using SWallet.Core.Consts;
 using SWallet.Core.Contexts;
 using SWallet.Core.Enums;
+using SWallet.Core.Helpers;
 using SWallet.Core.Services;
 using SWallet.Data.Repositories.Customers;
+using SWallet.Data.Repositories.FeaturesAndPermissions;
 using SWallet.Data.Repositories.Managers;
 using SWallet.Data.Repositories.Roles;
 using SWallet.Data.UnitOfWorks;
@@ -83,7 +86,7 @@ namespace SWallet.ManagerService.Services.Prepare
             foreach (var item in items)
             {
                 levelRepository.Add(new Data.Core.Entities.Level
-            {
+                {
                     LevelId = item.Value.ToInt(),
                     LevelName = item.Code,
                     LevelCode = item.Code,
@@ -91,8 +94,70 @@ namespace SWallet.ManagerService.Services.Prepare
                     FullDescription = item.Code,
                     CreatedAt = ClockService.GetUtcNow(),
                     CreatedBy = 0L
-            });
+                });
             }
+            return (await SWalletUow.SaveChangesAsync()) > 0;
+        }
+
+        public async Task<bool> InitialFeaturesAndPermissions()
+        {
+            ValidationPrepareToken();
+
+            var allFeatureCode = FeatureAndPermissionHelper.AllFeatures.Select(f => f.FeatureCode).ToList();
+            var allPermissionCode = FeatureAndPermissionHelper.AllFeatures.SelectMany(f => f.Permissions).Select(f => f.PermissionCode).ToList();
+
+            var featureRepository = SWalletUow.GetRepository<IFeatureRepository>();
+            var features = await featureRepository.FindQueryBy(f => allFeatureCode.Contains(f.FeatureName)).ToListAsync();
+
+            var permissionRepository = SWalletUow.GetRepository<IPermissionRepository>();
+            var permissions = await permissionRepository.FindQueryBy(f => allPermissionCode.Contains(f.PermissionCode)).ToListAsync();
+
+            foreach (var item in FeatureAndPermissionHelper.AllFeatures)
+            {
+                var feature = features.FirstOrDefault(f => f.FeatureCode == item.FeatureCode);
+                if (feature == null)
+                {
+                    feature = new Data.Core.Entities.Feature
+                    {
+                        FeatureName = item.FeatureName,
+                        FeatureCode = item.FeatureCode,
+                        CreatedAt = ClockService.GetUtcNow(),
+                        CreatedBy = 0L,
+                        Enabled = true
+                    };
+                    featureRepository.Add(feature);
+
+                    foreach (var itemPermission in item.Permissions)
+                    {
+                        permissionRepository.Add(new Data.Core.Entities.Permission
+                        {
+                            Feature = feature,
+                            CreatedAt = ClockService.GetUtcNow(),
+                            CreatedBy = 0L,
+                            PermissionCode = itemPermission.PermissionCode,
+                            PermissionName = itemPermission.PermissionName
+                        });
+                    }
+                }
+                else
+                {
+                    foreach (var itemPermission in item.Permissions)
+                    {
+                        var permission = permissions.FirstOrDefault(f => f.PermissionCode == itemPermission.PermissionCode);
+                        if (permission != null) continue;
+
+                        permissionRepository.Add(new Data.Core.Entities.Permission
+                        {
+                            Feature = feature,
+                            CreatedAt = ClockService.GetUtcNow(),
+                            CreatedBy = 0L,
+                            PermissionCode = itemPermission.PermissionCode,
+                            PermissionName = itemPermission.PermissionName
+                        });
+                    }
+                }
+            }
+
             return (await SWalletUow.SaveChangesAsync()) > 0;
         }
 
