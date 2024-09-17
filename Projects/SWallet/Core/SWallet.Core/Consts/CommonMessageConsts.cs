@@ -12,6 +12,9 @@
         #region Bank
         public const string BankNameIsRequired = "Bank Name is required.";
         public const string BankIconIsRequired = "Bank Icon is required.";
+        public const string BankIdIsRequired = "BankId is required.";
+        public const string NumberAccountIsRequired = "Number Account is required.";
+        public const string CardHolderIsRequired = "Card Holder is required.";
         #endregion
     }
 }
