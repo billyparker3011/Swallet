@@ -95,12 +95,40 @@ namespace SWallet.Core.Contexts
                 if (claimHash == null || string.IsNullOrEmpty(claimHash.Value))
                     throw new HnMicroException("Cannot parse Hash.");
 
+                var claimFirstName = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.CustomerClaimConfig.FirstName);
+                var claimLastName = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.CustomerClaimConfig.LastName);
+                var claimIsAffiliate = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.CustomerClaimConfig.IsAffiliate);
+                var isAffiliate = false;
+                if (claimIsAffiliate != null && claimIsAffiliate.Value == "true") isAffiliate = true;
+                var claimEmail = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.CustomerClaimConfig.Email);
+                var claimTelegram = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.CustomerClaimConfig.Telegram);
+
+                var claimSupermaster = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.SupermasterId);
+                if (claimSupermaster == null || string.IsNullOrEmpty(claimSupermaster.Value) || !long.TryParse(claimSupermaster.Value, out long supermasterId))
+                    supermasterId = 0L;
+
+                var claimMaster = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.MasterId);
+                if (claimMaster == null || string.IsNullOrEmpty(claimMaster.Value) || !long.TryParse(claimMaster.Value, out long masterId))
+                    masterId = 0L;
+
+                var claimAgent = HttpContextAccessor.HttpContext.User.FindFirst(ClaimConfigs.AgentId);
+                if (claimAgent == null || string.IsNullOrEmpty(claimAgent.Value) || !long.TryParse(claimAgent.Value, out long agentId))
+                    agentId = 0L;
+
                 return new ClientOfCustomerModel
                 {
                     CustomerId = customerId,
                     UserName = claimUserName.Value,
                     RoleId = roleId,
-                    Hash = claimHash.Value
+                    Hash = claimHash.Value,
+                    FirstName = claimFirstName != null ? claimFirstName.Value : string.Empty,
+                    LastName = claimLastName != null ? claimLastName.Value : string.Empty,
+                    IsAffiliate = isAffiliate,
+                    Email = claimEmail != null ? claimEmail.Value : string.Empty,
+                    Telegram = claimTelegram != null ? claimTelegram.Value : string.Empty,
+                    SupermasterId = supermasterId,
+                    MasterId = masterId,
+                    AgentId = agentId
                 };
             }
         }

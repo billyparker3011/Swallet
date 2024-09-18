@@ -13,17 +13,17 @@ namespace SWallet.Data.Repositories.Customers
 
         public async Task<Customer> FindByEmail(string email)
         {
-            return await DbSet.FirstOrDefaultAsync(f => f.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
+            return await DbSet.FirstOrDefaultAsync(f => f.Email.Equals(email));
         }
 
         public async Task<Customer> FindByUsername(string username)
         {
-            return await DbSet.FirstOrDefaultAsync(f => f.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
+            return await DbSet.FirstOrDefaultAsync(f => f.UsernameUpper.Equals(username));
         }
 
         public async Task<Customer> FindByUsernameAndPassword(string username, string password)
         {
-            return await DbSet.FirstOrDefaultAsync(f => f.Username.Equals(username, StringComparison.OrdinalIgnoreCase) && f.Password.Equals(password, StringComparison.Ordinal));
+            return await DbSet.FirstOrDefaultAsync(f => f.UsernameUpper.Equals(username) && f.Password.Equals(password));
         }
     }
 }

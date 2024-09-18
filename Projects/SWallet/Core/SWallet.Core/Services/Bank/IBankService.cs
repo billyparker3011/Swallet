@@ -1,5 +1,6 @@
 ﻿using HnMicro.Core.Scopes;
 using SWallet.Core.Models;
+using SWallet.Core.Models.Bank;
 using SWallet.Core.Models.Bank.GetBanks;
 
 namespace SWallet.Core.Services.Bank
@@ -10,5 +11,6 @@ namespace SWallet.Core.Services.Bank
         Task<GetBanksResult> GetBanks(GetBanksModel query);
         Task UpdateBank(int id, CreateBankModel model);
         Task DeleteBank(int id);
+        Task<List<BankModel>> GetBankBy(bool deposit, bool withdraw);
     }
 }

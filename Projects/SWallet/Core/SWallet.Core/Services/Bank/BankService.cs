@@ -1,9 +1,11 @@
 ﻿using HnMicro.Framework.Enums;
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SWallet.Core.Contexts;
+using SWallet.Core.Converters;
 using SWallet.Core.Models;
 using SWallet.Core.Models.Bank;
 using SWallet.Core.Models.Bank.GetBanks;
@@ -68,14 +70,7 @@ namespace SWallet.Core.Services.Bank
             var result = await bankRepos.PagingByAsync(bankQuery, query.PageIndex, query.PageSize);
             return new GetBanksResult
             {
-                Banks = result.Items.Select(x => new BankModel
-                {
-                    BankId = x.BankId,
-                    BankName = x.Name,
-                    DepositEnabled = x.DepositEnabled,
-                    Icon = x.Icon,
-                    WithdrawEnabled = x.WithdrawEnabled
-                }),
+                Banks = result.Items.Select(x => x.ToBankModel()),
                 Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
                 {
                     NoOfPages = result.Metadata.NoOfPages,
@@ -110,6 +105,15 @@ namespace SWallet.Core.Services.Bank
             bank.UpdatedBy = ClientContext.Manager.ManagerId;
 
             await SWalletUow.SaveChangesAsync();
+        }
+
+        public async Task<List<BankModel>> GetBankBy(bool deposit, bool withdraw)
+        {
+            var bankRepository = SWalletUow.GetRepository<IBankRepository>();
+            if (deposit && withdraw) return await bankRepository.FindQuery().Select(f => f.ToBankModel()).ToListAsync();
+            if (deposit) return (await bankRepository.GetDepositBanks()).Select(f => f.ToBankModel()).ToList();
+            if (withdraw) return (await bankRepository.GetWithdrawBanks()).Select(f => f.ToBankModel()).ToList();
+            return new List<BankModel>();
         }
     }
 }

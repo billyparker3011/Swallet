@@ -15,6 +15,8 @@ namespace SWallet.Data.Core.Entities
         [MaxLength(500)]
         public string DiscountName { get; set; }
 
+        public string Description { get; set; }
+
         [Required]
         public bool IsStatic { get; set; }
 
