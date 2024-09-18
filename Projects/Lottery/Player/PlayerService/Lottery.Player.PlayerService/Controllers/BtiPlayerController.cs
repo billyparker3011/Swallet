@@ -3,6 +3,7 @@ using Lottery.Core.Partners.Attribute.Bti;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Lottery.Core.Services.Partners.Bti;
+using HnMicro.Core.Helpers;
 
 namespace Lottery.Player.PlayerService.Controllers
 {    
@@ -24,14 +25,16 @@ namespace Lottery.Player.PlayerService.Controllers
         [Authorize(AuthenticationSchemes = nameof(BtiAuthorizeAttribute))]
         public async Task<IActionResult> GetToken(long playerId)
         {
-            return Ok(_btiSerivice.GenerateToken(playerId, DateTime.UtcNow.AddDays(1400)));
+            var result = _btiSerivice.GenerateToken(playerId, DateTime.UtcNow.AddDays(1400));
+            return Content(result, "text/plain");
         }
 
         [HttpGet("validatetoken")]
         [Authorize(AuthenticationSchemes = nameof(BtiAuthorizeAttribute))]
         public async Task<IActionResult> ValidateToken([FromQuery] string auth_token)
         {
-            return Ok(await _btiTicketService.ValidateToken(auth_token));
+            var result = await _btiTicketService.ValidateToken(auth_token);
+            return Content(ConvertObjectToString(result, true), "text/plain");
         }
 
         [HttpPost("reserve")]
@@ -39,8 +42,8 @@ namespace Lottery.Player.PlayerService.Controllers
         public async Task<IActionResult> Reserve(string cust_id, long reserve_id, decimal amount, string extsessionID)
         {
             var requestBody = await GetRequestBody(Request.Body);
-            var result = await _btiTicketService.Reverse(cust_id, reserve_id, amount, extsessionID, requestBody);
-            return Ok(result);
+            var result = await _btiTicketService.Reverse(cust_id, reserve_id, amount, extsessionID, requestBody);;
+            return Content(ConvertObjectToString(result), "text/plain");
         }
 
         [HttpPost("debitreserve")]
@@ -49,7 +52,7 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             var requestBody = await GetRequestBody(Request.Body);
             var result = await _btiTicketService.DebitReverse(cust_id, reserve_id, amount, req_id, purchase_id, requestBody);
-            return Ok(result);
+            return Content(ConvertObjectToString(result), "text/plain");
         }
 
         [HttpGet("cancelreserve")]
@@ -57,7 +60,7 @@ namespace Lottery.Player.PlayerService.Controllers
         public async Task<IActionResult> CancelReserve(string cust_id, long reserve_id)
         {
             var result = await _btiTicketService.CancelReverse(cust_id, reserve_id);
-            return Ok(result);
+            return Content(ConvertObjectToString(result), "text/plain");
         }
 
         [HttpGet("commitreserve")]
@@ -65,7 +68,7 @@ namespace Lottery.Player.PlayerService.Controllers
         public async Task<IActionResult> CommitReserve(string cust_id, long reserve_id, long purchase_id)
         {
             var result = await _btiTicketService.CommitReverse(cust_id, reserve_id, purchase_id);
-            return Ok(result);
+            return Content(ConvertObjectToString(result), "text/plain");
         }
 
         [HttpPost("debitcustomer")]
@@ -74,7 +77,7 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             var requestBody = await GetRequestBody(Request.Body);
             var result = await _btiTicketService.DebitCustomer(cust_id, amount, req_id, purchase_id, requestBody);
-            return Ok(result);
+            return Content(ConvertObjectToString(result), "text/plain");
         }
 
         [HttpPost("creditcustomer")]
@@ -83,7 +86,7 @@ namespace Lottery.Player.PlayerService.Controllers
         {
             var requestBody = await GetRequestBody(Request.Body);
             var result = await _btiTicketService.CreditCustomer(cust_id, amount, req_id, purchase_id, requestBody);
-            return Ok(result);
+            return Content(ConvertObjectToString(result), "text/plain");
         }
 
         [HttpGet("btisport.js")]
@@ -100,6 +103,12 @@ namespace Lottery.Player.PlayerService.Controllers
             {
                 return await reader.ReadToEndAsync();
             }
+        }
+
+        private string ConvertObjectToString<T>(T model, bool isRemoveNullValue = false, bool isReturnNull = true)
+        {
+            var properties = model.GetType().GetProperties();
+            return string.Join("\r", properties.Where(c => isRemoveNullValue ? c.GetValue(model) != null : true).Select(p => $"{p.Name}={p.GetValue(model) ?? (isReturnNull ? string.Empty : "null")}"));
         }
     }
 }
