@@ -1,6 +1,6 @@
 ﻿using SWallet.Core.Enums;
 
-namespace SWallet.Core.Models.Manager
+namespace SWallet.Core.Models
 {
     public class ManagerSessionModel
     {

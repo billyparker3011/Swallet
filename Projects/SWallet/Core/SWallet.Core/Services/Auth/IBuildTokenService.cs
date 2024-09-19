@@ -1,7 +1,7 @@
 ﻿using HnMicro.Core.Scopes;
 using HnMicro.Framework.Models;
 using SWallet.Core.Models.Customers;
-using SWallet.Core.Models.Manager;
+using SWallet.Core.Models;
 
 namespace SWallet.Core.Services.Auth
 {

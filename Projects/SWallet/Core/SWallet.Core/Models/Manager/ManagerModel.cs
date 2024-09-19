@@ -1,6 +1,6 @@
 ﻿using SWallet.Core.Enums;
 
-namespace SWallet.Core.Models.Manager
+namespace SWallet.Core.Models
 {
     public class ManagerModel
     {
@@ -14,5 +14,10 @@ namespace SWallet.Core.Models.Manager
         public long SupermasterId { get; set; }
         public long MasterId { get; set; }
         public int RoleId { get; set; }
+        public string RoleName { get; set; }
+        public string RoleCode { get; set; }
+        public string IpAddress { get; set; }
+        public string Platform { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 }

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using SWallet.Core.Configs;
 using SWallet.Core.Contexts;
 using SWallet.Core.Models.Customers;
-using SWallet.Core.Models.Manager;
+using SWallet.Core.Models;
 using SWallet.Data.UnitOfWorks;
 using System.Security.Claims;
 

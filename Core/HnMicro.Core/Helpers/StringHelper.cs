@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace HnMicro.Core.Helpers
@@ -288,6 +289,24 @@ namespace HnMicro.Core.Helpers
                 // Optional: Log or handle parsing error
                 return false;
             }
+        }
+
+        public static string ConvertStringToAscii(this string inputString)
+        {
+            if (string.IsNullOrEmpty(inputString))
+            {
+                throw new ArgumentException("Input string cannot be null or empty.");
+            }
+
+            StringBuilder asciiString = new StringBuilder();
+
+            foreach (char c in inputString)
+            {
+                int asciiValue = (int)c;
+                asciiString.Append(asciiValue.ToString() + " ");
+            }
+
+            return asciiString.ToString().Trim();
         }
     }
 }
