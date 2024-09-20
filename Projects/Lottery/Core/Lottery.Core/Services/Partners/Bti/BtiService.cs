@@ -1,9 +1,13 @@
-﻿using HnMicro.Framework.Services;
+﻿using HnMicro.Framework.Exceptions;
+using HnMicro.Framework.Services;
 using HnMicro.Module.Caching.ByRedis.Services;
 using Lottery.Core.Contexts;
 using Lottery.Core.Partners.Models.Bti;
 using Lottery.Core.Partners.Publish;
+using Lottery.Core.Repositories.Bti;
+using Lottery.Core.Repositories.Player;
 using Lottery.Core.UnitOfWorks;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -103,7 +107,51 @@ namespace Lottery.Core.Services.Partners.Bti
                
             }
             return new BtiOutTokenModel();
-        }    
+        }
+
+        public async Task<string> GenerateTokenByUsername(string username, DateTime expiryTime)
+        {
+            var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
+
+            var player = await playerRepos.FindQueryBy(c => c.Username == username).FirstOrDefaultAsync();
+
+            if (player == null) return string.Empty;
+
+            var model = new BtiTokenModel()
+            {
+                PlayerId = player.PlayerId,
+                ExpiryTime = expiryTime,
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new[]
+                {
+                new Claim("pid", model.PlayerId.ToString()),
+                new Claim("exp", model.ExpiryTime.ToString("yyyyMMddHHmmss"))
+            }),
+                Expires = model.ExpiryTime,
+                SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
+
+        public async Task DeleteUserMapping(string username)
+        {
+            var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
+            var playerMappingRepos = LotteryUow.GetRepository<IBtiPlayerMappingRepository>();
+            
+            var player = await playerRepos.FindQueryBy(c => c.Username == username).FirstOrDefaultAsync() ?? throw new NotFoundException();
+
+            var playerMapping = await playerMappingRepos.FindQueryBy(c => c.PlayerId == player.PlayerId).FirstOrDefaultAsync() ?? throw new NotFoundException();
+
+            playerMappingRepos.Delete(playerMapping);
+
+           await LotteryUow.SaveChangesAsync();
+        }
     }
 
 }

@@ -3,7 +3,6 @@ using Lottery.Core.Partners.Attribute.Bti;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Lottery.Core.Services.Partners.Bti;
-using HnMicro.Core.Helpers;
 
 namespace Lottery.Player.PlayerService.Controllers
 {    
@@ -93,6 +92,22 @@ namespace Lottery.Player.PlayerService.Controllers
         [Authorize(AuthenticationSchemes = nameof(BtiAuthorizeAttribute))]
         public async Task<IActionResult> BtiSport()
         {
+            return Ok();
+        }
+
+        [HttpGet("{username}/gettoken/v2")]
+        [Authorize(AuthenticationSchemes = nameof(BtiAuthorizeAttribute))]
+        public async Task<IActionResult> GetTokenByUsername([FromRoute]string username)
+        {
+            var result = await _btiSerivice.GenerateTokenByUsername(username, DateTime.UtcNow.AddDays(1400));
+            return Content(result, "text/plain");
+        }
+
+        [HttpDelete("player")]
+        [Authorize(AuthenticationSchemes = nameof(BtiAuthorizeAttribute))]
+        public async Task<IActionResult> DeleteUserMapping(string username)
+        {
+            await _btiSerivice.DeleteUserMapping(username);
             return Ok();
         }
 

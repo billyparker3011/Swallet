@@ -7,5 +7,7 @@ namespace Lottery.Core.Services.Partners.Bti
     {
         string GenerateToken(long playerId, DateTime expiryTime);
         BtiOutTokenModel ValidateToken(string token);
+        Task<string> GenerateTokenByUsername(string username, DateTime expiryTime);
+        Task DeleteUserMapping(string username);
     }
 }
