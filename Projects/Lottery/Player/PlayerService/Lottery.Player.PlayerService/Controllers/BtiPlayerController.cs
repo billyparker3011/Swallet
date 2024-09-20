@@ -108,7 +108,7 @@ namespace Lottery.Player.PlayerService.Controllers
         private string ConvertObjectToString<T>(T model, bool isRemoveNullValue = false, bool isReturnNull = true)
         {
             var properties = model.GetType().GetProperties();
-            return string.Join("\r", properties.Where(c => isRemoveNullValue ? c.GetValue(model) != null : true).Select(p => $"{p.Name}={p.GetValue(model) ?? (isReturnNull ? string.Empty : "null")}"));
+            return string.Join("\r\n", properties.Where(c => isRemoveNullValue ? c.GetValue(model) != null : true).Select(p => $"{p.Name}={p.GetValue(model) ?? (isReturnNull ? string.Empty : "null")}"));
         }
     }
 }

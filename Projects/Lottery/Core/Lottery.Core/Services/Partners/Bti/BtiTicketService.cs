@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using static Lottery.Core.Partners.Helpers.BtiHelper;
 
@@ -484,10 +485,22 @@ namespace Lottery.Core.Services.Partners.Bti
         {
             using (MD5 md5 = MD5.Create())
             {
-                byte[] hashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(value));
+                byte[] inputBytes = Encoding.UTF8.GetBytes(value);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
 
-                return Convert.ToBase64String(hashBytes);
+                StringBuilder sb = new StringBuilder();
+                foreach (byte b in hashBytes)
+                {
+                    sb.Append(b.ToString("X2"));
+                }
+                return sb.ToString();
             }
+        }
+
+        private bool ValidateSymbols(string value)
+        {
+            string pattern = @"^[a-zA-Z0-9_]+$";
+            return Regex.IsMatch(value, pattern);
         }
 
         private string GetValidationTokenDataModel(IEnumerable<BtiPlayerBetSetting> btiPlayerBetSettings)
