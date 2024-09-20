@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SWallet.Data.Core;
 
@@ -11,9 +12,11 @@ using SWallet.Data.Core;
 namespace SWallet.Data.Core.Migrations
 {
     [DbContext(typeof(SWalletContext))]
-    partial class SWalletContextModelSnapshot : ModelSnapshot
+    [Migration("20240919213240_ChangeCustomerPassword")]
+    partial class ChangeCustomerPassword
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -651,10 +654,6 @@ namespace SWallet.Data.Core.Migrations
                     b.Property<decimal>("OriginAmount")
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
-
-                    b.Property<string>("TransactionName")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<int>("TransactionState")
                         .HasColumnType("int");

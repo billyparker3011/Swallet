@@ -7,7 +7,6 @@ using SWallet.CustomerService.Requests.Auth;
 
 namespace SWallet.CustomerService.Controllers
 {
-    [AllowAnonymous]
     public class AuthController : HnControllerBase
     {
         private readonly ICustomerAuthenticationService _customerAuthenticationService;
@@ -17,7 +16,7 @@ namespace SWallet.CustomerService.Controllers
             _customerAuthenticationService = customerAuthenticationService;
         }
 
-        [HttpPost]
+        [HttpPost, AllowAnonymous]
         public async Task<IActionResult> Auth([FromBody] AuthRequest request)
         {
             var token = await _customerAuthenticationService.Auth(new AuthModel { Username = request.Username, Password = request.Password });

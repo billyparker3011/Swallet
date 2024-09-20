@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Controllers;
+using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
 using SWallet.Core.Services.Bank;
 
@@ -16,13 +17,13 @@ namespace SWallet.CustomerService.Controllers
         [HttpGet("deposit-banks")]
         public async Task<IActionResult> DepositBanks()
         {
-            return Ok(await _bankService.GetBankBy(true, false));
+            return Ok(OkResponse.Create(await _bankService.GetBankBy(true, false)));
         }
 
         [HttpGet("withdraw-banks")]
         public async Task<IActionResult> WithdrawBanks()
         {
-            return Ok(await _bankService.GetBankBy(false, true));
+            return Ok(OkResponse.Create(await _bankService.GetBankBy(false, true)));
         }
     }
 }

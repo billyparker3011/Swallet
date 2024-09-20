@@ -66,5 +66,7 @@ namespace SWallet.Data.Core.Entities
 
         [Required, DefaultValue(0L)]
         public long SupermasterId { get; set; }
+
+        public DateTime? ChangedPasswordAt { get; set; }
     }
 }

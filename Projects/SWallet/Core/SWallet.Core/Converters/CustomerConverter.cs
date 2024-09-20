@@ -41,5 +41,18 @@ namespace SWallet.Core.Converters
                 UserAgent = session.UserAgent,
             };
         }
+
+        public static CustomerBankAccountModel ToCustomerBankAccountModel(this CustomerBankAccount customerBankAccount)
+        {
+            return new CustomerBankAccountModel
+            {
+                Id = customerBankAccount.Id,
+                BankId = customerBankAccount.BankId,
+                BankIcon = customerBankAccount.Bank.Icon,
+                BankName = customerBankAccount.Bank.Name,
+                CardHolder = customerBankAccount.CardHolder,
+                NumberAccount = customerBankAccount.NumberAccount
+            };
+        }
     }
 }

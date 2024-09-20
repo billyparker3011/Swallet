@@ -21,7 +21,9 @@
         public const string BankIconIsRequired = "Bank Icon is required.";
         public const string BankIdIsRequired = "BankId is required.";
         public const string NumberAccountIsRequired = "Number Account is required.";
+        public const string NumberAccountDoesNotContainSpecialCharacters = "Number Account doesn't contain space and special characters.";
         public const string CardHolderIsRequired = "Card Holder is required.";
+        public const string BankIsRequire = "Bank is required.";
         #endregion
 
         #region Customer
@@ -33,6 +35,9 @@
         public const string DoneAcceptTermAndConditionAndPolicy = "You must accept Terms & Conditions and Privacy Policy.";
         public const string UsernameWasUsed = "Username was used. Please choose another username.";
         public const string CouldNotFindAgentPromoCode = "Could not find Agent's promo code.";
+        public const string ConfirmPasswordDoesNotMatch = "Password doesn't match.";
+        public const string NewPasswordCanNotBeOldPassword = "New Password cann't be equal to Old Password.";
+        public const string OldPasswordDoesNotMatch = "Old Password doesn't match.";
         #endregion
     }
 }

@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Controllers;
+using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SWallet.Core.Services.Discount;
@@ -17,7 +18,7 @@ namespace SWallet.CustomerService.Controllers
         [HttpGet("static-discounts"), AllowAnonymous]
         public async Task<IActionResult> StaticDiscount()
         {
-            return Ok(await _discountService.GetStaticDiscount());
+            return Ok(OkResponse.Create(await _discountService.GetStaticDiscount()));
         }
     }
 }
