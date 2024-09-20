@@ -61,5 +61,11 @@ namespace SWallet.ManagerService.Controllers
             await _bankService.DeleteBank(id);
             return Ok();
         }
+
+        [HttpGet("exists")]
+        public async Task<IActionResult> CheckExistBank([FromQuery] string bankName, [FromQuery] int? bankId)
+        {
+            return Ok(OkResponse.Create(await _bankService.CheckExistBank(bankName, bankId)));
+        }
     }
 }

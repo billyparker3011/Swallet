@@ -110,7 +110,8 @@ namespace Lottery.Agent.AgentService.Controllers
                 LastName = request.LastName,
                 Permissions = request.Permissions,
                 Credit = request.Credit,
-                MemberMaxCredit = request.MemberMaxCredit
+                MemberMaxCredit = request.MemberMaxCredit,
+                IsLock = request.IsLock
             });
             return Ok();
         }

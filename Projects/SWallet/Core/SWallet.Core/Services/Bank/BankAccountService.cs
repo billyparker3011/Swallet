@@ -8,6 +8,7 @@ using SWallet.Core.Models;
 using SWallet.Core.Models.Bank;
 using SWallet.Core.Models.Bank.GetBankAccounts;
 using SWallet.Data.Repositories.Banks;
+using SWallet.Data.Repositories.Managers;
 using SWallet.Data.UnitOfWorks;
 
 namespace SWallet.Core.Services.Bank
@@ -21,6 +22,20 @@ namespace SWallet.Core.Services.Bank
             ISWalletClientContext clientContext, 
             ISWalletUow sWalletUow) : base(logger, serviceProvider, configuration, clockService, clientContext, sWalletUow)
         {
+        }
+
+        public async Task<bool> CheckExistBankAccount(int bankId, string accountNumber, int? bankAccountId)
+        {
+            var bankAccountRepos = SWalletUow.GetRepository<IBankAccountRepository>();
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+
+            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
+            if (bankAccountId.HasValue)
+            {
+                return await bankAccountRepos.CheckExistAccountNumberWhenUpdate(bankId, accountNumber, bankAccountId.Value);
+            }
+
+            return await bankAccountRepos.CheckExistAccountNumber(bankId, accountNumber);
         }
 
         public async Task CreateBankAccount(CreateBankAccountModel model)

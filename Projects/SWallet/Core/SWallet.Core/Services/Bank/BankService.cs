@@ -10,6 +10,7 @@ using SWallet.Core.Models;
 using SWallet.Core.Models.Bank;
 using SWallet.Core.Models.Bank.GetBanks;
 using SWallet.Data.Repositories.Banks;
+using SWallet.Data.Repositories.Managers;
 using SWallet.Data.UnitOfWorks;
 using System.Linq.Expressions;
 
@@ -29,6 +30,9 @@ namespace SWallet.Core.Services.Bank
         public async Task CreateBank(CreateBankModel model)
         {
             var bankRepos = SWalletUow.GetRepository<IBankRepository>();
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+
+            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
             await bankRepos.AddAsync(new Data.Core.Entities.Bank
             {
                 Name = model.Name,
@@ -45,6 +49,9 @@ namespace SWallet.Core.Services.Bank
         public async Task DeleteBank(int id)
         {
             var bankRepos = SWalletUow.GetRepository<IBankRepository>();
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+
+            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
             var bank = await bankRepos.FindByIdAsync(id) ?? throw new NotFoundException();
             bankRepos.Delete(bank);
 
@@ -54,6 +61,9 @@ namespace SWallet.Core.Services.Bank
         public async Task<GetBanksResult> GetBanks(GetBanksModel query)
         {
             var bankRepos = SWalletUow.GetRepository<IBankRepository>();
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+
+            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
             var bankQuery = bankRepos.FindQuery();
             if (!string.IsNullOrEmpty(query.SearchName))
             {
@@ -96,6 +106,9 @@ namespace SWallet.Core.Services.Bank
         {
             var bankRepos = SWalletUow.GetRepository<IBankRepository>();
             var bank = await bankRepos.FindByIdAsync(id) ?? throw new NotFoundException();
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+
+            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
 
             bank.Name = model.Name;
             bank.Icon = model.Icon;
@@ -110,10 +123,27 @@ namespace SWallet.Core.Services.Bank
         public async Task<List<BankModel>> GetBankBy(bool deposit, bool withdraw)
         {
             var bankRepository = SWalletUow.GetRepository<IBankRepository>();
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+
+            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
             if (deposit && withdraw) return await bankRepository.FindQuery().Select(f => f.ToBankModel()).ToListAsync();
             if (deposit) return (await bankRepository.GetDepositBanks()).Select(f => f.ToBankModel()).ToList();
             if (withdraw) return (await bankRepository.GetWithdrawBanks()).Select(f => f.ToBankModel()).ToList();
             return new List<BankModel>();
+        }
+
+        public async Task<bool> CheckExistBank(string bankName, int? bankId)
+        {
+            var bankRepository = SWalletUow.GetRepository<IBankRepository>();
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+
+            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
+
+            if (bankId.HasValue)
+            {
+                return await bankRepository.CheckExistBankWhenUpdate(bankName, bankId.Value);
+            }
+            return await bankRepository.CheckExistBank(bankName);
         }
     }
 }

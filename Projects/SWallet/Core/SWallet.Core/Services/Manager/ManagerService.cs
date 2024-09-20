@@ -62,9 +62,7 @@ namespace SWallet.Core.Services.Manager
         {
             return managerRole switch
             {
-                (int)ManagerRole.Root => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsRoot).Select(x => x.RoleId).FirstOrDefaultAsync(),
-                (int)ManagerRole.Supermaster => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsManager).Select(x => x.RoleId).FirstOrDefaultAsync(),
-                (int)ManagerRole.Master => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsAgent).Select(x => x.RoleId).FirstOrDefaultAsync(),
+                (int)ManagerRole.Root or (int)ManagerRole.Supermaster or (int)ManagerRole.Master => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsAgent).Select(x => x.RoleId).FirstOrDefaultAsync(),
                 (int)ManagerRole.Agent => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsCustomer).Select(x => x.RoleId).FirstOrDefaultAsync(),
                 _ => 0,
             };

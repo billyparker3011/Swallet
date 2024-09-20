@@ -10,5 +10,6 @@ namespace SWallet.Core.Services.Bank
         Task<GetBankAccountsResult> GetBankAccounts();
         Task UpdateBankAccount(int id, CreateBankAccountModel model);
         Task DeleteBankAccount(int id);
+        Task<bool> CheckExistBankAccount(int bankId, string accountNumber, int? bankAccountId);
     }
 }

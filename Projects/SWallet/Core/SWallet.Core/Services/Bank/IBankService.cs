@@ -12,5 +12,6 @@ namespace SWallet.Core.Services.Bank
         Task UpdateBank(int id, CreateBankModel model);
         Task DeleteBank(int id);
         Task<List<BankModel>> GetBankBy(bool deposit, bool withdraw);
+        Task<bool> CheckExistBank(string bankName, int? bankId);
     }
 }
