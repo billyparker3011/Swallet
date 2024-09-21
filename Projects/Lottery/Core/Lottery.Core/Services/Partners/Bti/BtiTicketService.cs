@@ -234,7 +234,7 @@ namespace Lottery.Core.Services.Partners.Bti
 
             await LotteryUow.SaveChangesAsync();
 
-            if (-1 * debitTickets.Sum(c => c.BetAmount) + amount - (-1 * reserveTicket.BetAmount) > 0.01m) return new BtiDebitReserveResponseModel(BtiResponseCodeHelper.No_Errors) { error_message = "Total DebitReserve amount larger than Reserve amount ", balance = reserveTicket.BalanceResponse, trx_id = ticket.TransactionId.Value };
+            if (-1 * (reserveTicket.BetAmount ?? 0m) - (-1 * debitTickets.Sum(c => c.BetAmount ?? 0m)) - amount  > 0.01m) return new BtiDebitReserveResponseModel(BtiResponseCodeHelper.No_Errors) { error_message = "Total DebitReserve amount larger than Reserve amount ", balance = reserveTicket.BalanceResponse, trx_id = ticket.TransactionId.Value };
 
             return new BtiDebitReserveResponseModel(ticket.StatusResponse) { balance = ticket.BalanceResponse, trx_id = ticket.TransactionId.Value };
 
@@ -247,13 +247,19 @@ namespace Lottery.Core.Services.Partners.Bti
             var btiTicketRepos = LotteryUow.GetRepository<IBtiTicketRepository>();
             var btiPlayerMappingRepos = LotteryUow.GetRepository<IBtiPlayerMappingRepository>();
 
+            var cancelTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.CancelReverse).FirstOrDefaultAsync();
+
+            if (cancelTicket != null) return new BtiBaseResponseModel(cancelTicket.StatusResponse) { balance = cancelTicket.BalanceResponse };
+
             var debitTickets = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.DebitReverse).ToListAsync();
 
             if (debitTickets.Any()) return new BtiBaseResponseModel() { error_message = "Already Debitted Reserve", balance = debitTickets.FirstOrDefault().BalanceResponse };
 
             var reserveTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.Reverse).FirstOrDefaultAsync();
 
-            var playerMapping = await btiPlayerMappingRepos.FindQueryBy(c => c.CustomerId == cust_id).Include(c => c.Player).FirstOrDefaultAsync() ?? throw new NotFoundException();
+            var playerMapping = await btiPlayerMappingRepos.FindQueryBy(c => c.CustomerId == cust_id).Include(c => c.Player).FirstOrDefaultAsync();
+
+            if (playerMapping == null) return new BtiBaseResponseModel(BtiHelper.BtiResponseCodeHelper.Customer_Not_Found);
 
             var outAndWinlose = await GetOutAndWinlose(btiTicketRepos, playerMapping.PlayerId);
 
@@ -261,7 +267,38 @@ namespace Lottery.Core.Services.Partners.Bti
 
             if (reserveTicket == null) return new BtiBaseResponseModel() { error_message = "ReserveID not exists", balance = balance };
 
-            if (reserveTicket != null && reserveTicket.Status == BtiTicketStatusHelper.Cancel) return new BtiBaseResponseModel() { balance = balance };
+            balance = balance + -1 * (reserveTicket.BetAmount ?? 0m);
+
+            var ticket = new Data.Entities.Partners.Bti.BtiTicket
+            {
+                PlayerId = reserveTicket.PlayerId,
+                CustomerId = cust_id,
+                ReserveId = reserve_id,
+                TransactionId = GetTransaction(),
+                BalanceResponse = balance,
+                StatusResponse = BtiResponseCodeHelper.No_Errors,
+                Status = BtiTicketStatusHelper.Cancel,
+                Type = BtiTypeHelper.CancelReverse,
+                ParentId = reserveTicket.Id,
+                AgentId = reserveTicket.AgentId,
+                MasterId = reserveTicket.MasterId,
+                SupermasterId = reserveTicket.SupermasterId,
+                BetKindId = 1,
+                CurrencyCode = "CNY",
+                TicketAmount = reserveTicket.TicketAmount,
+                TicketCreatedDate = ClockService.GetUtcNow().AddHours(_offSetTime),
+                AgentWinLoss = 0,
+                AgentPt = 0,
+                MasterWinLoss = 0,
+                MasterPt = 0,
+                SupermasterWinLoss = 0,
+                SupermasterPt = 0,
+                CompanyWinLoss = 0,
+                CreatedAt = ClockService.GetUtcNow().AddHours(_offSetTime),
+                CreatedBy = 0
+            };
+
+            btiTicketRepos.Add(ticket);
 
             reserveTicket.Status = BtiTicketStatusHelper.Cancel;
             reserveTicket.TicketModifiedDate = ClockService.GetUtcNow().AddHours(_offSetTime);
@@ -269,10 +306,6 @@ namespace Lottery.Core.Services.Partners.Bti
             btiTicketRepos.Update(reserveTicket);
 
             await LotteryUow.SaveChangesAsync();
-
-            outAndWinlose = await GetOutAndWinlose(btiTicketRepos, playerMapping.PlayerId);
-
-            balance = _testBalance + outAndWinlose;
 
             return new BtiBaseResponseModel() { balance = balance };
         }
@@ -284,32 +317,61 @@ namespace Lottery.Core.Services.Partners.Bti
             var btiTicketRepos = LotteryUow.GetRepository<IBtiTicketRepository>();
             var btiPlayerMappingRepos = LotteryUow.GetRepository<IBtiPlayerMappingRepository>();
 
-            var reserveTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.Reverse).FirstOrDefaultAsync();      
-          
-            if (reserveTicket == null)
-            {
-                var playerMapping = await btiPlayerMappingRepos.FindQueryBy(c => c.CustomerId == cust_id).Include(c => c.Player).FirstOrDefaultAsync() ?? throw new NotFoundException();
+            var commitTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.PurcahseId == purchase_id && c.Type == BtiTypeHelper.CommitReverse).FirstOrDefaultAsync();
 
-                var outAndWinlose = await GetOutAndWinlose(btiTicketRepos, playerMapping.PlayerId);
+            if(commitTicket != null) return new BtiBaseResponseModel(commitTicket.StatusResponse) { balance = commitTicket.BalanceResponse };
 
-                var balance = _testBalance + outAndWinlose;
+            var reserveTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.Reverse).FirstOrDefaultAsync();
 
-                return new BtiBaseResponseModel() { error_message = "ReserveID not exists", balance = balance };
-            }
+            var playerMapping = await btiPlayerMappingRepos.FindQueryBy(c => c.CustomerId == cust_id).Include(c => c.Player).FirstOrDefaultAsync();
 
-            // if multi PurcahseId in a reverseId??
+            if (playerMapping == null) return new BtiBaseResponseModel(BtiHelper.BtiResponseCodeHelper.Customer_Not_Found);
 
+            var outAndWinlose = await GetOutAndWinlose(btiTicketRepos, playerMapping.PlayerId);
+
+            var balance = _testBalance + outAndWinlose;
+
+            if (reserveTicket == null) return new BtiBaseResponseModel() { error_message = "ReserveID not exists", balance = balance };
+            
             var debitTickets = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.DebitReverse).ToListAsync();
 
             var betAmountActual = debitTickets.Select(c => c.BetAmount ?? 0m).Sum();
 
-            var difBetAmount = betAmountActual -( reserveTicket.BetAmount ?? 0m);
+            var difBetAmount = -1 * (reserveTicket.BetAmount ?? 0m) - (-1 * betAmountActual);
 
-            var balanceActual = difBetAmount > 0.01m || difBetAmount < -0.01m ? reserveTicket.BalanceResponse - (reserveTicket.BetAmount ?? 0m) + betAmountActual : reserveTicket.BalanceResponse;
+            var balanceActual = difBetAmount > 0.01m ? balance + difBetAmount : balance;
 
-            if (reserveTicket != null && reserveTicket.Status == BtiTicketStatusHelper.Commit) return new BtiBaseResponseModel() { balance = balanceActual };        
+            var ticket = new Data.Entities.Partners.Bti.BtiTicket
+            {
+                PlayerId = reserveTicket.PlayerId,
+                CustomerId = cust_id,
+                ReserveId = reserve_id,
+                PurcahseId = purchase_id,
+                TransactionId = GetTransaction(),
+                BalanceResponse = balanceActual,
+                StatusResponse = BtiResponseCodeHelper.No_Errors,
+                Status = BtiTicketStatusHelper.Commit,
+                Type = BtiTypeHelper.CommitReverse,
+                ParentId = reserveTicket.Id,
+                AgentId = reserveTicket.AgentId,
+                MasterId = reserveTicket.MasterId,
+                SupermasterId = reserveTicket.SupermasterId,
+                BetKindId = 1,
+                CurrencyCode = "CNY",
+                TicketAmount = reserveTicket.TicketAmount,
+                TicketCreatedDate = ClockService.GetUtcNow().AddHours(_offSetTime),
+                AgentWinLoss = 0,
+                AgentPt = 0,
+                MasterWinLoss = 0,
+                MasterPt = 0,
+                SupermasterWinLoss = 0,
+                SupermasterPt = 0,
+                CompanyWinLoss = 0,
+                CreatedAt = ClockService.GetUtcNow().AddHours(_offSetTime),
+                CreatedBy = 0
+            };
 
-            // need update BalanceResponse if difBetAmount valid???
+            btiTicketRepos.Add(ticket);
 
             reserveTicket.Status = BtiTicketStatusHelper.Commit;
 
@@ -325,7 +387,7 @@ namespace Lottery.Core.Services.Partners.Bti
 
             await LotteryUow.SaveChangesAsync();
 
-            return new BtiBaseResponseModel() { balance = balanceActual, trx_id = GetTransaction() };
+            return new BtiBaseResponseModel() { balance = balanceActual, trx_id = ticket.TransactionId.Value };
         }
 
         public async Task<BtiBaseResponseModel> DebitCustomer(string cust_id, decimal amount, long req_id, long purchase_id, string requestBody)
@@ -417,10 +479,6 @@ namespace Lottery.Core.Services.Partners.Bti
             var masterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.MasterId)?.PositionTaking ?? 0m;
             var supermasterPT = lstPositionTaking.FirstOrDefault(x => x.AgentId == playerMapping.Player.SupermasterId)?.PositionTaking ?? 0m;
 
-            //requestID and PurcahseId are same in DebitReserve??
-            //ReverseId in body is true ReverseId?
-            //Amount in CreditCustomer include BetAmount ??
-
             var ticket = new Data.Entities.Partners.Bti.BtiTicket
             {
                 PlayerId = playerMapping.PlayerId,
@@ -462,16 +520,11 @@ namespace Lottery.Core.Services.Partners.Bti
         {
             var ticket = await btiTicketRepository.FindQueryBy(c => c.PlayerId == playerId && c.Status != BtiTicketStatusHelper.Cancel && BtiTypeHelper.AmountType.Contains(c.Type)).ToListAsync();
 
-            var debitReverseGreater = ticket.Where(c => BtiTypeHelper.DebitReverse == c.Type && BtiTicketStatusHelper.Debit == c.Status).GroupBy(c => c.ReserveId).Select(c => new BtiTicket()
-            {
-                BetAmount = c.Select(x => x.BetAmount ?? 0m).Sum(),
-                ReserveId = c.Key.Value,
-                TicketAmount = c.FirstOrDefault().TicketAmount
-            }).Where(c => (-1 * c.BetAmount ?? 0m) - (-1 * c.TicketAmount ?? 0m) > 0.01m).ToList();
+            var commitBetAmount = ticket.Where(c => BtiTypeHelper.DebitReverse == c.Type && BtiTicketStatusHelper.Commit == c.Status).Select(c => c.BetAmount ?? 0m).Sum();
 
-            var reverseBetAmount = ticket.Where(c => BtiTypeHelper.Reverse == c.Type && BtiTicketStatusHelper.Betting.Contains(c.Status) && !debitReverseGreater.Select(c=>c.ReserveId).Contains(c.ReserveId)).Select(c => c.BetAmount ?? 0m).Sum();
+            var reverseBetAmount = ticket.Where(c => BtiTypeHelper.Reverse == c.Type && BtiTicketStatusHelper.Betting.Contains(c.Status)).Select(c => c.BetAmount ?? 0m).Sum();
 
-            var outs = ticket.Where(c=> BtiTypeHelper.DebitReverse == c.Type && BtiTicketStatusHelper.Betted.Contains(c.Status)).Select(c=>c.BetAmount ?? 0m).Sum() + reverseBetAmount + debitReverseGreater.Select(c => c.BetAmount ?? 0m).Sum();
+            var outs = reverseBetAmount + commitBetAmount;
             var winlose = ticket.Select(c => c.WinlossAmount ?? 0m).Sum();
             return outs + winlose;
         }
