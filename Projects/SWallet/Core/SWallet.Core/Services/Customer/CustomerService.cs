@@ -3,6 +3,7 @@ using HnMicro.Framework.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SWallet.Core.Contexts;
+using SWallet.Core.Converters;
 using SWallet.Core.Models.Customers;
 using SWallet.Data.Repositories.Customers;
 using SWallet.Data.UnitOfWorks;
@@ -25,8 +26,7 @@ namespace SWallet.Core.Services.Customer
             var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
             var customerId = ClientContext.Customer.CustomerId;
 
-            var customer = await customerRepository.FindByIdAsync(customerId);
-            if (customer == null) throw new NotFoundException();
+            var customer = await customerRepository.FindByIdAsync(customerId) ?? throw new NotFoundException();
 
             customer.FirstName = model.FirstName;
             customer.LastName = model.LastName;
@@ -34,6 +34,16 @@ namespace SWallet.Core.Services.Customer
             customer.Telegram = model.Telegram;
 
             await SWalletUow.SaveChangesAsync();
+        }
+
+        public async Task<MyCustomerProfileModel> MyProfile()
+        {
+            var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
+            var customerId = ClientContext.Customer.CustomerId;
+
+            var customer = await customerRepository.FindByIdAsync(customerId) ?? throw new NotFoundException();
+
+            return customer.ToMyCustomerProfileModel();
         }
     }
 }

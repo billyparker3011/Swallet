@@ -22,5 +22,7 @@ namespace SWallet.Data.Core
         public DbSet<CustomerBankAccount> CustomerBankAccounts { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<BalanceCustomer> BalanceCustomers { get; set; }
+        public DbSet<Setting> Settings { get; set; }
+        public DbSet<PaymentMethod> PaymentMethods { get; set; }
     }
 }

@@ -9,7 +9,9 @@ using SWallet.Core.Services;
 using SWallet.Data.Repositories.Customers;
 using SWallet.Data.Repositories.FeaturesAndPermissions;
 using SWallet.Data.Repositories.Managers;
+using SWallet.Data.Repositories.Payments;
 using SWallet.Data.Repositories.Roles;
+using SWallet.Data.Repositories.Settings;
 using SWallet.Data.UnitOfWorks;
 using SWallet.ManagerService.Models.Prepare;
 
@@ -161,6 +163,37 @@ namespace SWallet.ManagerService.Services.Prepare
             return (await SWalletUow.SaveChangesAsync()) > 0;
         }
 
+        public async Task<bool> InitialManualPayment()
+        {
+            ValidationPrepareToken();
+
+            var settingRepository = SWalletUow.GetRepository<ISettingRepository>();
+            var actualSetting = await settingRepository.GetActualSetting();
+            if (actualSetting == null || actualSetting.PaymentPartner != PaymentPartner.Manual.ToInt()) return false;
+
+            var paymentMethodRepository = SWalletUow.GetRepository<IPaymentMethodRepository>();
+            var paymentMethods = await paymentMethodRepository.FindByPaymentPartner(actualSetting.PaymentPartner);
+            if (paymentMethods.Count != 0) return true;
+
+            var ibPaymentMethod = paymentMethods.FirstOrDefault(f => f.Code == Core.InstanceOfPayment.Manual.Config.InternetBankingCode);
+            if (ibPaymentMethod == null)
+            {
+                paymentMethodRepository.Add(new Data.Core.Entities.PaymentMethod
+                {
+                    Code = Core.InstanceOfPayment.Manual.Config.InternetBankingCode,
+                    Name = Core.InstanceOfPayment.Manual.Config.InternetBankingName,
+                    Icon = Core.InstanceOfPayment.Manual.Config.InternetBankingIcon,
+                    Enabled = true,
+                    Fee = 0m,
+                    PaymentPartner = PaymentPartner.Manual.ToInt(),
+                    CreatedAt = ClockService.GetUtcNow(),
+                    CreatedBy = 0L
+                });
+            }
+
+            return (await SWalletUow.SaveChangesAsync()) > 0;
+        }
+
         public async Task<bool> InitialRoles()
         {
             ValidationPrepareToken();
@@ -179,6 +212,35 @@ namespace SWallet.ManagerService.Services.Prepare
                     CreatedBy = 0L
                 });
             }
+            return (await SWalletUow.SaveChangesAsync()) > 0;
+        }
+
+        public async Task<bool> InitialSettings()
+        {
+            ValidationPrepareToken();
+
+            var settingRepository = SWalletUow.GetRepository<ISettingRepository>();
+            var actualSetting = await settingRepository.GetActualSetting();
+            if (actualSetting == null)
+            {
+                actualSetting = new Data.Core.Entities.Setting
+                {
+                    CreatedAt = ClockService.GetUtcNow(),
+                    CreatedBy = 0L,
+                    CurrencySymbol = "USD",
+                    MaskCharacter = "X",
+                    NumberOfMaskCharacters = 4,
+                    PaymentPartner = PaymentPartner.Manual.ToInt()
+                };
+                settingRepository.Add(actualSetting);
+            }
+            else
+            {
+                if (actualSetting.PaymentPartner == 0) actualSetting.PaymentPartner = PaymentPartner.Manual.ToInt();
+                actualSetting.UpdatedAt = ClockService.GetUtcNow();
+                actualSetting.UpdatedBy = 0L;
+            }
+
             return (await SWalletUow.SaveChangesAsync()) > 0;
         }
     }

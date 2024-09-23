@@ -13,6 +13,10 @@ namespace SWallet.Core.Models
         public string Telegram { get; set; }
         public CustomerState State { get; set; }
         public string Phone { get; set; }
+        public bool Lock { get; set; }
+        public bool DepositAllowed { get; set; }
+        public bool WithdrawAllowed { get; set; }
+        public bool DiscountAllowed { get; set; }
         public int RoleId { get; set; }
         public string RoleName { get; set; }
         public string RoleCode { get; set; }

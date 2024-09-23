@@ -1,4 +1,5 @@
 ﻿using HnMicro.Framework.Controllers;
+using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SWallet.Core.Models.Auth;
@@ -64,6 +65,12 @@ namespace SWallet.CustomerService.Controllers
                 Telegram = request.Telegram
             });
             return Ok();
+        }
+
+        [HttpGet("my-profile")]
+        public async Task<IActionResult> MyProfile()
+        {
+            return Ok(OkResponse.Create(await _customerService.MyProfile()));
         }
     }
 }

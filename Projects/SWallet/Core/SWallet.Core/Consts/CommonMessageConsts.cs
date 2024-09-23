@@ -3,6 +3,14 @@
     public static class CommonMessageConsts
     {
         public const string RoleHasNotBeenInitialYet = "Role has not been initial yet.";
+        public const string PaymentPartnerHasNotBeenInitialYet = "Payment Partner has not been initial yet.";
+        public const string PaymentPartnerDoesNotExist = "Payment Partner does not exist.";
+
+        public const string PaymentMethodCodeIsRequired = "Payment Method Code is required.";
+        public const string CustomerBankAccountIsRequired = "Customer Bank Account is required.";
+        public const string BankAccountIsRequired = "Bank Account is required.";
+        public const string AmountIsGreaterThanZero = "Amount must be greater than zero.";
+        public const string PaymentContentIsRequired = "Payment Content is required.";
 
         public const string UserNameIsRequired = "Username is required.";
         public const int MinLengthOfUserName = 15;
@@ -23,7 +31,7 @@
         public const string NumberAccountIsRequired = "Number Account is required.";
         public const string NumberAccountDoesNotContainSpecialCharacters = "Number Account doesn't contain space and special characters.";
         public const string CardHolderIsRequired = "Card Holder is required.";
-        public const string BankIsRequire = "Bank is required.";
+        public const string BankIsRequired = "Bank is required.";
         #endregion
 
         #region Customer

@@ -9,5 +9,7 @@ namespace SWallet.Data.Repositories.Banks
         Task<List<BankAccount>> GetBankAccountByBankId(int bankId);
         Task<bool> CheckExistAccountNumber(int bankId, string accountNumber);
         Task<bool> CheckExistAccountNumberWhenUpdate(int bankId, string accountNumber, int bankAccountId);
+        Task<List<BankAccount>> GetDepositBankAccountByBankId(int bankId);
+        Task<BankAccount> FindByBankAndBankAccount(int bankId, int bankAccountId);
     }
 }

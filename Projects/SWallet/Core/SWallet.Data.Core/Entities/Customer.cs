@@ -68,5 +68,17 @@ namespace SWallet.Data.Core.Entities
         public long SupermasterId { get; set; }
 
         public DateTime? ChangedPasswordAt { get; set; }
+
+        [Required, DefaultValue(false)]
+        public bool Lock { get; set; }
+
+        [Required, DefaultValue(true)]
+        public bool DepositAllowed { get; set; }
+
+        [Required, DefaultValue(true)]
+        public bool WithdrawAllowed { get; set; }
+
+        [Required, DefaultValue(true)]
+        public bool DiscountAllowed { get; set; }
     }
 }

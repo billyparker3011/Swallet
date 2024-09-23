@@ -20,7 +20,7 @@ namespace SWallet.CustomerService.Validations.Customer
 
             RuleFor(f => f.BankId)
                 .GreaterThan(0)
-                .WithMessage(CommonMessageConsts.BankIsRequire);
+                .WithMessage(CommonMessageConsts.BankIsRequired);
         }
     }
 }

@@ -91,6 +91,13 @@ namespace HnMicro.Core.Helpers
                     : new string(Enumerable.Repeat(_chars, length).Select(f => f[OtherHelper.Rnd.Next(f.Length)]).ToArray());
         }
 
+        public static string RandomStringFrom(this string originText, int length)
+        {
+            if (string.IsNullOrEmpty(originText)) return string.Empty;
+            if (originText.Length < length) return originText;
+            return new string(Enumerable.Repeat(originText, length).Select(f => f[OtherHelper.Rnd.Next(f.Length)]).ToArray());
+        }
+
         public static string Hs256Signature()
         {
             var rng = System.Security.Cryptography.RandomNumberGenerator.Create();

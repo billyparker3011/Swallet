@@ -6,5 +6,6 @@ namespace SWallet.Data.Repositories.Customers
 {
     public interface ICustomerBankAccountRepository : IEntityFrameworkCoreRepository<long, CustomerBankAccount, SWalletContext>
     {
+        Task<CustomerBankAccount> FindByIdAndCustomer(long customerBankAccountId, long customerId);
     }
 }

@@ -25,6 +25,30 @@ namespace SWallet.Core.Converters
                 Telegram = customer.Telegram,
                 Username = customer.Username,
                 UsernameUpper = customer.UsernameUpper,
+                DepositAllowed = customer.DepositAllowed,
+                DiscountAllowed = customer.DiscountAllowed,
+                Lock = customer.Lock,
+                WithdrawAllowed = customer.WithdrawAllowed
+            };
+        }
+
+        public static MyCustomerProfileModel ToMyCustomerProfileModel(this Customer customer)
+        {
+            return new MyCustomerProfileModel
+            {
+                CustomerId = customer.CustomerId,
+                Email = customer.Email,
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                Phone = customer.Phone,
+                State = customer.State.ToEnum<CustomerState>(),
+                Telegram = customer.Telegram,
+                Username = customer.Username,
+                UsernameUpper = customer.UsernameUpper,
+                DepositAllowed = customer.DepositAllowed,
+                DiscountAllowed = customer.DiscountAllowed,
+                Lock = customer.Lock,
+                WithdrawAllowed = customer.WithdrawAllowed
             };
         }
 

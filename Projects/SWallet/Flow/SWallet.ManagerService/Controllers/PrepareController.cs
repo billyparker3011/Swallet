@@ -45,5 +45,17 @@ namespace SWallet.ManagerService.Controllers
         {
             return Ok(OkResponse.Create(await _prepareService.InitialFeaturesAndPermissions()));
         }
+
+        [HttpGet("200/initial-settings")]
+        public async Task<IActionResult> InitialSettings()
+        {
+            return Ok(OkResponse.Create(await _prepareService.InitialSettings()));
+        }
+
+        [HttpGet("201/initial-manual-payment")]
+        public async Task<IActionResult> InitialManualPayment()
+        {
+            return Ok(OkResponse.Create(await _prepareService.InitialManualPayment()));
+        }
     }
 }
