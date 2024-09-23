@@ -56,9 +56,14 @@ namespace SWallet.Core.Services.Payments
 
         public async Task Deposit(int paymentPartner, long customerId, DepositActivityModel model)
         {
-            var instanceOf = _instances.FirstOrDefault(f => f.PaymentPartner == paymentPartner.ToEnum<PaymentPartner>() && f.PaymentMethodCode == model.PaymentMethodCode);
-            if (instanceOf == null) throw new NotFoundException();
+            var instanceOf = _instances.FirstOrDefault(f => f.PaymentPartner == paymentPartner.ToEnum<PaymentPartner>() && f.PaymentMethodCode == model.PaymentMethodCode) ?? throw new NotFoundException();
             await instanceOf.Deposit(customerId, model);
+        }
+
+        public async Task Withdraw(int paymentPartner, long customerId, WithdrawActivityModel model)
+        {
+            var instanceOf = _instances.FirstOrDefault(f => f.PaymentPartner == paymentPartner.ToEnum<PaymentPartner>() && f.PaymentMethodCode == model.PaymentMethodCode) ?? throw new NotFoundException();
+            await instanceOf.Withdraw(customerId, model);
         }
     }
 }

@@ -26,9 +26,6 @@ namespace SWallet.Core.Services.Payments.InstanceOf
 
         public override async Task Deposit(long customerId, DepositActivityModel model)
         {
-            var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
-            var customer = await customerRepository.FindByIdAsync(customerId) ?? throw new NotFoundException();
-
             var bankRepository = SWalletUow.GetRepository<IBankRepository>();
             var bank = await bankRepository.FindByIdAsync(model.BankId) ?? throw new NotFoundException();
 
@@ -48,15 +45,18 @@ namespace SWallet.Core.Services.Payments.InstanceOf
                 CreatedAt = ClockService.GetUtcNow(),
                 CreatedBy = customerId,
                 CustomerId = customerId,
-                DepositBankName = bank.Name,
-                DepositCardHolder = bankAccount.CardHolder,
-                DepositNumberAccount = bankAccount.NumberAccount,
-                DepositContent = model.Content,
                 DepositPaymentPartnerId = PaymentPartner.ToInt(),
                 DepositPaymentMethodId = paymentMethod.Id,
-                DepositToBankName = customerBankAccount.Bank.Name,
-                DepositToCardHolder = customerBankAccount.CardHolder,
-                DepositToNumberAccount = customerBankAccount.NumberAccount,
+
+                DepositBankName = customerBankAccount.Bank.Name,
+                DepositCardHolder = customerBankAccount.CardHolder,
+                DepositNumberAccount = customerBankAccount.NumberAccount,
+
+                DepositToBankName = bank.Name,
+                DepositToCardHolder = bankAccount.CardHolder,
+                DepositToNumberAccount = bankAccount.NumberAccount,
+
+                DepositContent = model.Content,
                 OriginAmount = model.Amount,
                 TransactionState = TransactionState.Processing.ToInt(),
                 TransactionType = TransactionType.Deposit.ToInt()
@@ -75,6 +75,36 @@ namespace SWallet.Core.Services.Payments.InstanceOf
         {
             var bankRepository = SWalletUow.GetRepository<IBankRepository>();
             return (await bankRepository.GetDepositBanks()).Select(f => f.ToBankForModel()).ToList();
+        }
+
+        public override async Task Withdraw(long customerId, WithdrawActivityModel model)
+        {
+            var paymentMethodRepository = SWalletUow.GetRepository<IPaymentMethodRepository>();
+            var paymentMethod = await paymentMethodRepository.FindByPaymentPartnerAndPaymentMethodCode(PaymentPartner.ToInt(), model.PaymentMethodCode) ?? throw new NotFoundException();
+
+            var customerBankAccountRepository = SWalletUow.GetRepository<ICustomerBankAccountRepository>();
+            var customerBankAccount = await customerBankAccountRepository.FindByIdAndCustomer(model.CustomerBankAccountId, customerId) ?? throw new NotFoundException();
+
+            var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
+            transactionRepository.Add(new Data.Core.Entities.Transaction
+            {
+                Amount = model.Amount,
+                CreatedAt = ClockService.GetUtcNow(),
+                CreatedBy = customerId,
+                CustomerId = customerId,
+                DepositPaymentPartnerId = PaymentPartner.ToInt(),
+                DepositPaymentMethodId = paymentMethod.Id,
+
+                WithdrawToBankName = customerBankAccount.Bank.Name,
+                WithdrawToCardHolder = customerBankAccount.CardHolder,
+                WithdrawToNumberAccount = customerBankAccount.NumberAccount,
+
+                OriginAmount = model.Amount,
+                TransactionState = TransactionState.Processing.ToInt(),
+                TransactionType = TransactionType.Withdraw.ToInt()
+            });
+
+            await SWalletUow.SaveChangesAsync();
         }
     }
 }

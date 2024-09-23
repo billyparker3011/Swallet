@@ -84,5 +84,12 @@ namespace SWallet.Core.Services.Payments
             var customerId = ClientContext.Customer.CustomerId;
             await _paymentProcessor.Deposit(setting.PaymentPartner, customerId, model);
         }
+
+        public async Task Withdraw(WithdrawActivityModel model)
+        {
+            var setting = await GetInternalActualPaymentPartner();
+            var customerId = ClientContext.Customer.CustomerId;
+            await _paymentProcessor.Withdraw(setting.PaymentPartner, customerId, model);
+        }
     }
 }

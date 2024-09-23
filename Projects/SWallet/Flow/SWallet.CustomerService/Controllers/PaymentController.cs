@@ -2,7 +2,6 @@
 using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
 using SWallet.Core.Models.Payment;
-using SWallet.Core.Services.Bank;
 using SWallet.Core.Services.Payments;
 using SWallet.CustomerService.Requests.Payment;
 
@@ -11,14 +10,10 @@ namespace SWallet.CustomerService.Controllers
     public class PaymentController : HnControllerBase
     {
         private readonly IPaymentService _paymentService;
-        private readonly IBankService _bankService;
-        private readonly IBankAccountService _bankAccountService;
 
-        public PaymentController(IPaymentService paymentService, IBankService bankService, IBankAccountService bankAccountService)
+        public PaymentController(IPaymentService paymentService)
         {
             _paymentService = paymentService;
-            _bankService = bankService;
-            _bankAccountService = bankAccountService;
         }
 
         [HttpGet("payment-methods")]
@@ -56,6 +51,18 @@ namespace SWallet.CustomerService.Controllers
                 PaymentMethodCode = request.PaymentMethodCode,
                 Amount = request.Amount,
                 Content = request.Content
+            });
+            return Ok();
+        }
+
+        [HttpPost("withdraw")]
+        public async Task<IActionResult> Withdraw([FromBody] WithdrawRequest request)
+        {
+            await _paymentService.Withdraw(new WithdrawActivityModel
+            {
+                CustomerBankAccountId = request.CustomerBankAccountId,
+                PaymentMethodCode = request.PaymentMethodCode,
+                Amount = request.Amount
             });
             return Ok();
         }

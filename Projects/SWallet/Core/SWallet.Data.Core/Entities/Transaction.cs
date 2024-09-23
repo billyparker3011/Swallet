@@ -49,6 +49,23 @@ namespace SWallet.Data.Core.Entities
         public string DepositToCardHolder { get; set; }
         //  End: Deposit transaction
 
+        //  Begin: Withdraw transaction
+        public int? WithdrawPaymentPartnerId { get; set; }
+        public int? WithdrawPaymentMethodId { get; set; }
+        [MaxLength(2000)]
+        public string WithdrawBankName { get; set; }
+        [MaxLength(300)]
+        public string WithdrawNumberAccount { get; set; }
+        [MaxLength(2000)]
+        public string WithdrawCardHolder { get; set; }
+        [MaxLength(2000)]
+        public string WithdrawToBankName { get; set; }
+        [MaxLength(300)]
+        public string WithdrawToNumberAccount { get; set; }
+        [MaxLength(2000)]
+        public string WithdrawToCardHolder { get; set; }
+        //  End: Withdraw transaction
+
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer Customer { get; set; }
     }
