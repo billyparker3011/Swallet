@@ -250,7 +250,7 @@ namespace Lottery.Core.Services.Partners.Bti
 
             var cancelTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.CancelReverse).FirstOrDefaultAsync();
 
-            if (cancelTicket != null) return new BtiBaseResponseModel(cancelTicket.StatusResponse) { balance = cancelTicket.BalanceResponse };
+            if (cancelTicket != null) return new BtiBaseResponseModel(cancelTicket.StatusResponse) { balance = cancelTicket.BalanceResponse, trx_id = cancelTicket.TransactionId.Value };
 
             var debitTickets = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.DebitReverse).ToListAsync();
 
@@ -320,7 +320,7 @@ namespace Lottery.Core.Services.Partners.Bti
 
             var commitTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.PurcahseId == purchase_id && c.Type == BtiTypeHelper.CommitReverse).FirstOrDefaultAsync();
 
-            if(commitTicket != null) return new BtiBaseResponseModel(commitTicket.StatusResponse) { balance = commitTicket.BalanceResponse };
+            if(commitTicket != null) return new BtiBaseResponseModel(commitTicket.StatusResponse) { balance = commitTicket.BalanceResponse ,trx_id = commitTicket.TransactionId.Value };
 
             var reserveTicket = await btiTicketRepos.FindQueryBy(c => c.ReserveId == reserve_id && c.Type == BtiTypeHelper.Reverse).FirstOrDefaultAsync();
 
