@@ -12,6 +12,7 @@ using Lottery.Data.Entities.Partners.Bti;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -520,7 +521,13 @@ namespace Lottery.Core.Services.Partners.Bti
         {
             var ticket = await btiTicketRepository.FindQueryBy(c => c.PlayerId == playerId && c.Status != BtiTicketStatusHelper.Cancel && BtiTypeHelper.AmountType.Contains(c.Type)).ToListAsync();
 
-            var commitBetAmount = ticket.Where(c => BtiTypeHelper.DebitReverse == c.Type && BtiTicketStatusHelper.Commit == c.Status).Select(c => c.BetAmount ?? 0m).Sum();
+            var commitBetAmount = ticket.Where(c => BtiTypeHelper.DebitReverse == c.Type && BtiTicketStatusHelper.Commit == c.Status).GroupBy(c => c.ReserveId).Select(c =>
+            {
+                var betActual = -1 * c.Select(x => x.BetAmount ?? 0m).Sum();
+                var ticketAmount = -1 * c.FirstOrDefault().TicketAmount ?? 0m;
+                if (ticketAmount - betActual > 0.01m) return -1 * betActual;
+                else return -1 * ticketAmount;
+            }).Sum();
 
             var reverseBetAmount = ticket.Where(c => BtiTypeHelper.Reverse == c.Type && BtiTicketStatusHelper.Betting.Contains(c.Status)).Select(c => c.BetAmount ?? 0m).Sum();
 
