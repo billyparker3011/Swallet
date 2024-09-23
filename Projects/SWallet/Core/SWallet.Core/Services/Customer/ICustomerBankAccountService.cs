@@ -1,5 +1,5 @@
 ﻿using HnMicro.Core.Scopes;
-using SWallet.Core.Models.Customers;
+using SWallet.Core.Models;
 
 namespace SWallet.Core.Services.Customer
 {

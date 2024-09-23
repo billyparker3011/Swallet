@@ -10,6 +10,7 @@ using SWallet.Core.Contexts;
 using SWallet.Core.Enums;
 using SWallet.Core.Helpers;
 using SWallet.Core.Models;
+using SWallet.Data.Repositories.Customers;
 using SWallet.Data.Repositories.Managers;
 using SWallet.Data.Repositories.Roles;
 using SWallet.Data.UnitOfWorks;
@@ -19,11 +20,11 @@ namespace SWallet.Core.Services.Manager
 {
     public class ManagerService : SWalletBaseService<ManagerService>, IManagerService
     {
-        public ManagerService(ILogger<ManagerService> logger, 
-            IServiceProvider serviceProvider, 
-            IConfiguration configuration, 
-            IClockService clockService, 
-            ISWalletClientContext clientContext, 
+        public ManagerService(ILogger<ManagerService> logger,
+            IServiceProvider serviceProvider,
+            IConfiguration configuration,
+            IClockService clockService,
+            ISWalletClientContext clientContext,
             ISWalletUow sWalletUow) : base(logger, serviceProvider, configuration, clockService, clientContext, sWalletUow)
         {
         }
@@ -62,7 +63,9 @@ namespace SWallet.Core.Services.Manager
         {
             return managerRole switch
             {
-                (int)ManagerRole.Root or (int)ManagerRole.Supermaster or (int)ManagerRole.Master => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsAgent).Select(x => x.RoleId).FirstOrDefaultAsync(),
+                (int)ManagerRole.Root => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsRoot).Select(x => x.RoleId).FirstOrDefaultAsync(),
+                (int)ManagerRole.Supermaster => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsManager).Select(x => x.RoleId).FirstOrDefaultAsync(),
+                (int)ManagerRole.Master => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsAgent).Select(x => x.RoleId).FirstOrDefaultAsync(),
                 (int)ManagerRole.Agent => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsCustomer).Select(x => x.RoleId).FirstOrDefaultAsync(),
                 _ => 0,
             };
@@ -185,6 +188,99 @@ namespace SWallet.Core.Services.Manager
                 "state" => manager => manager.State,
                 "fullname" => manager => manager.FullName,
                 _ => manager => manager
+            };
+        }
+
+        public async Task<GetCustomerOfAgentManagerResult> GetCustomerOfAgentManager(GetCustomerOfAgentManagerModel model)
+        {
+            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+            var customerRepos = SWalletUow.GetRepository<ICustomerRepository>();
+
+            var clientManager = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
+
+            IQueryable<Data.Core.Entities.Customer> customerQuery = customerRepos.FindQuery().Include(f => f.CustomerSession).Include(x => x.Role).Where(x => x.IsAffiliate);
+
+            switch (clientManager.ManagerRole.ToEnum<ManagerRole>())
+            {
+                case ManagerRole.Supermaster:
+                    customerQuery = customerQuery.Where(x => x.SupermasterId == clientManager.ManagerId);
+                    break;
+                case ManagerRole.Master:
+                    customerQuery = customerQuery.Where(x => x.SupermasterId == clientManager.SupermasterId && x.MasterId == clientManager.ManagerId);
+                    break;
+                case ManagerRole.Agent:
+                    customerQuery = customerQuery.Where(x => x.SupermasterId == clientManager.SupermasterId && x.MasterId == clientManager.MasterId && x.AgentId == clientManager.ManagerId);
+                    break;
+                default:
+                    break;
+            }
+
+            if (!string.IsNullOrEmpty(model.SearchTerm))
+            {
+                customerQuery = customerQuery.Where(x =>
+                        x.Username.Contains(model.SearchTerm) ||
+                        x.FirstName.Contains(model.SearchTerm) ||
+                        x.LastName.Contains(model.SearchTerm));
+            }
+            if (model.State.HasValue)
+            {
+                customerQuery = customerQuery.Where(x => x.State == model.State.Value);
+            }
+
+            if (model.SortType == SortType.Descending)
+            {
+                customerQuery = model.SortName == "state" ? customerQuery.OrderByDescending(x => x.State).ThenBy(x => x.Username) : customerQuery.OrderByDescending(GetSortCustomerProperty(model));
+            }
+            else
+            {
+                customerQuery = model.SortName == "state" ? customerQuery.OrderBy(x => x.State).ThenBy(x => x.Username) : customerQuery.OrderBy(GetSortCustomerProperty(model));
+            }
+            var result = await customerRepos.PagingByAsync(customerQuery, model.PageIndex, model.PageSize);
+
+            return new GetCustomerOfAgentManagerResult
+            {
+                Customers = result.Items.Select(x => new CustomerModel
+                {
+                    CustomerId = x.CustomerId,
+                    RoleCode = x.Role?.RoleCode,
+                    RoleName = x.Role?.RoleName,
+                    RoleId = x.RoleId,
+                    State = x.State.ToEnum<CustomerState>(),
+                    Username = x.Username,
+                    UsernameUpper = x.UsernameUpper,
+                    FirstName = x.FirstName,
+                    LastName = x.LastName,
+                    Email = x.Email,
+                    Phone = x.Phone,
+                    Telegram = x.Telegram,
+                    IsAffiliate = x.IsAffiliate,
+                    AgentId = x.AgentId,
+                    CreatedDate = x.CreatedAt,
+                    IpAddress = x.CustomerSession?.IpAddress,
+                    Platform = x.CustomerSession?.Platform,
+                    SupermasterId = x.SupermasterId,
+                    MasterId = x.MasterId
+                }).ToList(),
+                Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
+                {
+                    NoOfPages = result.Metadata.NoOfPages,
+                    NoOfRows = result.Metadata.NoOfRows,
+                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
+                    Page = result.Metadata.Page
+                }
+            };
+        }
+
+        private static Expression<Func<Data.Core.Entities.Customer, object>> GetSortCustomerProperty(GetCustomerOfAgentManagerModel model)
+        {
+            if (string.IsNullOrEmpty(model.SortName)) return customer => customer.State;
+            return model.SortName?.ToLower() switch
+            {
+                "username" => customer => customer.Username,
+                "createddate" => customer => customer.CreatedAt,
+                "state" => customer => customer.State,
+                "fullname" => customer => customer.FirstName + " " + customer.LastName,
+                _ => customer => customer
             };
         }
     }

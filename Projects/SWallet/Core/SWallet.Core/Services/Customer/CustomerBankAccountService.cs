@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SWallet.Core.Contexts;
 using SWallet.Core.Converters;
-using SWallet.Core.Models.Customers;
+using SWallet.Core.Models;
 using SWallet.Data.Core.Entities;
 using SWallet.Data.Repositories.Banks;
 using SWallet.Data.Repositories.Customers;

@@ -1,6 +1,6 @@
 ﻿using HnMicro.Core.Helpers;
 using SWallet.Core.Enums;
-using SWallet.Core.Models.Customers;
+using SWallet.Core.Models;
 using SWallet.Data.Core.Entities;
 
 namespace SWallet.Core.Converters

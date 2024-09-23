@@ -40,5 +40,19 @@ namespace SWallet.ManagerService.Controllers
             });
             return Ok();
         }
+
+        [HttpGet("get-list-customers")]
+        public async Task<IActionResult> GetCustomersOfAgentManager([FromQuery] GetCustomersOfAgentManagerRequest request)
+        {
+            return Ok(OkResponse.Create(await _managerService.GetCustomerOfAgentManager(new GetCustomerOfAgentManagerModel
+            {
+                SearchTerm = request.SearchTerm,
+                State = request.State,
+                PageIndex = request.PageIndex,
+                PageSize = request.PageSize,
+                SortName = request.SortName,
+                SortType = request.SortType
+            })));
+        }
     }
 }

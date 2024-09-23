@@ -1,6 +1,6 @@
 ﻿using SWallet.Core.Enums;
 
-namespace SWallet.Core.Models.Customers
+namespace SWallet.Core.Models
 {
     public class CustomerSessionModel
     {

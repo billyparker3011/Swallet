@@ -1,7 +1,7 @@
 ﻿using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
-using SWallet.Core.Models.Customers;
+using SWallet.Core.Models;
 using SWallet.Core.Services.Customer;
 using SWallet.CustomerService.Requests.Customer;
 

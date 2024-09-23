@@ -1,4 +1,4 @@
-﻿namespace SWallet.Core.Models.Customers
+﻿namespace SWallet.Core.Models
 {
     public class AddOrUpdateCustomerBankAccountModel
     {

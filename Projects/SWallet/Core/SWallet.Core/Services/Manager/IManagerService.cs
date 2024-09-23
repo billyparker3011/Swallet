@@ -7,5 +7,6 @@ namespace SWallet.Core.Services.Manager
     {
         Task CreateManager(CreateManagerModel model);
         Task<GetManagersResult> GetManagers(GetManagersModel model);
+        Task<GetCustomerOfAgentManagerResult> GetCustomerOfAgentManager(GetCustomerOfAgentManagerModel model);
     }
 }
