@@ -19,8 +19,8 @@ steps:
       echo "Logging into Azure Container Registry using token"
       echo $(ACR_ACCESS_TOKEN) | docker --config /tmp/.docker login crhnxstagingsoutheastasia.azurecr.io -u $(ACR_USERNAME) --password-stdin
 
-      echo "Pull Image from Azure Container Registry"
-      docker --config /tmp/.docker pull crhnxstagingsoutheastasia.azurecr.io/agent:latest
+    #      echo "Pull Image from Azure Container Registry"
+    #      docker --config /tmp/.docker pull crhnxstagingsoutheastasia.azurecr.io/agent:latest
     #      echo "Stopping and removing existing container"
     #      docker stop webapp-container || true
     #      docker rm webapp-container || true
