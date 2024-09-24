@@ -111,6 +111,14 @@ namespace Lottery.Player.PlayerService.Controllers
             return Ok();
         }
 
+        [HttpGet("js/refresh")]
+        [Authorize(AuthenticationSchemes = nameof(BtiAuthorizeAttribute))]
+        public async Task<IActionResult> RefreshBalance([FromQuery] string token)
+        {
+            var result = await _btiTicketService.RefreshBalance(token);
+            return Ok(result);
+        }
+
         private async Task<string> GetRequestBody(Stream body)
         {
             if (body == null) return string.Empty;

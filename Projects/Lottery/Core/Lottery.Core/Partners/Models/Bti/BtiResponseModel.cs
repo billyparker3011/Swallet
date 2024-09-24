@@ -52,4 +52,15 @@ namespace Lottery.Core.Partners.Models.Bti
         public BtiBaseResponseModel(int code = 0) : base(code) { }
         public long trx_id { get; set; }
     }
+
+    public class BtiRefreshResponseModel
+    {
+        public BtiRefreshResponseModel(bool isSuccess, decimal balance)
+        {
+            Status = isSuccess ? "success" : "failure";
+            Balance = balance;
+        }
+        public string Status { get; set; }
+        public Decimal Balance { get; set; }
+    }
 }

@@ -19,5 +19,7 @@ namespace Lottery.Core.Services.Partners.Bti
         Task<BtiBaseResponseModel> DebitCustomer(string cust_id, decimal amount, long req_id, long purchase_id, string requestBody);
 
         Task<BtiBaseResponseModel> CreditCustomer(string cust_id, decimal amount, long req_id, long purchase_id, string requestBody);
+
+        Task<BtiRefreshResponseModel> RefreshBalance(string token);
     }
 }
