@@ -17,7 +17,7 @@ steps:
     runOptions: 'commands'
     commands: |
       echo "Logging into Azure Container Registry using token"
-      docker login crhnxstagingsoutheastasia.azurecr.io -u $(ACR_USERNAME) -p $(ACR_ACCESS_TOKEN)
+      echo $(ACR_ACCESS_TOKEN) | docker login crhnxstagingsoutheastasia.azurecr.io -u $(ACR_USERNAME) --password-stdin
 
       echo "Pull Image from Azure Container Registry"
       docker pull crhnxstagingsoutheastasia.azurecr.io/agent:latest
