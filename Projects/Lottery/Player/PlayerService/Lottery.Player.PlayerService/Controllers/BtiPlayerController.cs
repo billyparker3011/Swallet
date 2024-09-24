@@ -116,6 +116,7 @@ namespace Lottery.Player.PlayerService.Controllers
         public async Task<IActionResult> RefreshBalance([FromQuery] string token)
         {
             var result = await _btiTicketService.RefreshBalance(token);
+            Response.Headers.Add("Access-Control-Allow-Origin", "*");
             return Ok(result);
         }
 
