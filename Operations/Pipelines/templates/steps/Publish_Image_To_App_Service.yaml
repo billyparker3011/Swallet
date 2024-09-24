@@ -16,8 +16,13 @@ steps:
     dockerRegistryServiceConnection: 'Staging Azure Container Registry'
     runOptions: 'commands'
     commands: |
+      echo "Docker version:"
+      docker --version
+      echo "Existing Docker images:"
+      docker images
       echo "Logging into Azure Container Registry using token"
       docker login crhnxstagingsoutheastasia.azurecr.io -u $(ACR_USERNAME) -p $(ACR_ACCESS_TOKEN)
+      echo "Attempting to pull the Docker image..."
       docker pull crhnxstagingsoutheastasia.azurecr.io/agent:latest
     #      echo "Stopping and removing existing container"
     #      docker stop webapp-container || true
