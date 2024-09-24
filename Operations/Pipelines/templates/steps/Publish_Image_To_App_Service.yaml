@@ -9,9 +9,9 @@
 
 
 steps:
-- task: Bash@3
+- task: Bash@2
   condition: eq(variables.environment, 'staging')
-  displayName: "Publish $(application) to App Service"
+  displayName: "Publish $(application) to Docker Server"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
