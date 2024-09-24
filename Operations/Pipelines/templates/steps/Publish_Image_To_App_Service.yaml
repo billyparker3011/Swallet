@@ -9,15 +9,15 @@
 
 
 steps:
-- task: Bash@2
+- task: SSH@0
   condition: eq(variables.environment, 'staging')
   displayName: "Publish $(application) to Docker Server"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
-      hostname
-      docker ps
+      echo "Hello from remote server"
+      df -h
     #      echo "Stopping and removing existing container"
     #      docker stop webapp-container || true
     #      docker rm webapp-container || true
