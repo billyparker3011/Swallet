@@ -1,0 +1,13 @@
+variables:
+- name: AgentPool
+  value: "Testing Environment Agent Pool"
+- name: DockerRegistry
+  value: "Staging Azure Container Registry"
+- name: ResourceGroupName
+  value: "rg-hnx-staging-southeastasia"
+- name: DockerRegistryURL
+  value: "crhnxstagingsoutheastasia.azurecr.io"
+- name: environment
+  value: "staging"
+- name: location
+  value: "southeastasia"

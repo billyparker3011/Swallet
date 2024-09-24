@@ -4,6 +4,7 @@ trigger:
     - main
     - develop
     - test
+    - staging
   paths:
     exclude:
     - "Operations/*"
@@ -21,6 +22,8 @@ variables:
   - template: templates/variables/Production.yaml
 - ${{ elseif eq(variables['Build.SourceBranchName'], 'test') }}:
   - template: templates/variables/Testing.yaml
+- ${{ elseif eq(variables['Build.SourceBranchName'], 'staging') }}:
+  - template: templates/variables/Staging.yaml
 - ${{ else }}:
   - template: templates/variables/Development.yaml
 
