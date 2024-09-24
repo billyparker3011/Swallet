@@ -15,7 +15,11 @@ steps:
   inputs:
     sshEndpoint: 'docker_container'
     runOptions: 'commands'
-    commands: "echo \"Deploying Docker container\"     \ndocker pull thekop68/webapp\ndocker stop webapp-container || true\ndocker rm webapp-container || true\ndocker run -d --name webapp-container -p 80:5000 thekop68/webapp\n"
+    commands: |
+      echo "Deploying Docker container"
+      docker pull crhnxstagingsoutheastasia.azurecr.io/agent:latest
+    #      docker rm webapp-container || true
+    #      docker run -d --name webapp-container -p 80:5000 thekop68/webapp
     readyTimeout: '20000'
 
 - task: Bash@3
