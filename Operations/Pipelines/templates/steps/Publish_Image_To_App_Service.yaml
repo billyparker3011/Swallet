@@ -67,7 +67,6 @@ steps:
           docker run -d --name crhnxstagingsoutheastasia-agent-authentication -p 8080:80 $(DockerRegistryURL)/$(repository):latest
       else
           echo "Repository name $(repository) is not recognized. Skipping container creation."
-      fi
     readyTimeout: '20000'
 
 - task: Bash@3
