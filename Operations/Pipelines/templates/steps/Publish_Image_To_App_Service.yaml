@@ -31,6 +31,63 @@ steps:
     commands: |
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 81:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'match'))
+  displayName: "Run agent container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'odd'))
+  displayName: "Run agent container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'player'))
+  displayName: "Run agent container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'player-authentication'))
+  displayName: "Run agent container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
+
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'ticket'))
+  displayName: "Run agent container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'adjust-odd'))
+  displayName: "Run agent container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
+
+
 - task: Bash@3
   condition: and(ne(variables['environment'], 'prod'), ne(variables['environment'], 'staging'))
   displayName: "Publish $(application) to App Service"
