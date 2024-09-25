@@ -60,13 +60,13 @@ steps:
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
 
-      echo "Running new Docker containers based on repository name"
-      if [ "$(repository)" eq "agent" ]; then
-          docker run -d --name crhnxstagingsoutheastasia-agent -p 80:80 $(DockerRegistryURL)/$(repository):latest
-      elif [ "$(repository)" eq "agent-authentication" ]; then
-          docker run -d --name crhnxstagingsoutheastasia-agent-authentication -p 8080:80 $(DockerRegistryURL)/$(repository):latest
+      if [ "$(repository)" = "agent" ]; then
+        docker run -d --name crhnxstagingsoutheastasia-agent -p 80:80 $(DockerRegistryURL)/$(repository):latest
+      elif [ "$(repository)" = "agent-authentication" ]; then
+        docker run -d --name crhnxstagingsoutheastasia-agent-authentication -p 8080:80 $(DockerRegistryURL)/$(repository):latest
       else
-          echo "Repository name $(repository) is not recognized. Skipping container creation."
+        echo "Repository name $(repository) is not recognized. Skipping container creation."
+      fi
     readyTimeout: '20000'
 
 - task: Bash@3
