@@ -1,0 +1,31 @@
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+    - test
+    - staging
+  paths:
+    exclude:
+    - "Operations/*"
+    - "Terraform/*"
+    - "Helm/*"
+  batch: true
+
+name: $(date:yyMMdd)$(rev:.rr)
+
+pool:
+  name: Development Environment Agent Pool
+
+variables:
+- ${{ if eq(variables['Build.SourceBranchName'], 'main') }}:
+  - template: templates/variables/Production.yaml
+- ${{ elseif eq(variables['Build.SourceBranchName'], 'test') }}:
+  - template: templates/variables/Testing.yaml
+- ${{ elseif eq(variables['Build.SourceBranchName'], 'staging') }}:
+  - template: templates/variables/Staging.yaml
+- ${{ else }}:
+  - template: templates/variables/Development.yaml
+
+stages:
+- template: templates/stages/Publish_Artifacts_Agent_Authentication.yaml
