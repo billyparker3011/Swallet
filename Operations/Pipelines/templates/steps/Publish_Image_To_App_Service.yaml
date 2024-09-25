@@ -59,7 +59,7 @@ steps:
 
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
-
+    script: |
       #!/bin/bash
       if [ "$(repository)" == "agent" ]; then
         docker run -d --name crhnxstagingsoutheastasia-agent -p 80:80 $(DockerRegistryURL)/$(repository):latest
@@ -71,6 +71,7 @@ steps:
     readyTimeout: '20000'
 
 - task: Bash@3
+
 
   condition: and(ne(variables['environment'], 'prod'), ne(variables['environment'], 'staging'))
   displayName: "Publish $(application) to App Service"
