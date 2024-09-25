@@ -40,8 +40,42 @@ steps:
 
 #     readyTimeout: '20000'
 
+# - task: SSH@0
+#   condition: eq(variables['environment'], 'staging')
+#   displayName: "Publish $(application) to Docker Server"
+#   inputs:
+#     sshEndpoint: 'ssh-docker-srv'
+#     runOptions: 'commands'
+#     commands: |
+#       echo "Docker version:"
+#       docker --version
+#       echo "Existing Docker images:"
+#       docker images
+#       echo "Login to Azure Container Registry"
+#       echo $(ACR_ACCESS_TOKEN) | docker login $(DockerRegistryURL) -u $(ACR_USERNAME) --password-stdin > /dev/null 2>&1
+
+#       echo "Attempting to pull the Docker image..."
+#       docker pull $(DockerRegistryURL)/$(repository):latest
+
+#       /root/script.sh $(DockerRegistryURL) $(repository)
+#     readyTimeout: '20000'
+
+# - task: Bash@3
+#   condition: and(ne(variables['environment'], 'prod'), ne(variables['environment'], 'staging'))
+#   displayName: "Publish $(application) to App Service"
+#   inputs:
+#     targetType: 'inline'
+#     script: |
+#       az webapp config container set --name $(WebAppName) --resource-group $(ResourceGroupName) --docker-custom-image-name $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
+
+
+
+
+
+
 - task: SSH@0
-  condition: eq(variables['environment'], 'staging')
+  condition: eq(variables.environment, 'staging')
   displayName: "Publish $(application) to Docker Server"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
@@ -53,17 +87,23 @@ steps:
       docker images
       echo "Login to Azure Container Registry"
       echo $(ACR_ACCESS_TOKEN) | docker login $(DockerRegistryURL) -u $(ACR_USERNAME) --password-stdin > /dev/null 2>&1
-
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
-
-      /root/script.sh $(DockerRegistryURL) $(repository)
     readyTimeout: '20000'
-
-- task: Bash@3
-  condition: and(ne(variables['environment'], 'prod'), ne(variables['environment'], 'staging'))
-  displayName: "Publish $(application) to App Service"
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'agent'))
+  displayName: "Run agent container"
   inputs:
-    targetType: 'inline'
-    script: |
-      az webapp config container set --name $(WebAppName) --resource-group $(ResourceGroupName) --docker-custom-image-name $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-agent -p 80:80 $(DockerRegistryURL)/$(repository):latest
+
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'agent-authentication'))
+  displayName: "Run agent-authentication container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker run -d --name crhnxstagingsoutheastasia-agent-authentication -p 8080:80 $(DockerRegistryURL)/$(repository):latest
