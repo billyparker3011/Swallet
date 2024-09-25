@@ -1,0 +1,34 @@
+steps:
+
+- task: SSH@0
+  condition: eq(variables.environment, 'staging')
+  displayName: "Publish $(application) to Docker Server"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      echo "Docker version:"
+      docker --version
+
+      echo "Existing Docker images:"
+      docker images
+
+      echo "Login to Azure Container Registry"
+      echo $(ACR_ACCESS_TOKEN) | docker login $(DockerRegistryURL) -u $(ACR_USERNAME) --password-stdin > /dev/null 2>&1
+
+      echo "Attempting to pull the Docker image..."
+      docker pull $(DockerRegistryURL)/$(repository):latest
+      echo "Running new Docker container"
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 81:80 $(DockerRegistryURL)/$(repository):latest
+
+    readyTimeout: '20000'
+
+- task: Bash@3
+
+
+  condition: and(ne(variables['environment'], 'prod'), ne(variables['environment'], 'staging'))
+  displayName: "Publish $(application) to App Service"
+  inputs:
+    targetType: 'inline'
+    script: |
+      az webapp config container set --name $(WebAppName) --resource-group $(ResourceGroupName) --docker-custom-image-name $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
