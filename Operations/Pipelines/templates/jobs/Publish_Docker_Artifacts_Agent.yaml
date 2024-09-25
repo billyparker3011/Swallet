@@ -5,18 +5,18 @@ jobs:
   displayName: "Publish Docker Artifact to ${{ variables.environment }} Environment"
   strategy:
     matrix:
-      AgentAuthentication:
-        WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
-        application: "AgentAuthentication"
-        repository: "agent-authentication"
-        Dockerfile: "Projects/Lottery/Agent/AuthenticationService/Lottery.Agent.AuthenticationService/Dockerfile"
-        AppSettings: "Projects/Lottery/Agent/AuthenticationService/Lottery.Agent.AuthenticationService"
+      #        WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
+      #        application: "AgentAuthentication"
+      #        repository: "agent-authentication"
+      #        Dockerfile: "Projects/Lottery/Agent/AuthenticationService/Lottery.Agent.AuthenticationService/Dockerfile"
+      #        AppSettings: "Projects/Lottery/Agent/AuthenticationService/Lottery.Agent.AuthenticationService"
       Agent:
         WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
         application: "Agent"
         repository: "agent"
         Dockerfile: "Projects/Lottery/Agent/AgentService/Lottery.Agent.AgentService/Dockerfile"
         AppSettings: "Projects/Lottery/Agent/AgentService/Lottery.Agent.AgentService"
+      #      AgentAuthentication:
   steps:
   - template: ../steps/Publish_Image_To_App_Service.yaml
     #  - template: ../steps/Publish_Docker_Artifacts.yaml
