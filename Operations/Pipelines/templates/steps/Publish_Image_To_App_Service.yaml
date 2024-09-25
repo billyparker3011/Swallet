@@ -49,17 +49,15 @@ steps:
     commands: |
       echo "Docker version:"
       docker --version
-
       echo "Existing Docker images:"
       docker images
-
       echo "Login to Azure Container Registry"
       echo $(ACR_ACCESS_TOKEN) | docker login $(DockerRegistryURL) -u $(ACR_USERNAME) --password-stdin > /dev/null 2>&1
 
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
       echo $(DockerRegistryURL)/$(repository):latest
-      if [[ "$(repository)" == '"agent"' ]]; then echo "Start run service Agent"; fi
+      if [[ "$(repository)" = '"agent"' ]]; then echo "Start run service Agent"; fi
     readyTimeout: '20000'
 
 - task: Bash@3
