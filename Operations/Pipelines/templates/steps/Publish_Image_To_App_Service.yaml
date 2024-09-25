@@ -57,7 +57,7 @@ steps:
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
 
-      bash -c "if [ '$(repository)' = 'agent' ]; then echo 'Start run service Agent'; fi"
+      bash -c "if [ 'agent' = 'agent' ]; then echo 'Start run service Agent'; fi"
     readyTimeout: '20000'
 
 - task: Bash@3
