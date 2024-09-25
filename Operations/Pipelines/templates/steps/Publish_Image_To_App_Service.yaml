@@ -60,7 +60,7 @@ steps:
       docker pull $(DockerRegistryURL)/$(repository):latest
       echo $(DockerRegistryURL)/$(repository):latest
 
-      if [ "$(repository)" == "agent" ]; then echo "Start run service Agent"; fi
+      if [ "$(repository)" == "agent" ]; then echo "Start run service Agent"
     readyTimeout: '20000'
 
 - task: Bash@3
