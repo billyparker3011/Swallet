@@ -7,6 +7,10 @@
 #     script: |
 #       az webapp config container set --name $(WebAppName) --resource-group $(ResourceGroupName) --docker-custom-image-name $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
+
+#     echo "Stopping and removing existing container"
+#     docker stop webapp-container || true
+#     docker rm webapp-container || true
 steps:
 - task: SSH@0
   condition: eq(variables.environment, 'staging')
@@ -25,9 +29,6 @@ steps:
       echo $(ACR_ACCESS_TOKEN) | docker login crhnxstagingsoutheastasia.azurecr.io -u $(ACR_USERNAME) --password-stdin > /dev/null 2>&1
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
-#     echo "Stopping and removing existing container"
-#     docker stop webapp-container || true
-#     docker rm webapp-container || true
       echo "Running new Docker container"
       docker run -d --name webapp-container -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
     readyTimeout: '20000'
