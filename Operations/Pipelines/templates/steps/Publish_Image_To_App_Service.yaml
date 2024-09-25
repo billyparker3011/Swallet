@@ -2,7 +2,7 @@
 steps:
 - task: SSH@0
   condition: eq(variables.environment, 'staging')
-  displayName: "Publish $(application) to Docker Server"
+  displayName: "Docker Server Pull $(application)"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
@@ -15,43 +15,51 @@ steps:
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'agent'))
-  displayName: "Run agent container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
+      docker stop crhnxstagingsoutheastasia-$(repository) || true
+      docker rm -f crhnxstagingsoutheastasia-$(repository) || true
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'agent-authentication'))
-  displayName: "Run agent-authentication container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
+      docker stop crhnxstagingsoutheastasia-$(repository) || true
+      docker rm -f crhnxstagingsoutheastasia-$(repository) || true
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 81:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'match'))
-  displayName: "Run agent container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
+      docker stop crhnxstagingsoutheastasia-$(repository) || true
+      docker rm -f crhnxstagingsoutheastasia-$(repository) || true
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 82:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'odd'))
-  displayName: "Run agent container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
+      docker stop crhnxstagingsoutheastasia-$(repository) || true
+      docker rm -f crhnxstagingsoutheastasia-$(repository) || true
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 83:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'player'))
-  displayName: "Run agent container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
@@ -62,7 +70,7 @@ steps:
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'player-authentication'))
-  displayName: "Run agent container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
@@ -74,20 +82,24 @@ steps:
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'ticket'))
-  displayName: "Run agent container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
+      docker stop crhnxstagingsoutheastasia-$(repository) || true
+      docker rm -f crhnxstagingsoutheastasia-$(repository) || true
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 86:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'adjust-odd'))
-  displayName: "Run agent container"
+  displayName: "Run $(application) container"
   inputs:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
+      docker stop crhnxstagingsoutheastasia-$(repository) || true
+      docker rm -f crhnxstagingsoutheastasia-$(repository) || true
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 88:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 
