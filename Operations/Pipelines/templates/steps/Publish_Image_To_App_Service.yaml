@@ -59,20 +59,18 @@ steps:
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
       echo $(DockerRegistryURL)/$(repository):latest
-      - task: Bash@2
-       inputs:
-         targetType: 'inline'
-         script: |
-           # Write your commands here
-
-           echo 'Hello world'
-
-      if [ "$(repository)" == "agent" ]; then echo "Start run service Agent"; fi
+    #      if [ "$(repository)" == "agent" ]; then echo "Start run service Agent"; fi
     readyTimeout: '20000'
 
+- task: Bash2
+  condition: eq(variables['environment'], 'staging')
+  displayName: "Publish $(application) to Docker Server"
+  inputs:
+    targetType: 'inline'
+    script: |
+      if [ "$(repository)" == "agent" ]; then echo "Start run service Agent"; fi
+
 - task: Bash@3
-
-
   condition: and(ne(variables['environment'], 'prod'), ne(variables['environment'], 'staging'))
   displayName: "Publish $(application) to App Service"
   inputs:
