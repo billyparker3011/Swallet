@@ -57,7 +57,7 @@ steps:
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
 
-      /root/script.sh $(repository)
+      /root/script.sh $(DockerRegistryURL) $(repository)
     readyTimeout: '20000'
 
 - task: Bash@3
