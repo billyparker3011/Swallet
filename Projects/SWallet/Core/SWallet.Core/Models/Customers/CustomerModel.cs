@@ -21,11 +21,13 @@ namespace SWallet.Core.Models
         public string RoleName { get; set; }
         public string RoleCode { get; set; }
         public bool IsAffiliate { get; set; }
+        public string AffiliateUsername { get; set; }
         public long AgentId { get; set; }
         public long MasterId { get; set; }
         public long SupermasterId { get; set; }
         public string IpAddress { get; set; }
         public string Platform { get; set; }
         public DateTime CreatedDate { get; set; }
+        public DateTime? ChangedPasswordAt { get; set; }
     }
 }

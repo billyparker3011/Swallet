@@ -68,9 +68,9 @@ namespace SWallet.CustomerService.Controllers
         }
 
         [HttpGet("my-profile")]
-        public async Task<IActionResult> MyProfile()
+        public async Task<IActionResult> MyProfile([FromQuery] long? customerId)
         {
-            return Ok(OkResponse.Create(await _customerService.MyProfile()));
+            return Ok(OkResponse.Create(await _customerService.MyProfile(customerId)));
         }
     }
 }

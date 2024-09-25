@@ -36,12 +36,12 @@ namespace SWallet.Core.Services.Customer
             await SWalletUow.SaveChangesAsync();
         }
 
-        public async Task<MyCustomerProfileModel> MyProfile()
+        public async Task<MyCustomerProfileModel> MyProfile(long? customerId)
         {
             var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
-            var customerId = ClientContext.Customer.CustomerId;
+            var targetCustomerId = customerId.HasValue ? customerId.Value : ClientContext.Customer.CustomerId;
 
-            var customer = await customerRepository.FindByIdAsync(customerId) ?? throw new NotFoundException();
+            var customer = await customerRepository.FindByIdAsync(targetCustomerId) ?? throw new NotFoundException();
 
             return customer.ToMyCustomerProfileModel();
         }
