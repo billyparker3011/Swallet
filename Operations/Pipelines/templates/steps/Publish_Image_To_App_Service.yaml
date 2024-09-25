@@ -60,19 +60,17 @@ steps:
       docker pull $(DockerRegistryURL)/$(repository):latest
       echo $(DockerRegistryURL)/$(repository):latest
 
-      if [ "$(repository)" == "agent" ]; then
-        echo "Start run service Agent"
-        echo echo $(DockerRegistryURL)/$(repository):latest
-        docker rm -f crhnxstagingsoutheastasia-agent || true
-        docker run -d --name crhnxstagingsoutheastasia-agent -p 80:80 crhnxstagingsoutheastasia.azurecr.io/$(repository):latest
-      elif [ "$(repository)" == "agent-authentication" ]; then
-        echo "Start run service Agent Auth"
-        echo echo $(DockerRegistryURL)/$(repository):latest
-        docker rm -f crhnxstagingsoutheastasia-agent-authentication || true
-        docker run -d --name crhnxstagingsoutheastasia-agent-authentication -p 8080:80 crhnxstagingsoutheastasia.azurecr.io/$(repository):latest
-      else
-        echo "Repository name $(repository) is not recognized. Skipping container creation."
-      fi
+      if [ "$(repository)" == "agent" ]; then \
+        echo "Start run service Agent" \
+        docker rm -f crhnxstagingsoutheastasia-agent || true \
+        docker run -d --name crhnxstagingsoutheastasia-agent -p 80:80 crhnxstagingsoutheastasia.azurecr.io/$(repository):latest \
+      elif [ "$(repository)" == "agent-authentication" ]; then \
+        echo "Start run service Agent Auth" \
+        docker rm -f crhnxstagingsoutheastasia-agent-authentication || true \
+        docker run -d --name crhnxstagingsoutheastasia-agent-authentication -p 8080:80 crhnxstagingsoutheastasia.azurecr.io/$(repository):latest \
+      else \
+        echo "Repository name $(repository) is not recognized. Skipping container creation." \
+      fi \
     readyTimeout: '20000'
 
 - task: Bash@3
