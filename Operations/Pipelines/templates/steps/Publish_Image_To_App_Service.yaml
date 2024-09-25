@@ -38,7 +38,7 @@ steps:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 82:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'odd'))
@@ -47,7 +47,7 @@ steps:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 83:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'player'))
@@ -56,7 +56,7 @@ steps:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 84:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'player-authentication'))
@@ -65,7 +65,7 @@ steps:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 85:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 
 - task: SSH@0
@@ -75,7 +75,7 @@ steps:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 86:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'adjust-odd'))
@@ -84,7 +84,7 @@ steps:
     sshEndpoint: 'ssh-docker-srv'
     runOptions: 'commands'
     commands: |
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 88:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 
 
