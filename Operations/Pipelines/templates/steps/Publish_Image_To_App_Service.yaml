@@ -60,6 +60,8 @@ steps:
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):latest
     script: |
+      echo $(repository)
+      echo $(DockerRegistryURL)/$(repository)
       #!/bin/bash
       if [ "$(repository)" == "agent" ]; then
         docker run -d --name crhnxstagingsoutheastasia-agent -p 80:80 $(DockerRegistryURL)/$(repository):latest
