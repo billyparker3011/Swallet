@@ -2,7 +2,7 @@ jobs:
 - job: Publish_Docker_Artifacts
   pool:
     name: "$(AgentPool)"
-  displayName: "Publish Docker Artifact to ${{ variables.environment }} Environment"
+  displayName: "Publish Docker Artifact to ${{ variables.environment }} Agent Environment"
   strategy:
     matrix:
       AgentAuthentication:
