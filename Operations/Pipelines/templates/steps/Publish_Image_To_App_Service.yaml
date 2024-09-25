@@ -20,8 +20,8 @@ steps:
       docker --version
       echo "Existing Docker images:"
       docker images
+      echo $(DockerRegistryURL)/$(repository)
       echo "Logging into Azure Container Registry using token"
-
       echo $(ACR_ACCESS_TOKEN) | docker login crhnxstagingsoutheastasia.azurecr.io -u $(ACR_USERNAME) --password-stdin > /dev/null 2>&1
       echo "Attempting to pull the Docker image..."
       docker pull crhnxstagingsoutheastasia.azurecr.io/agent:latest
