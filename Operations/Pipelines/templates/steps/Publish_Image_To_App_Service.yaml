@@ -30,7 +30,7 @@ steps:
       echo "Attempting to pull the Docker image..."
       docker pull $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
       echo "Running new Docker container"
-      docker run -d --name webapp-container -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name $(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
     readyTimeout: '20000'
 
 - task: Bash@3
