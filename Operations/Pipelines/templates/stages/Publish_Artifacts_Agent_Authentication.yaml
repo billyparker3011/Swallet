@@ -3,4 +3,3 @@ stages:
   displayName: "Publish Artifacts"
   jobs:
   - template: ../jobs/Publish_Docker_Artifacts_Agent_Authentication.yaml
-    #  - template: ../jobs/Publish_Docker_Artifacts_Agent.yaml
