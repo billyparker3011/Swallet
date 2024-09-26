@@ -22,7 +22,7 @@ steps:
     commands: |
       docker stop crhnxstagingsoutheastasia-$(repository) || true
       docker rm -f crhnxstagingsoutheastasia-$(repository) || true
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 80:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 87:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'agent-authentication'))
