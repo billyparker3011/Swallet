@@ -15,4 +15,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 COPY Projects/Lottery/Tools/Casino.Tools.AllBet/appsettings.json .
+
 ENTRYPOINT ["dotnet", "Casino.Tools.AllBet.dll"]
