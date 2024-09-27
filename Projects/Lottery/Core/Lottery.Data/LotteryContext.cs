@@ -1,4 +1,5 @@
 ﻿using Lottery.Data.Entities;
+using Lottery.Data.Entities.Partners.Bti;
 using Lottery.Data.Entities.Partners.Casino;
 using Lottery.Data.Entities.Partners.CockFight;
 using Microsoft.EntityFrameworkCore;
@@ -62,6 +63,15 @@ namespace Lottery.Data
         public virtual DbSet<CasinoTicket> CasinoTickets { get; set; }
         public virtual DbSet<CasinoTicketBetDetail> CasinoTicketBetDetails { get; set; }
         public virtual DbSet<CasinoTicketEventDetail> CasinoTicketEventDetails { get; set; }
+        #endregion
+
+        #region Bti Partner
+        public virtual DbSet<BtiAgentBetSetting> BtiAgentBetSettings { get; set; }
+        public virtual DbSet<BtiAgentPositionTaking> BtiAgentPositionTakings { get; set; }
+        public virtual DbSet<BtiBetKind> BtiBetKinds { get; set; }
+        public virtual DbSet<BtiPlayerBetSetting> BtiPlayerBetSettings { get; set; }
+        public virtual DbSet<BtiPlayerMapping> BtiPlayerMappings { get; set; }
+        public virtual DbSet<BtiTicket> BtiTickets { get; set; }
         #endregion
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

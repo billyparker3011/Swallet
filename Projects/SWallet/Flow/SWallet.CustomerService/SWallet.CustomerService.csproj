@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <Folder Include="Services\Background\" />
-    <Folder Include="Validations\Auth\" />
   </ItemGroup>
 
 </Project>

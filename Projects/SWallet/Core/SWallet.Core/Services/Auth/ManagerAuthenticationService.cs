@@ -4,25 +4,25 @@ using HnMicro.Framework.Models;
 using HnMicro.Framework.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SWallet.Core.Configs;
 using SWallet.Core.Contexts;
+using SWallet.Core.Converters;
 using SWallet.Core.Enums;
 using SWallet.Core.Helpers;
 using SWallet.Core.Models.Auth;
 using SWallet.Data.Repositories.Managers;
 using SWallet.Data.UnitOfWorks;
-using System.Security.Claims;
 
 namespace SWallet.Core.Services.Auth
 {
     public class ManagerAuthenticationService : SWalletBaseService<ManagerAuthenticationService>, IManagerAuthenticationService
     {
         private readonly IJwtTokenService _jwtTokenService;
+        private readonly IBuildTokenService _buildTokenService;
 
         public ManagerAuthenticationService(ILogger<ManagerAuthenticationService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ISWalletClientContext sWalletClientContext, ISWalletUow sWalletUow,
-            IJwtTokenService jwtTokenService) : base(logger, serviceProvider, configuration, clockService, sWalletClientContext, sWalletUow)
+            IBuildTokenService buildTokenService) : base(logger, serviceProvider, configuration, clockService, sWalletClientContext, sWalletUow)
         {
-            _jwtTokenService = jwtTokenService;
+            _buildTokenService = buildTokenService;
         }
 
         public async Task<JwtToken> Auth(AuthModel model)
@@ -64,22 +64,7 @@ namespace SWallet.Core.Services.Auth
 
             await SWalletUow.SaveChangesAsync();
 
-            var claims = new List<Claim>
-            {
-                new(ClaimConfigs.ManagerClaimConfig.ManagerId, manager.ManagerId.ToString()),
-                new(ClaimConfigs.ManagerClaimConfig.ParentId, manager.ParentId.ToString()),
-                new(ClaimConfigs.Username, manager.Username),
-                new(ClaimConfigs.RoleId, manager.RoleId.ToString()),
-                new(ClaimConfigs.ManagerClaimConfig.ManagerRole, manager.ManagerRole.ToString()),
-                new(ClaimConfigs.FullName, manager.FullName ?? string.Empty),
-                //new(ClaimConfigs.NeedToChangePassword, isExpiredPassword.ToString().ToLower()),
-                //new(ClaimConfigs.NeedToChangeSecurityCode, isExpiredSecurityCode.ToString().ToLower()),
-                new(ClaimConfigs.SupermasterId, manager.SupermasterId.ToString()),
-                new(ClaimConfigs.MasterId, manager.MasterId.ToString()),
-                new(ClaimConfigs.Hash, hash)
-            };
-
-            return _jwtTokenService.BuildToken(claims);
+            return _buildTokenService.BuildToken(manager.ToManagerModel(), managerSession.ToManagerSessionModel());
         }
     }
 }

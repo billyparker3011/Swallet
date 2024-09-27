@@ -11,6 +11,7 @@
         public string LastName { get; set; }
         public decimal Credit { get; set; }
         public decimal? MemberMaxCredit { get; set; }
+        public bool IsLock { get; set; }
         public DateTime CreatedDate { get; set; }
         public string IpAddress { get; set; }
         public string Platform { get; set; }

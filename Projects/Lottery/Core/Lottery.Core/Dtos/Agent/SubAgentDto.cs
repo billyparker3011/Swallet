@@ -8,6 +8,7 @@
         public string LastName { get; set; }
         public int State { get; set; }
         public int Role { get; set; }
+        public bool IsLock { get; set; }
         public DateTime CreatedDate { get; set; }
         public string IpAddress { get; set; }
         public string Platform { get; set; }

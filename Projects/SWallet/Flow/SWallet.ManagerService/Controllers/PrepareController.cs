@@ -39,5 +39,23 @@ namespace SWallet.ManagerService.Controllers
                 LengthOfPassword = request.LengthOfPassword
             })));
         }
+
+        [HttpGet("100/initial-features-permissions")]
+        public async Task<IActionResult> InitialFeaturesAndPermissions()
+        {
+            return Ok(OkResponse.Create(await _prepareService.InitialFeaturesAndPermissions()));
+        }
+
+        [HttpGet("200/initial-settings")]
+        public async Task<IActionResult> InitialSettings()
+        {
+            return Ok(OkResponse.Create(await _prepareService.InitialSettings()));
+        }
+
+        [HttpGet("201/initial-manual-payment")]
+        public async Task<IActionResult> InitialManualPayment()
+        {
+            return Ok(OkResponse.Create(await _prepareService.InitialManualPayment()));
+        }
     }
 }

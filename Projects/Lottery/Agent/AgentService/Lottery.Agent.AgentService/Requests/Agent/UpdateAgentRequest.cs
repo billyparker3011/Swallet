@@ -8,5 +8,6 @@
         public string Permissions { get; set; }
         public decimal? Credit { get; set; }
         public decimal? MemberMaxCredit { get; set; }
+        public bool? IsLock { get; set; }
     }
 }

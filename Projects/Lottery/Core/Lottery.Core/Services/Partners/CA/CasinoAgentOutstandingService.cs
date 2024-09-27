@@ -1,6 +1,5 @@
 ﻿using HnMicro.Framework.Enums;
 using HnMicro.Framework.Services;
-using HnMicro.Module.Caching.ByRedis.Helpers;
 using Lottery.Core.Contexts;
 using Lottery.Core.Enums;
 using Lottery.Core.Helpers;
@@ -9,15 +8,10 @@ using Lottery.Core.Repositories.Agent;
 using Lottery.Core.Repositories.Casino;
 using Lottery.Core.Repositories.Player;
 using Lottery.Core.UnitOfWorks;
-using Lottery.Data.Entities;
-using Lottery.Data.Entities.Partners.Casino;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using System.Linq.Expressions;
-using static Lottery.Core.Helpers.PartnerHelper;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
-
 namespace Lottery.Core.Services.Partners.CA
 {
     public class CasinoAgentOutstandingService : LotteryBaseService<CasinoAgentOutstandingService>, ICasinoAgentOutstandingService

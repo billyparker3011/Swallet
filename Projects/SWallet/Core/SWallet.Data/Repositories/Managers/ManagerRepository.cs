@@ -25,5 +25,10 @@ namespace SWallet.Data.Repositories.Managers
         {
             return await DbSet.AnyAsync(f => f.ManagerRole == managerRole && f.RoleId == roleId);
         }
+
+        public async Task<Manager> FindByAffiliateCode(string affiliateCode)
+        {
+            return await DbSet.FirstOrDefaultAsync(f => f.ManagerCode == affiliateCode);
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using HnMicro.Framework.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -22,6 +23,12 @@ namespace SWallet.Data.Core.Entities
         [Required]
         [MaxLength(2000)]
         public string CardHolder { get; set; }
+
+        [Required, DefaultValue(true)]
+        public bool DepositEnabled { get; set; }
+
+        [Required, DefaultValue(true)]
+        public bool WithdrawEnabled { get; set; }
 
         [ForeignKey(nameof(BankId))]
         public virtual Bank Bank { get; set; }

@@ -22,6 +22,40 @@ namespace SWallet.Data.Core.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("SWallet.Data.Core.Entities.BalanceCustomer", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Balance")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("BalanceCustomers");
+                });
+
             modelBuilder.Entity("SWallet.Data.Core.Entities.Bank", b =>
                 {
                     b.Property<int>("BankId")
@@ -85,6 +119,9 @@ namespace SWallet.Data.Core.Migrations
                     b.Property<long>("CreatedBy")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("DepositEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<string>("NumberAccount")
                         .IsRequired()
                         .HasMaxLength(300)
@@ -95,6 +132,9 @@ namespace SWallet.Data.Core.Migrations
 
                     b.Property<long?>("UpdatedBy")
                         .HasColumnType("bigint");
+
+                    b.Property<bool>("WithdrawEnabled")
+                        .HasColumnType("bit");
 
                     b.HasKey("BankAccountId");
 
@@ -112,11 +152,23 @@ namespace SWallet.Data.Core.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("CustomerId"));
 
+                    b.Property<long>("AgentId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ChangedPasswordAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<long>("CreatedBy")
                         .HasColumnType("bigint");
+
+                    b.Property<bool>("DepositAllowed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("DiscountAllowed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Email")
                         .HasMaxLength(300)
@@ -127,10 +179,19 @@ namespace SWallet.Data.Core.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<bool>("IsAffiliate")
+                        .HasColumnType("bit");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("Lock")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("MasterId")
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Password")
                         .IsRequired()
@@ -147,6 +208,13 @@ namespace SWallet.Data.Core.Migrations
                     b.Property<int>("State")
                         .HasColumnType("int");
 
+                    b.Property<long>("SupermasterId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Telegram")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -158,6 +226,14 @@ namespace SWallet.Data.Core.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<string>("UsernameUpper")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("WithdrawAllowed")
+                        .HasColumnType("bit");
+
                     b.HasKey("CustomerId");
 
                     b.HasIndex("Email");
@@ -167,7 +243,56 @@ namespace SWallet.Data.Core.Migrations
                     b.HasIndex("Username")
                         .IsUnique();
 
+                    b.HasIndex("UsernameUpper")
+                        .IsUnique();
+
                     b.ToTable("Customers");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.CustomerBankAccount", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("BankId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CardHolder")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("NumberAccount")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BankId");
+
+                    b.HasIndex("CustomerId", "BankId", "NumberAccount")
+                        .IsUnique();
+
+                    b.ToTable("CustomerBankAccounts");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.CustomerSession", b =>
@@ -211,6 +336,48 @@ namespace SWallet.Data.Core.Migrations
                     b.ToTable("CustomerSessions");
                 });
 
+            modelBuilder.Entity("SWallet.Data.Core.Entities.Discount", b =>
+                {
+                    b.Property<int>("DiscountId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DiscountId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DiscountName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsStatic")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Setting")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("DiscountId");
+
+                    b.ToTable("Discounts");
+                });
+
             modelBuilder.Entity("SWallet.Data.Core.Entities.Feature", b =>
                 {
                     b.Property<int>("FeatureId")
@@ -227,6 +394,11 @@ namespace SWallet.Data.Core.Migrations
 
                     b.Property<bool>("Enabled")
                         .HasColumnType("bit");
+
+                    b.Property<string>("FeatureCode")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("FeatureName")
                         .IsRequired()
@@ -301,6 +473,10 @@ namespace SWallet.Data.Core.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
 
+                    b.Property<string>("ManagerCode")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
                     b.Property<int>("ManagerRole")
                         .HasColumnType("int");
 
@@ -337,7 +513,15 @@ namespace SWallet.Data.Core.Migrations
 
                     b.HasKey("ManagerId");
 
+                    b.HasIndex("MasterId");
+
                     b.HasIndex("RoleId");
+
+                    b.HasIndex("SupermasterId");
+
+                    b.HasIndex("Username", "ManagerCode")
+                        .IsUnique()
+                        .HasFilter("[ManagerCode] IS NOT NULL");
 
                     b.ToTable("Managers");
                 });
@@ -381,6 +565,63 @@ namespace SWallet.Data.Core.Migrations
                         .IsUnique();
 
                     b.ToTable("ManagerSessions");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.PaymentMethod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("Fee")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("Icon")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("Max")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<decimal?>("Min")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("PaymentPartner")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PaymentMethods");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Permission", b =>
@@ -461,6 +702,170 @@ namespace SWallet.Data.Core.Migrations
                     b.ToTable("Roles");
                 });
 
+            modelBuilder.Entity("SWallet.Data.Core.Entities.Setting", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("CurrencySymbol")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("MaskCharacter")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<int>("NumberOfMaskCharacters")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PaymentPartner")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Settings");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.Transaction", b =>
+                {
+                    b.Property<long>("TransactionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("TransactionId"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DepositBankName")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DepositCardHolder")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DepositContent")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("DepositNumberAccount")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("DepositPaymentMethodId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DepositPaymentPartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DepositToBankName")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DepositToCardHolder")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("DepositToNumberAccount")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<decimal>("OriginAmount")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<string>("TransactionName")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("TransactionState")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TransactionType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("WithdrawBankName")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("WithdrawCardHolder")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("WithdrawNumberAccount")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("WithdrawPaymentMethodId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("WithdrawPaymentPartnerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("WithdrawToBankName")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("WithdrawToCardHolder")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("WithdrawToNumberAccount")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.HasKey("TransactionId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("Transactions");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.BalanceCustomer", b =>
+                {
+                    b.HasOne("SWallet.Data.Core.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("SWallet.Data.Core.Entities.BankAccount", b =>
                 {
                     b.HasOne("SWallet.Data.Core.Entities.Bank", "Bank")
@@ -481,6 +886,25 @@ namespace SWallet.Data.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.CustomerBankAccount", b =>
+                {
+                    b.HasOne("SWallet.Data.Core.Entities.Bank", "Bank")
+                        .WithMany()
+                        .HasForeignKey("BankId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SWallet.Data.Core.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bank");
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.CustomerSession", b =>
@@ -525,6 +949,17 @@ namespace SWallet.Data.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Feature");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.Transaction", b =>
+                {
+                    b.HasOne("SWallet.Data.Core.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Customer", b =>
