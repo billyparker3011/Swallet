@@ -102,6 +102,17 @@ steps:
       docker rm -f crhnxstagingsoutheastasia-$(repository) || true
       docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 88:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
 
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'allbet'))
+  displayName: "Run $(application) container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker stop crhnxstagingsoutheastasia-$(repository) || true
+      docker rm -f crhnxstagingsoutheastasia-$(repository) || true
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 91:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+
 
 
 - task: Bash@3
