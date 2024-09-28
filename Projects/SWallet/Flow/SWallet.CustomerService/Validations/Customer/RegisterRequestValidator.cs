@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using HnMicro.Core.Helpers;
 using SWallet.Core.Consts;
 using SWallet.CustomerService.Requests.Customer;
 
@@ -33,7 +34,20 @@ namespace SWallet.CustomerService.Validations.Customer
             RuleFor(f => f.Password)
                 .NotEmpty()
                 .WithMessage(CommonMessageConsts.PasswordIsRequired)
-                .MinimumLength(CommonMessageConsts.MinLengthOfPassword);
+                .Custom((password, context) =>
+                {
+                    var decodePassword = password.DecodePassword();
+                    if (decodePassword.Length < CommonMessageConsts.MinLengthOfPassword)
+                    {
+                        context.AddFailure(CommonMessageConsts.LengthOfPasswordAtLeast);
+                        return;
+                    }
+                    if (!password.IsStrongPassword())
+                    {
+                        context.AddFailure(CommonMessageConsts.PasswordIsTooWeak);
+                        return;
+                    }
+                });
 
             RuleFor(f => f.Accepted)
                 .Equal(true)

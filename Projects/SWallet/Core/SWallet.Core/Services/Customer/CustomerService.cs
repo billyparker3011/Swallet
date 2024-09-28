@@ -6,6 +6,7 @@ using SWallet.Core.Contexts;
 using SWallet.Core.Converters;
 using SWallet.Core.Models.Customers;
 using SWallet.Data.Repositories.Customers;
+using SWallet.Data.Repositories.Settings;
 using SWallet.Data.UnitOfWorks;
 
 namespace SWallet.Core.Services.Customer
@@ -36,14 +37,24 @@ namespace SWallet.Core.Services.Customer
             await SWalletUow.SaveChangesAsync();
         }
 
-        public async Task<MyCustomerProfileModel> MyProfile(long? customerId)
+        public async Task<MyCustomerProfileModel> CustomerProfile(long customerId = 0L)
         {
+            var targetCustomerId = customerId == 0L ? ClientContext.Customer.CustomerId : customerId;
             var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
-            var targetCustomerId = customerId.HasValue ? customerId.Value : ClientContext.Customer.CustomerId;
-
             var customer = await customerRepository.FindByIdAsync(targetCustomerId) ?? throw new NotFoundException();
-
             return customer.ToMyCustomerProfileModel();
+        }
+
+        public async Task<MyBalanceCustomerModel> MyBalance()
+        {
+            var customerId = ClientContext.Customer.CustomerId;
+            var balanceCustomerRepository = SWalletUow.GetRepository<IBalanceCustomerRepository>();
+            var balance = await balanceCustomerRepository.FindByCustomerId(customerId) ?? throw new NotFoundException();
+
+            var settingRepository = SWalletUow.GetRepository<ISettingRepository>();
+            var setting = await settingRepository.GetActualSetting() ?? throw new NotFoundException();
+
+            return balance.ToMyCustomerBalanceModel(setting);
         }
     }
 }

@@ -21,6 +21,11 @@ namespace SWallet.Data.Repositories.Banks
             return await DbSet.AnyAsync(f => f.Name.ToLower() == bankName.ToLower() && f.BankId != bankId);
         }
 
+        public async Task<List<Bank>> GetActiveBanks()
+        {
+            return await DbSet.Where(f => f.DepositEnabled || f.WithdrawEnabled).ToListAsync();
+        }
+
         public async Task<List<Bank>> GetDepositBanks()
         {
             return await DbSet.Where(f => f.DepositEnabled).OrderBy(f => f.Name).ToListAsync();

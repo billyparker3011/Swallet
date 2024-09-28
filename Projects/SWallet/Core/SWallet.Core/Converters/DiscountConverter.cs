@@ -1,4 +1,6 @@
-﻿using SWallet.Core.Models.Discounts;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Enums;
+using SWallet.Core.Models.Discounts;
 using SWallet.Data.Core.Entities;
 
 namespace SWallet.Core.Converters
@@ -13,7 +15,11 @@ namespace SWallet.Core.Converters
                 DiscountName = discount.DiscountName,
                 IsEnabled = discount.IsEnabled,
                 IsStatic = discount.IsStatic,
-                Setting = discount.Setting
+                Setting = string.IsNullOrEmpty(discount.Setting) ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<DiscountSettingModel>(discount.Setting),
+                Description = discount.Description,
+                EndDate = discount.EndDate,
+                StartDate = discount.StartDate,
+                SportKind = discount.SportKindId.HasValue ? discount.SportKindId.Value.ToEnum<SportKind>() : null
             };
         }
     }

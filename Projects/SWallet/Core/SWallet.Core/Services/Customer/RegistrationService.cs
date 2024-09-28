@@ -30,22 +30,22 @@ namespace SWallet.Core.Services.Customer
         public async Task<JwtToken> Register(RegisterModel model)
         {
             var firstName = string.IsNullOrEmpty(model.FirstName) ? string.Empty : model.FirstName;
-            if (string.IsNullOrEmpty(firstName)) throw new BadRequestException(CommonMessageConsts.FirstNameIsRequired);
+            if (string.IsNullOrEmpty(firstName)) throw new BadRequestException(-1, CommonMessageConsts.FirstNameIsRequired);
 
             var lastName = string.IsNullOrEmpty(model.LastName) ? string.Empty : model.LastName;
-            if (string.IsNullOrEmpty(lastName)) throw new BadRequestException(CommonMessageConsts.LastNameIsRequired);
+            if (string.IsNullOrEmpty(lastName)) throw new BadRequestException(-1, CommonMessageConsts.LastNameIsRequired);
 
             var email = string.IsNullOrEmpty(model.Email) ? string.Empty : model.Email.ToLower();
-            if (string.IsNullOrEmpty(email)) throw new BadRequestException(CommonMessageConsts.EmailIsRequired);
-            if (!email.IsEmail()) throw new BadRequestException(CommonMessageConsts.EmailIsNotValid);
+            if (string.IsNullOrEmpty(email)) throw new BadRequestException(-1, CommonMessageConsts.EmailIsRequired);
+            if (!email.IsEmail()) throw new BadRequestException(-1, CommonMessageConsts.EmailIsNotValid);
 
             var username = string.IsNullOrEmpty(model.Username) ? string.Empty : model.Username;
-            if (string.IsNullOrEmpty(username)) throw new BadRequestException(CommonMessageConsts.UserNameIsRequired);
+            if (string.IsNullOrEmpty(username)) throw new BadRequestException(-1, CommonMessageConsts.UserNameIsRequired);
 
             var password = string.IsNullOrEmpty(model.Password) ? string.Empty : model.Password;
-            if (string.IsNullOrEmpty(password)) throw new BadRequestException(CommonMessageConsts.PasswordIsRequired);
+            if (string.IsNullOrEmpty(password)) throw new BadRequestException(-1, CommonMessageConsts.PasswordIsRequired);
             var decodePassword = password.DecodePassword();
-            if (!decodePassword.IsStrongPassword()) throw new BadRequestException(CommonMessageConsts.PasswordIsTooWeak);
+            if (!decodePassword.IsStrongPassword()) throw new BadRequestException(-1, CommonMessageConsts.PasswordIsTooWeak);
 
             var telegram = string.IsNullOrEmpty(model.Telegram) ? string.Empty : model.Telegram;
             var phone = string.IsNullOrEmpty(model.Phone) ? string.Empty : model.Phone;
@@ -55,14 +55,14 @@ namespace SWallet.Core.Services.Customer
             var customerSessionRepository = SWalletUow.GetRepository<ICustomerSessionRepository>();
 
             var customerByEmail = await customerRepository.FindByEmail(email);
-            if (customerByEmail != null) throw new BadRequestException(CommonMessageConsts.EmailWasUsed);
+            if (customerByEmail != null) throw new BadRequestException(-1, CommonMessageConsts.EmailWasUsed);
 
             var customerByUsername = await customerRepository.FindByUsername(username.ToUpper());
-            if (customerByUsername != null) throw new BadRequestException(CommonMessageConsts.UsernameWasUsed);
+            if (customerByUsername != null) throw new BadRequestException(-1, CommonMessageConsts.UsernameWasUsed);
 
             var roleRepository = SWalletUow.GetRepository<IRoleRepository>();
             var role = await roleRepository.GetRoleByRoleCode(RoleConsts.RoleAsCustomer);
-            if (role == null) throw new BadRequestException(CommonMessageConsts.RoleHasNotBeenInitialYet);
+            if (role == null) throw new BadRequestException(-1, CommonMessageConsts.RoleHasNotBeenInitialYet);
 
             var clientInformation = ClientContext.GetClientInformation();
             var hash = StringHelper.MaxHashLength.RandomString();
@@ -80,7 +80,10 @@ namespace SWallet.Core.Services.Customer
                 State = CustomerState.Open.ToInt(),
                 RoleId = role.RoleId,
                 CreatedAt = ClockService.GetUtcNow(),
-                CreatedBy = 0L
+                CreatedBy = 0L,
+                DepositAllowed = true,
+                DiscountAllowed = true,
+                WithdrawAllowed = true
             };
 
             var customerSession = new Data.Core.Entities.CustomerSession
@@ -100,7 +103,7 @@ namespace SWallet.Core.Services.Customer
             {
                 var managerRepository = SWalletUow.GetRepository<IManagerRepository>();
                 managerByAffiliate = await managerRepository.FindByAffiliateCode(affiliateCode);
-                if (managerByAffiliate == null) throw new BadRequestException(CommonMessageConsts.CouldNotFindAgentPromoCode);
+                if (managerByAffiliate == null) throw new BadRequestException(-1, CommonMessageConsts.CouldNotFindAgentPromoCode);
             }
 
             if (managerByAffiliate != null)

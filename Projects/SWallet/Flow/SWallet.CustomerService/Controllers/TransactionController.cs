@@ -17,6 +17,7 @@ namespace SWallet.CustomerService.Controllers
             _transactionService = transactionService;
         }
 
+        [HttpGet]
         public async Task<IActionResult> GetTransactionsHistory([FromQuery] GetTransactionsHistoryRequest request, [FromQuery] QueryAdvance advanceRequest)
         {
             return Ok(OkResponse.Create(await _transactionService.GetTransactionsHistory(new GetTransactionsHistoryModel
