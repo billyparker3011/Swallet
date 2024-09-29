@@ -47,5 +47,21 @@
         public const string NewPasswordCanNotBeOldPassword = "New Password cann't be equal to Old Password.";
         public const string OldPasswordDoesNotMatch = "Old Password doesn't match.";
         #endregion
+
+        #region Setting
+        public const string SettingMaskCanNotBeNull = "Mask cannot be NULL.";
+        public const string SettingNumberOfMaskCharactersMustBeGreaterThanZero = "No.of mask must be greater than zero.";
+        public const string SettingMaskCharacterCanNotBeNull = "Mask character cannot be NULL.";
+        public const string SettingMaskCharacterContainsOnlyOneCharacter = "Mask character contains only one character.";
+
+        public const string SettingCurrencyCanNotBeNull = "Currency cannot be NULL.";
+        public const string SettingCurrencySymbolCanNotBeNull = "Currency symbol cannot be NULL.";
+
+        public const string SettingPaymentPartnerCanNotBeNull = "Payment partner cannot be NULL.";
+
+        public const string PaymentMethodNameCannotBeNull = "Payment method name cannot be NULL.";
+        public const string PaymentMethodCodeCannotBeNull = "Payment method code cannot be NULL.";
+        public const string PaymentMethodCodeExists = "Payment method code has been used.";
+        #endregion
     }
 }

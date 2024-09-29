@@ -31,7 +31,7 @@ namespace SWallet.Core.Services.Payments
             var instanceOfPayments = typeof(IInstanceOfPaymentProcessor).GetDerivedClass();
             foreach (var instance in instanceOfPayments)
             {
-                _instances.Add(Activator.CreateInstance(instance, _serviceProvider, _configuration, _sWalletUow) as IInstanceOfPaymentProcessor);
+                _instances.Add(Activator.CreateInstance(instance, _serviceProvider, _configuration, _clockService, _sWalletUow) as IInstanceOfPaymentProcessor);
             }
         }
 

@@ -8,6 +8,11 @@
             {
                 public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/customer-bank-account";
             }
+
+            public static class PaymentMethod
+            {
+                public const string BaseRoute = HnMicro.Framework.Helpers.RouteHelper.BaseRoute.V1.BaseRouteNoneController + "/payment-method";
+            }
         }
     }
 }
