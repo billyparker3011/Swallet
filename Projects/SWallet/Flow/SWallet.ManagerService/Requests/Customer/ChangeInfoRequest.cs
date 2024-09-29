@@ -1,8 +1,6 @@
-﻿using SWallet.Core.Enums;
-
-namespace SWallet.Core.Models.Customers
+﻿namespace SWallet.ManagerService.Requests
 {
-    public class ChangeInfoModel
+    public class ChangeInfoRequest
     {
         public long CustomerId { get; set; } = 0L;
         public string FirstName { get; set; }

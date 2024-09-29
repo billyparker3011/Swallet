@@ -1,8 +1,8 @@
-﻿namespace SWallet.Core.Models.Auth
+﻿namespace SWallet.ManagerService.Requests
 {
-    public class ChangePasswordModel
+    public class ChangePasswordRequest
     {
-        public long CustomerId { get; set; } = 0L;
+        public long CustomerId { get; set; }
         public string OldPassword { get; set; }
         public string NewPassword { get; set; }
         public string ConfirmPassword { get; set; }

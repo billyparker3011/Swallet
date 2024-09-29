@@ -25,14 +25,16 @@ namespace SWallet.Core.Services.Customer
         public async Task ChangeInfo(ChangeInfoModel model)
         {
             var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
-            var customerId = ClientContext.Customer.CustomerId;
+            var customerId = model.CustomerId == 0L ? ClientContext.Customer.CustomerId : model.CustomerId;
 
             var customer = await customerRepository.FindByIdAsync(customerId) ?? throw new NotFoundException();
 
-            customer.FirstName = model.FirstName;
-            customer.LastName = model.LastName;
-            customer.Phone = model.Phone;
-            customer.Telegram = model.Telegram;
+            customer.FirstName = model.FirstName ?? customer.FirstName;
+            customer.LastName = model.LastName ?? customer.LastName;
+            customer.Phone = model.Phone ?? customer.Phone;
+            customer.Telegram = model.Telegram ?? customer.Telegram;
+            customer.Lock = model.IsLock ?? customer.Lock;
+            customer.State = model.State ?? customer.State;
 
             await SWalletUow.SaveChangesAsync();
         }
