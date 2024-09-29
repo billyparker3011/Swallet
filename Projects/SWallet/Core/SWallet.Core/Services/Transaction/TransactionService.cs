@@ -22,7 +22,8 @@ namespace SWallet.Core.Services.Transaction
 
             var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
 
-            var query = transactionRepository.FindQueryBy(f => f.CustomerId == ClientContext.Customer.CustomerId && f.CreatedAt >= model.From.UtcDateTime && f.CreatedAt <= model.To.UtcDateTime);
+            var targetCustomerId = model.CustomerId == 0L ? ClientContext.Customer.CustomerId : model.CustomerId;
+            var query = transactionRepository.FindQueryBy(f => f.CustomerId == targetCustomerId && f.CreatedAt >= model.From.UtcDateTime && f.CreatedAt <= model.To.UtcDateTime);
             if (model.TransactionType.HasValue) query = query.Where(f => f.TransactionType == model.TransactionType.Value);
             if (model.State.HasValue) query = query.Where(f => f.TransactionState == model.State.Value);
 

@@ -1,10 +1,7 @@
-﻿using HnMicro.Framework.Models;
-
-namespace SWallet.Core.Models.Transactions
+﻿namespace SWallet.ManagerService.Requests
 {
-    public class GetTransactionsHistoryModel : QueryAdvance
+    public class CustomerTransactionsRequest
     {
-        public long CustomerId { get; set; } = 0L;
         public int? TransactionType { get; set; }
         public int? State { get; set; }
         public DateTimeOffset From { get; set; }
