@@ -130,8 +130,9 @@ namespace Lottery.Core.Partners.Casino.Allbet
             var casinoPartnerLoginModel = data as CasinoAllBetPlayerLoginModel;
             Logger.LogInformation($"Player {casinoPartnerLoginModel.PlayerId}");
             await RemoveCacheClientUrl(casinoPartnerLoginModel.PlayerId);
-            await RemoveCacheClientUrl(casinoPartnerLoginModel.PlayerId + 1000);
-
+            await RemoveCacheClientUrl(1);
+            await RemoveCacheClientUrl(2);
+            await UpdateCacheClientUrl(2, "2");
             // Check player can play
             var isPlay = await CheckMaxWinLose(casinoPartnerLoginModel.PlayerId);
             if(!isPlay) return;
@@ -146,7 +147,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
 
                 //check
                 var check = await CheckSendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
-                await UpdateCacheClientUrl(casinoPartnerLoginModel.PlayerId + 1000, check);
+                await UpdateCacheClientUrl(1, check);
 
                 var response = await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
                 if (response == null) return;
