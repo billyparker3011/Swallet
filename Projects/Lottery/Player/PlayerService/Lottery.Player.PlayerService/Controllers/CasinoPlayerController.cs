@@ -51,6 +51,14 @@ namespace Lottery.Player.PlayerService.Controllers
             return Ok(result);
         }
 
+        [HttpGet("get-check-url")]
+        [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
+        public async Task<IActionResult> GetCheckGameUrlAsync(long check)
+        {
+            var result = await _casinoService.GetCheckGameUrlAsync(check);
+            return Ok(result);
+        }
+
         [HttpGet("game-types/{category}")]
         [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
         public async Task<IActionResult> GetGameTypes([FromRoute] string category)
