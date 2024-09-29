@@ -63,5 +63,11 @@
         public const string PaymentMethodCodeCannotBeNull = "Payment method code cannot be NULL.";
         public const string PaymentMethodCodeExists = "Payment method code has been used.";
         #endregion
+
+        #region
+        public const string DiscountNameCanNotBeNull = "Discount name cannot be NULL.";
+        public const string DiscountDescriptionCanNotBeNull = "Discount description cannot be NULL.";
+        public const string DiscountAppliedTimeIsWrong = "Ended Date must be greater or equals than Started Date.";
+        #endregion
     }
 }

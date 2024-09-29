@@ -51,7 +51,7 @@ namespace SWallet.Core.Services.Payments
         {
             var currentTime = _clockService.GetUtcNow();
             var content = currentUsername.RandomStringFrom(3);
-            return $"{currentTime.Millisecond}{currentTime.Hour}{currentTime.Year}{currentTime.Minute}{content}{currentTime.Day}{currentTime.Second}{currentTime.Month}";
+            return $"{currentTime:HHyymm}{content}{currentTime:ddsMM}".ToUpper();
         }
 
         public async Task Deposit(int paymentPartner, long customerId, DepositActivityModel model)

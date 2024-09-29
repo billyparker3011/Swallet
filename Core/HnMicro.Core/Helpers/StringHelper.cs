@@ -94,8 +94,8 @@ namespace HnMicro.Core.Helpers
         public static string RandomStringFrom(this string originText, int length)
         {
             if (string.IsNullOrEmpty(originText)) return string.Empty;
-            if (originText.Length < length) return originText;
-            return new string(Enumerable.Repeat(originText, length).Select(f => f[OtherHelper.Rnd.Next(f.Length)]).ToArray());
+            if (originText.Length < length) return originText.ToUpper();
+            return (new string(Enumerable.Repeat(originText, length).Select(f => f[OtherHelper.Rnd.Next(f.Length)]).ToArray())).ToUpper();
         }
 
         public static string Hs256Signature()
@@ -314,6 +314,11 @@ namespace HnMicro.Core.Helpers
             }
 
             return asciiString.ToString().Trim();
+        }
+
+        public static string NormalizeJsonString(this object obj)
+        {
+            return JsonConvert.SerializeObject(obj, CamelCaseJsonSetting);
         }
     }
 }

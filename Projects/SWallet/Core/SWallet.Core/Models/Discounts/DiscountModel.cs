@@ -13,5 +13,6 @@ namespace SWallet.Core.Models.Discounts
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool IsEnabled { get; set; }
+        public DateTime CreatedAt { get; set; }
     }
 }

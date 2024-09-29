@@ -19,7 +19,8 @@ namespace SWallet.Core.Converters
                 Description = discount.Description,
                 EndDate = discount.EndDate,
                 StartDate = discount.StartDate,
-                SportKind = discount.SportKindId.HasValue ? discount.SportKindId.Value.ToEnum<SportKind>() : null
+                SportKind = discount.SportKindId.HasValue ? discount.SportKindId.Value.ToEnum<SportKind>() : null,
+                CreatedAt = discount.CreatedAt
             };
         }
     }
