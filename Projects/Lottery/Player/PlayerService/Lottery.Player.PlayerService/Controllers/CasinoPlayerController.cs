@@ -12,6 +12,9 @@ using Lottery.Core.UnitOfWorks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Globalization;
+using System.IO;
+using System.Net.Http.Headers;
 using static Lottery.Core.Helpers.PartnerHelper;
 
 namespace Lottery.Player.PlayerService.Controllers
@@ -53,7 +56,7 @@ namespace Lottery.Player.PlayerService.Controllers
 
         [HttpGet("get-check-url")]
         [Authorize(AuthenticationSchemes = nameof(CasinoAuthorizeAttribute))]
-        public async Task<IActionResult> GetCheckGameUrlAsync(long check)
+        public async Task<IActionResult> GetCheckGameUrlAsync(int check)
         {
             var result = await _casinoService.GetCheckGameUrlAsync(check);
             return Ok(result);

@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -307,17 +308,13 @@ namespace Lottery.Core.Partners.Casino.Allbet
                 httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
                 httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-                Logger.LogInformation($"SendRequest to {httpRequestMessage.RequestUri} with body: {requestBody}, header: {httpRequestMessage.Headers}.");
-                HttpResponseMessage response = client.SendAsync(httpRequestMessage).Result;
-                Logger.LogInformation($"Response: {await response.Content.ReadAsStringAsync()}");
-
                 return JsonConvert.SerializeObject(httpRequestMessage).ToString();
 
             }
-            catch (HttpRequestException e)
+            catch (HttpRequestException e)  
             {
                 Logger.LogError($"SendRequest failed with errors {e.Message}.");
-                return null;
+                return e.Message;
             }
         }
 
