@@ -123,9 +123,6 @@ namespace SWallet.Core.Services.Bank
         public async Task<List<BankModel>> GetBankBy(bool deposit, bool withdraw)
         {
             var bankRepository = SWalletUow.GetRepository<IBankRepository>();
-            var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
-
-            _ = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
             if (deposit && withdraw) return await bankRepository.FindQuery().Select(f => f.ToBankModel()).ToListAsync();
             if (deposit) return (await bankRepository.GetDepositBanks()).Select(f => f.ToBankModel()).ToList();
             if (withdraw) return (await bankRepository.GetWithdrawBanks()).Select(f => f.ToBankModel()).ToList();
@@ -144,6 +141,12 @@ namespace SWallet.Core.Services.Bank
                 return await bankRepository.CheckExistBankWhenUpdate(bankName, bankId.Value);
             }
             return await bankRepository.CheckExistBank(bankName);
+        }
+
+        public async Task<List<BankModel>> ActiveBanks()
+        {
+            var bankRepository = SWalletUow.GetRepository<IBankRepository>();
+            return (await bankRepository.GetActiveBanks()).Select(f => f.ToBankModel()).ToList();
         }
     }
 }

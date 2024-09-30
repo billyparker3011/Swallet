@@ -1,4 +1,4 @@
-﻿namespace SWallet.CustomerService.Validations.Transactions
+﻿namespace SWallet.CustomerService.Requests.Transactions
 {
     public class GetTransactionsHistoryRequest
     {

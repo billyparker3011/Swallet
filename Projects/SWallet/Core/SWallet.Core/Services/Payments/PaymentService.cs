@@ -66,6 +66,14 @@ namespace SWallet.Core.Services.Payments
             return enabledPaymentMethods.Select(f => f.ToPaymentMethodModel()).ToList();
         }
 
+        public async Task<List<PaymentMethodModel>> GetPaymentMethodsBy(int paymentPartnerId)
+        {
+            var paymentMethodRepository = SWalletUow.GetRepository<IPaymentMethodRepository>();
+            var enabledPaymentMethods = await paymentMethodRepository.FindEnabledPaymentMethods(paymentPartnerId);
+
+            return enabledPaymentMethods.Select(f => f.ToPaymentMethodModel()).ToList();
+        }
+
         public List<PaymentPartnerInfoModel> GetPaymentPartners()
         {
             return Helpers.EnumHelper.GetListPaymentPartnerInfo();
@@ -90,6 +98,29 @@ namespace SWallet.Core.Services.Payments
             var setting = await GetInternalActualPaymentPartner();
             var customerId = ClientContext.Customer.CustomerId;
             await _paymentProcessor.Withdraw(setting.PaymentPartner, customerId, model);
+        }
+
+        public async Task CreatePaymentMethod(CreatePaymentMethodModel model)
+        {
+            var paymentMethodRepository = SWalletUow.GetRepository<IPaymentMethodRepository>();
+            var paymentMethod = await paymentMethodRepository.FindByPaymentPartnerAndPaymentMethodCode(model.PaymentPartnerId, model.Code);
+            if (paymentMethod != null) throw new BadRequestException(CommonMessageConsts.PaymentMethodCodeExists);
+
+            paymentMethod = new Data.Core.Entities.PaymentMethod
+            {
+                Code = model.Code,
+                CreatedAt = ClockService.GetUtcNow(),
+                CreatedBy = ClientContext.Manager.ManagerId,
+                Enabled = model.Enabled,
+                Fee = model.Fee,
+                Icon = model.Icon,
+                Min = model.Min,
+                Max = model.Max,
+                Name = model.Name,
+                PaymentPartner = model.PaymentPartnerId
+            };
+            paymentMethodRepository.Add(paymentMethod);
+            await SWalletUow.SaveChangesAsync();
         }
     }
 }

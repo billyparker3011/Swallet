@@ -31,7 +31,7 @@ namespace SWallet.Core.Services.Payments
             var instanceOfPayments = typeof(IInstanceOfPaymentProcessor).GetDerivedClass();
             foreach (var instance in instanceOfPayments)
             {
-                _instances.Add(Activator.CreateInstance(instance, _serviceProvider, _configuration, _sWalletUow) as IInstanceOfPaymentProcessor);
+                _instances.Add(Activator.CreateInstance(instance, _serviceProvider, _configuration, _clockService, _sWalletUow) as IInstanceOfPaymentProcessor);
             }
         }
 
@@ -51,7 +51,7 @@ namespace SWallet.Core.Services.Payments
         {
             var currentTime = _clockService.GetUtcNow();
             var content = currentUsername.RandomStringFrom(3);
-            return $"{currentTime.Millisecond}{currentTime.Hour}{currentTime.Year}{currentTime.Minute}{content}{currentTime.Day}{currentTime.Second}{currentTime.Month}";
+            return $"{currentTime:HHyymm}{content}{currentTime:ddsMM}".ToUpper();
         }
 
         public async Task Deposit(int paymentPartner, long customerId, DepositActivityModel model)

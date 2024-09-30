@@ -74,7 +74,7 @@ namespace SWallet.Core.Services.Customer
         private async Task<List<CustomerBankAccountModel>> GetCustomerBankAccountsByCustomerId(long customerId)
         {
             var customerBankAccountRepository = SWalletUow.GetRepository<ICustomerBankAccountRepository>();
-            return await customerBankAccountRepository.FindQueryBy(f => f.CustomerId == customerId).Select(f => f.ToCustomerBankAccountModel()).ToListAsync();
+            return await customerBankAccountRepository.FindQueryBy(f => f.CustomerId == customerId).Include(f => f.Bank).Select(f => f.ToCustomerBankAccountModel()).ToListAsync();
         }
     }
 }

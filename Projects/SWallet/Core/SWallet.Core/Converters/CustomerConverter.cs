@@ -33,6 +33,15 @@ namespace SWallet.Core.Converters
             };
         }
 
+        public static MyBalanceCustomerModel ToMyCustomerBalanceModel(this BalanceCustomer balanceCustomer, Setting setting)
+        {
+            return new MyBalanceCustomerModel
+            {
+                Balance = balanceCustomer.Balance,
+                CurrencySymbol = setting.CurrencySymbol
+            };
+        }
+
         public static MyCustomerProfileModel ToMyCustomerProfileModel(this Customer customer)
         {
             return new MyCustomerProfileModel

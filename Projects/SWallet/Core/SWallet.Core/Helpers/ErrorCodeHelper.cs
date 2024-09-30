@@ -4,8 +4,9 @@
     {
         public static class Auth
         {
-            public const int UserPasswordIsWrong = -1;
+            public const int UsernameOrPasswordIsWrong = -1;
             public const int UserClosed = -2;
+            public const int UserLocked = -3;
         }
 
         public static class Manager

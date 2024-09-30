@@ -28,8 +28,8 @@ namespace SWallet.Core.Services.Auth
         public async Task<JwtToken> Auth(AuthModel model)
         {
             var managerRepository = SWalletUow.GetRepository<IManagerRepository>();
-            var manager = await managerRepository.FindByUsername(model.Username.ToUpper()) ?? throw new BadRequestException(ErrorCodeHelper.Auth.UserPasswordIsWrong);
-            if (!manager.Password.Equals(model.Password.DecodePassword().Md5())) throw new BadRequestException(ErrorCodeHelper.Auth.UserPasswordIsWrong);
+            var manager = await managerRepository.FindByUsername(model.Username.ToUpper()) ?? throw new BadRequestException(ErrorCodeHelper.Auth.UsernameOrPasswordIsWrong);
+            if (!manager.Password.Equals(model.Password.DecodePassword().Md5())) throw new BadRequestException(ErrorCodeHelper.Auth.UsernameOrPasswordIsWrong);
             if (manager.State == ManagerState.Closed.ToInt()) throw new BadRequestException(ErrorCodeHelper.Auth.UserClosed);
 
             var clientInformation = ClientContext.GetClientInformation();

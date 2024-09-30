@@ -9,5 +9,6 @@ namespace Lottery.Core.Services.Partners.CA
         Task CreateAllBetPlayerAsync(CasinoAllBetPlayerModel model);
         Task UpdateAllBetPlayerBetSettingAsync(CasinoAllBetPlayerBetSettingModel model);
         Task<string> GetGameUrlAsync();
+        Task<string> GetCheckGameUrlAsync(long check);
     }
 }

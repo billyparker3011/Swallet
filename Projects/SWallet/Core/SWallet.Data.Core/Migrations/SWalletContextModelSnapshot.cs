@@ -358,6 +358,9 @@ namespace SWallet.Data.Core.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<bool>("IsEnabled")
                         .HasColumnType("bit");
 
@@ -366,6 +369,12 @@ namespace SWallet.Data.Core.Migrations
 
                     b.Property<string>("Setting")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("SportKindId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("StartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -376,6 +385,41 @@ namespace SWallet.Data.Core.Migrations
                     b.HasKey("DiscountId");
 
                     b.ToTable("Discounts");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.DiscountDetail", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("CreatedBy")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("CustomerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DiscountId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long?>("UpdatedBy")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("DiscountId");
+
+                    b.ToTable("DiscountDetails");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Feature", b =>
@@ -721,6 +765,9 @@ namespace SWallet.Data.Core.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
+                    b.Property<int>("DateTimeOffSet")
+                        .HasColumnType("int");
+
                     b.Property<string>("MaskCharacter")
                         .IsRequired()
                         .HasMaxLength(5)
@@ -916,6 +963,25 @@ namespace SWallet.Data.Core.Migrations
                         .IsRequired();
 
                     b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("SWallet.Data.Core.Entities.DiscountDetail", b =>
+                {
+                    b.HasOne("SWallet.Data.Core.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SWallet.Data.Core.Entities.Discount", "Discount")
+                        .WithMany()
+                        .HasForeignKey("DiscountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Discount");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Manager", b =>
