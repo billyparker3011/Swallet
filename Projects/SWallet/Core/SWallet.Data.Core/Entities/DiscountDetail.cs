@@ -11,6 +11,9 @@ namespace SWallet.Data.Core.Entities
         public int DiscountId { get; set; }
 
         [Required]
+        public Guid ReferenceTransaction { get; set; }
+
+        [Required]
         public long CustomerId { get; set; }
 
         [ForeignKey(nameof(DiscountId))]

@@ -45,13 +45,15 @@ namespace SWallet.Core.Services.Transaction
                     if ((discountDetails.Count + 1) <= discountModel.Setting.Deposit.NoOfApplyDiscount)
                     {
                         realAmount = model.Amount.GetDepositDiscountAmount(discountModel.Setting.Deposit);
+                        var referenceId = Guid.NewGuid();
 
                         discountDetailRepository.Add(new Data.Core.Entities.DiscountDetail
                         {
                             CreatedAt = ClockService.GetUtcNow(),
                             CreatedBy = ClientContext.Manager.ManagerId,
                             CustomerId = customer.CustomerId,
-                            DiscountId = discountModel.DiscountId
+                            DiscountId = discountModel.DiscountId,
+                            ReferenceTransaction = referenceId
                         });
 
                         transactionRepository.Add(new Data.Core.Entities.Transaction
@@ -64,6 +66,7 @@ namespace SWallet.Core.Services.Transaction
                             TransactionState = TransactionState.Success.ToInt(),
                             DiscountId = discountModel.DiscountId,
                             ReferenceTransactionId = transaction.TransactionId,
+                            ReferenceDiscountDetail = referenceId,
                             CreatedAt = ClockService.GetUtcNow(),
                             CreatedBy = customer.CustomerId
                         });
@@ -127,20 +130,37 @@ namespace SWallet.Core.Services.Transaction
                 transaction.UpdatedAt = ClockService.GetUtcNow();
                 transaction.UpdatedBy = ClientContext.Manager.ManagerId;
             }
+            var discountDetailRepository = SWalletUow.GetRepository<IDiscountDetailRepository>();
+            var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
+            var customerBalanceRepository = SWalletUow.GetRepository<IBalanceCustomerRepository>();
+            var customer = await customerRepository.FindByCustomerId(transaction.CustomerId) ?? throw new NotFoundException();
             if (transaction.TransactionState == TransactionState.Success.ToInt())
             {
                 transaction.TransactionState = TransactionState.Rejected.ToInt();
+
                 if (transaction.TransactionType == TransactionType.Discount.ToInt())
                 {
+                    var discountDetail = await discountDetailRepository.FindByReferenceTransaction(transaction.ReferenceDiscountDetail);
+                    if (discountDetail != null) discountDetailRepository.Delete(discountDetail);
 
+                    customer.CustomerBalance.Balance -= transaction.Amount;
+                    customer.CustomerBalance.UpdatedAt = ClockService.GetUtcNow();
+                    customer.CustomerBalance.UpdatedBy = ClientContext.Manager.ManagerId;
+                    customerBalanceRepository.Update(customer.CustomerBalance);
                 }
                 if (transaction.TransactionType == TransactionType.Deposit.ToInt())
                 {
-
+                    customer.CustomerBalance.Balance -= transaction.Amount;
+                    customer.CustomerBalance.UpdatedAt = ClockService.GetUtcNow();
+                    customer.CustomerBalance.UpdatedBy = ClientContext.Manager.ManagerId;
+                    customerBalanceRepository.Update(customer.CustomerBalance);
                 }
                 if (transaction.TransactionType == TransactionType.Withdraw.ToInt())
                 {
-
+                    customer.CustomerBalance.Balance += transaction.Amount;
+                    customer.CustomerBalance.UpdatedAt = ClockService.GetUtcNow();
+                    customer.CustomerBalance.UpdatedBy = ClientContext.Manager.ManagerId;
+                    customerBalanceRepository.Update(customer.CustomerBalance);
                 }
             }
             transactionRepository.Update(transaction);

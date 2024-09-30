@@ -68,6 +68,7 @@ namespace SWallet.Data.Core.Entities
 
         //  Begin: Discount
         public int? DiscountId { get; set; }
+        public Guid? ReferenceDiscountDetail { get; set; }
         public long? ReferenceTransactionId { get; set; }
         //  End: Discount
 

@@ -15,5 +15,11 @@ namespace SWallet.Data.Repositories.Discounts
         {
             return await DbSet.Where(f => f.DiscountId == discountId).ToListAsync();
         }
+
+        public async Task<DiscountDetail> FindByReferenceTransaction(Guid? referenceDiscountDetail)
+        {
+            if (!referenceDiscountDetail.HasValue) return null;
+            return await DbSet.Where(f => f.ReferenceTransaction == referenceDiscountDetail.Value).FirstOrDefaultAsync();
+        }
     }
 }
