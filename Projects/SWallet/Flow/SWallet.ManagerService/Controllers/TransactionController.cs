@@ -2,6 +2,7 @@
 using HnMicro.Framework.Models;
 using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
+using SWallet.Core.Models.Transactions;
 using SWallet.Core.Services.Transaction;
 using SWallet.ManagerService.Requests;
 
@@ -48,6 +49,23 @@ namespace SWallet.ManagerService.Controllers
                 SortType = advanceRequest.SortType,
                 GetAllCustomerTrans = true
             })));
+        }
+
+        [HttpPut("{transactionId:long}/completed")]
+        public async Task<IActionResult> CompletedTransaction([FromRoute] long transactionId, [FromBody] CompletedTransactionRequest request)
+        {
+            await _transactionService.CompletedTransaction(new CompletedTransactionModel
+            {
+                TransactionId = transactionId,
+                Amount = request.Amount
+            });
+            return Ok();
+        }
+
+        [HttpGet("{transactionId:long}/rejected")]
+        public async Task<IActionResult> RejectedTransaction([FromRoute] long transactionId)
+        {
+            return Ok(OkResponse.Create(await _transactionService.RejectedTransaction(transactionId)));
         }
     }
 }

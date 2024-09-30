@@ -66,6 +66,11 @@ namespace SWallet.Data.Core.Entities
         public string WithdrawToCardHolder { get; set; }
         //  End: Withdraw transaction
 
+        //  Begin: Discount
+        public int? DiscountId { get; set; }
+        public long? ReferenceTransactionId { get; set; }
+        //  End: Discount
+
         [ForeignKey(nameof(CustomerId))]
         public virtual Customer Customer { get; set; }
     }

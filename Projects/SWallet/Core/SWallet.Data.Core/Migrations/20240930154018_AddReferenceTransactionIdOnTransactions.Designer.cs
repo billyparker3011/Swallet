@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SWallet.Data.Core;
 
@@ -11,9 +12,11 @@ using SWallet.Data.Core;
 namespace SWallet.Data.Core.Migrations
 {
     [DbContext(typeof(SWalletContext))]
-    partial class SWalletContextModelSnapshot : ModelSnapshot
+    [Migration("20240930154018_AddReferenceTransactionIdOnTransactions")]
+    partial class AddReferenceTransactionIdOnTransactions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -51,8 +54,7 @@ namespace SWallet.Data.Core.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerId")
-                        .IsUnique();
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("BalanceCustomers");
                 });
@@ -915,8 +917,8 @@ namespace SWallet.Data.Core.Migrations
             modelBuilder.Entity("SWallet.Data.Core.Entities.BalanceCustomer", b =>
                 {
                     b.HasOne("SWallet.Data.Core.Entities.Customer", "Customer")
-                        .WithOne("CustomerBalance")
-                        .HasForeignKey("SWallet.Data.Core.Entities.BalanceCustomer", "CustomerId")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -1040,8 +1042,6 @@ namespace SWallet.Data.Core.Migrations
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Customer", b =>
                 {
-                    b.Navigation("CustomerBalance");
-
                     b.Navigation("CustomerSession");
                 });
 

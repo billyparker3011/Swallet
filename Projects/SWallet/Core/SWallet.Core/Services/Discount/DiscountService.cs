@@ -53,6 +53,15 @@ namespace SWallet.Core.Services.Discount
             await SWalletUow.SaveChangesAsync();
         }
 
+        public async Task ChangeState(int discountId)
+        {
+            var discountRepository = SWalletUow.GetRepository<IDiscountRepository>();
+            var discount = await discountRepository.FindByIdAsync(discountId) ?? throw new NotFoundException();
+
+            discount.IsEnabled = !discount.IsEnabled;
+            await SWalletUow.SaveChangesAsync();
+        }
+
         public async Task<GetDiscountsResultModel> GetDiscounts(GetDiscountsModel model)
         {
             var discountRepository = SWalletUow.GetRepository<IDiscountRepository>();

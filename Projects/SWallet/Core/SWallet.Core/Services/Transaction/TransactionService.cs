@@ -1,10 +1,14 @@
-﻿using HnMicro.Framework.Exceptions;
+﻿using HnMicro.Core.Helpers;
+using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SWallet.Core.Contexts;
 using SWallet.Core.Converters;
+using SWallet.Core.Enums;
 using SWallet.Core.Models.Transactions;
+using SWallet.Data.Repositories.Customers;
+using SWallet.Data.Repositories.Discounts;
 using SWallet.Data.Repositories.Transactions;
 using SWallet.Data.UnitOfWorks;
 
@@ -14,6 +18,73 @@ namespace SWallet.Core.Services.Transaction
     {
         public TransactionService(ILogger<TransactionService> logger, IServiceProvider serviceProvider, IConfiguration configuration, IClockService clockService, ISWalletClientContext clientContext, ISWalletUow sWalletUow) : base(logger, serviceProvider, configuration, clockService, clientContext, sWalletUow)
         {
+        }
+
+        public async Task CompletedTransaction(CompletedTransactionModel model)
+        {
+            var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
+            var transaction = await transactionRepository.FindByIdAsync(model.TransactionId) ?? throw new NotFoundException();
+            if (transaction.TransactionState != TransactionState.Processing.ToInt()) throw new BadRequestException();
+
+            var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
+            var customer = await customerRepository.FindByIdAsync(transaction.CustomerId) ?? throw new NotFoundException();
+
+            var balanceCustomerRepository = SWalletUow.GetRepository<IBalanceCustomerRepository>();
+            var balance = await balanceCustomerRepository.FindByCustomerId(transaction.CustomerId) ?? throw new NotFoundException();
+
+            var realAmount = 0m;
+            if (customer.DiscountId.HasValue)
+            {
+                var discountRepository = SWalletUow.GetRepository<IDiscountRepository>();
+                var discountDetailRepository = SWalletUow.GetRepository<IDiscountDetailRepository>();
+                var discount = await discountRepository.FindByIdAsync(customer.DiscountId.Value) ?? throw new NotFoundException();
+                var discountModel = discount.ToDiscountModel();
+                if (discountModel.IsEnabled && transaction.TransactionType == TransactionType.Deposit.ToInt() && discountModel.Setting.Deposit != null)
+                {
+                    var discountDetails = await discountDetailRepository.FindByDiscountId(discountModel.DiscountId);
+                    if ((discountDetails.Count + 1) <= discountModel.Setting.Deposit.NoOfApplyDiscount)
+                    {
+                        realAmount = model.Amount.GetDepositDiscountAmount(discountModel.Setting.Deposit);
+
+                        discountDetailRepository.Add(new Data.Core.Entities.DiscountDetail
+                        {
+                            CreatedAt = ClockService.GetUtcNow(),
+                            CreatedBy = ClientContext.Manager.ManagerId,
+                            CustomerId = customer.CustomerId,
+                            DiscountId = discountModel.DiscountId
+                        });
+
+                        transactionRepository.Add(new Data.Core.Entities.Transaction
+                        {
+                            TransactionName = discountModel.DiscountName,
+                            CustomerId = customer.CustomerId,
+                            TransactionType = TransactionType.Discount.ToInt(),
+                            OriginAmount = realAmount,
+                            Amount = realAmount,
+                            TransactionState = TransactionState.Success.ToInt(),
+                            DiscountId = discountModel.DiscountId,
+                            ReferenceTransactionId = transaction.TransactionId,
+                            CreatedAt = ClockService.GetUtcNow(),
+                            CreatedBy = customer.CustomerId
+                        });
+                    }
+                }
+            }
+
+            if (transaction.TransactionType == TransactionType.Deposit.ToInt())
+            {
+                balance.Balance += model.Amount + realAmount;
+                balance.UpdatedAt = ClockService.GetUtcNow();
+                balance.UpdatedBy = customer.CustomerId;
+            }
+            balanceCustomerRepository.Update(balance);
+
+            transaction.TransactionState = TransactionState.Success.ToInt();
+            transaction.UpdatedAt = ClockService.GetUtcNow();
+            transaction.UpdatedBy = ClientContext.Manager.ManagerId;
+            transactionRepository.Update(transaction);
+
+            await SWalletUow.SaveChangesAsync();
         }
 
         public async Task<TransactionsHistoryResultModel> GetTransactionsHistory(GetTransactionsHistoryModel model)
@@ -43,6 +114,38 @@ namespace SWallet.Core.Services.Transaction
                     Page = result.Metadata.Page
                 }
             };
+        }
+
+        public async Task<bool> RejectedTransaction(long transactionId)
+        {
+            var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
+            var transaction = await transactionRepository.FindByIdAsync(transactionId) ?? throw new NotFoundException();
+            if (transaction.TransactionState == TransactionState.Rejected.ToInt()) return true;
+            if (transaction.TransactionState == TransactionState.Processing.ToInt())
+            {
+                transaction.TransactionState = TransactionState.Rejected.ToInt();
+                transaction.UpdatedAt = ClockService.GetUtcNow();
+                transaction.UpdatedBy = ClientContext.Manager.ManagerId;
+            }
+            if (transaction.TransactionState == TransactionState.Success.ToInt())
+            {
+                transaction.TransactionState = TransactionState.Rejected.ToInt();
+                if (transaction.TransactionType == TransactionType.Discount.ToInt())
+                {
+
+                }
+                if (transaction.TransactionType == TransactionType.Deposit.ToInt())
+                {
+
+                }
+                if (transaction.TransactionType == TransactionType.Withdraw.ToInt())
+                {
+
+                }
+            }
+            transactionRepository.Update(transaction);
+            await SWalletUow.SaveChangesAsync();
+            return true;
         }
     }
 }

@@ -23,5 +23,11 @@ namespace SWallet.Core.Converters
                 CreatedAt = discount.CreatedAt
             };
         }
+
+        public static decimal GetDepositDiscountAmount(this decimal originAmount, DiscountDepositSettingModel setting)
+        {
+            if (setting.AmountType == AmountType.Fixed.ToInt()) return setting.Amount;
+            return originAmount * setting.Amount / 100;
+        }
     }
 }

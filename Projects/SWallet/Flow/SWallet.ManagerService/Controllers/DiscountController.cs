@@ -99,5 +99,12 @@ namespace SWallet.ManagerService.Controllers
             });
             return Ok();
         }
+
+        [HttpPut("{discountId:int}/change-state")]
+        public async Task<IActionResult> ChangeState([FromRoute] int discountId)
+        {
+            await _discountService.ChangeState(discountId);
+            return Ok();
+        }
     }
 }

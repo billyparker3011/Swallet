@@ -10,6 +10,7 @@ using SWallet.Core.Converters;
 using SWallet.Core.Enums;
 using SWallet.Core.Models.Customers;
 using SWallet.Core.Services.Auth;
+using SWallet.Data.Core.Entities;
 using SWallet.Data.Repositories.Customers;
 using SWallet.Data.Repositories.Managers;
 using SWallet.Data.Repositories.Roles;
@@ -83,10 +84,11 @@ namespace SWallet.Core.Services.Customer
                 CreatedBy = 0L,
                 DepositAllowed = true,
                 DiscountAllowed = true,
-                WithdrawAllowed = true
+                WithdrawAllowed = true,
+                DiscountId = model.DiscountId
             };
 
-            var customerSession = new Data.Core.Entities.CustomerSession
+            var customerSession = new CustomerSession
             {
                 Customer = customer,
                 Hash = hash,
@@ -114,6 +116,14 @@ namespace SWallet.Core.Services.Customer
                 customer.SupermasterId = managerByAffiliate.SupermasterId;
             }
 
+            var balanceCustomerRepository = SWalletUow.GetRepository<IBalanceCustomerRepository>();
+            balanceCustomerRepository.Add(new BalanceCustomer
+            {
+                CreatedAt = ClockService.GetUtcNow(),
+                CreatedBy = 0L,
+                Customer = customer,
+                Balance = 0m
+            });
             customerRepository.Add(customer);
             customerSessionRepository.Add(customerSession);
 
