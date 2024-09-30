@@ -9,5 +9,6 @@ namespace SWallet.Core.Models.Transactions
         public int? State { get; set; }
         public DateTimeOffset From { get; set; }
         public DateTimeOffset To { get; set; }
+        public bool GetAllCustomerTrans{ get; set; } = false;
     }
 }

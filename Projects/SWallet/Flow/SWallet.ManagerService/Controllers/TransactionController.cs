@@ -32,5 +32,22 @@ namespace SWallet.ManagerService.Controllers
                 SortType = advanceRequest.SortType
             })));
         }
+
+        [HttpGet("get-customer-transactions")]
+        public async Task<IActionResult> GetAllCustomerTransactions([FromQuery] CustomerTransactionsRequest request, [FromQuery] QueryAdvance advanceRequest)
+        {
+            return Ok(OkResponse.Create(await _transactionService.GetTransactionsHistory(new Core.Models.Transactions.GetTransactionsHistoryModel
+            {
+                TransactionType = request.TransactionType,
+                From = request.From,
+                To = request.To,
+                State = request.State,
+                PageIndex = advanceRequest.PageIndex,
+                PageSize = advanceRequest.PageSize,
+                SortName = advanceRequest.SortName,
+                SortType = advanceRequest.SortType,
+                GetAllCustomerTrans = true
+            })));
+        }
     }
 }
