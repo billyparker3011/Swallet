@@ -3,17 +3,21 @@ using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
 using SWallet.Core.Models;
 using SWallet.Core.Services.Bank;
+using SWallet.Core.Services.Payments;
 using SWallet.ManagerService.Requests;
 
 namespace SWallet.ManagerService.Controllers
 {
+    [Route(Core.Helpers.RouteHelper.V1.BankAccount.BaseRoute)]
     public class BankAccountController : HnControllerBase
     {
         private readonly IBankAccountService _bankAccountService;
+        private readonly IPaymentService _paymentService;
 
-        public BankAccountController(IBankAccountService bankAccountService)
+        public BankAccountController(IBankAccountService bankAccountService, IPaymentService paymentService)
         {
             _bankAccountService = bankAccountService;
+            _paymentService = paymentService;
         }
 
         [HttpGet]
@@ -57,6 +61,12 @@ namespace SWallet.ManagerService.Controllers
         public async Task<IActionResult> CheckExistBankAccount([FromQuery] int bankId, [FromQuery] string accountNumber, [FromQuery] int? bankAccountId)
         {
             return Ok(OkResponse.Create(await _bankAccountService.CheckExistBankAccount(bankId, accountNumber, bankAccountId)));
+        }
+
+        [HttpGet("withdraw-bank-accounts")]
+        public async Task<IActionResult> GetWithdrawBankAccounts([FromQuery] int paymentMethodId, [FromQuery] int bankId)
+        {
+            return Ok(OkResponse.Create(await _paymentService.GetBankAccountsForWithdraw(paymentMethodId, bankId)));
         }
     }
 }

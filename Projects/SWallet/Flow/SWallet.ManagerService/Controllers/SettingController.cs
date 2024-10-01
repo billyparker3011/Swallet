@@ -39,7 +39,8 @@ namespace SWallet.ManagerService.Controllers
                     MaskCharacter = request.Mask.MaskCharacter,
                     NumberOfMaskCharacters = request.Mask.NumberOfMaskCharacters
                 },
-                PaymentPartner = request.PaymentPartner
+                PaymentPartner = request.PaymentPartner,
+                MainDomain = request.MainDomain
             });
             return Ok();
         }

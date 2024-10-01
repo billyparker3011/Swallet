@@ -1,12 +1,14 @@
 ﻿using HnMicro.Core.Helpers;
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SWallet.Core.Contexts;
 using SWallet.Core.Converters;
 using SWallet.Core.Enums;
 using SWallet.Core.Models.Transactions;
+using SWallet.Data.Repositories.Banks;
 using SWallet.Data.Repositories.Customers;
 using SWallet.Data.Repositories.Discounts;
 using SWallet.Data.Repositories.Transactions;
@@ -82,6 +84,16 @@ namespace SWallet.Core.Services.Transaction
             }
             balanceCustomerRepository.Update(balance);
 
+            if (transaction.TransactionType == TransactionType.Withdraw.ToInt())
+            {
+                var bankAccountRepository = SWalletUow.GetRepository<IBankAccountRepository>();
+                var bankAccount = await bankAccountRepository.FindByBankAndBankAccount(model.BankId, model.BankAccountId) ?? throw new NotFoundException();
+
+                transaction.WithdrawBankName = bankAccount.Bank.Name;
+                transaction.WithdrawNumberAccount = bankAccount.NumberAccount;
+                transaction.WithdrawCardHolder = bankAccount.CardHolder;
+            }
+
             transaction.TransactionState = TransactionState.Success.ToInt();
             transaction.UpdatedAt = ClockService.GetUtcNow();
             transaction.UpdatedBy = ClientContext.Manager.ManagerId;
@@ -97,7 +109,7 @@ namespace SWallet.Core.Services.Transaction
             var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
 
             var targetCustomerId = model.CustomerId == 0L ? ClientContext.Customer.CustomerId : model.CustomerId;
-            var query = model.GetAllCustomerTrans ? transactionRepository.FindQuery() : transactionRepository.FindQueryBy(f => f.CustomerId == targetCustomerId);
+            var query = model.GetAllCustomerTrans ? transactionRepository.FindQuery().Include(f => f.Customer) : transactionRepository.FindQueryBy(f => f.CustomerId == targetCustomerId).Include(f => f.Customer).AsQueryable();
             query = query.Where(f => f.CreatedAt >= model.From.UtcDateTime && f.CreatedAt <= model.To.UtcDateTime);
             if (model.TransactionType.HasValue) query = query.Where(f => f.TransactionType == model.TransactionType.Value);
             if (model.State.HasValue) query = query.Where(f => f.TransactionState == model.State.Value);

@@ -9,5 +9,6 @@
         public int PaymentPartner { get; set; }
 
         public int DateTimeOffset { get; set; }
+        public string MainDomain { get; set; }
     }
 }

@@ -37,6 +37,8 @@ namespace SWallet.Core.Services.Setting
 
             setting.PaymentPartner = model.PaymentPartner;
 
+            setting.MainDomain = model.MainDomain;
+
             setting.UpdatedAt = ClockService.GetUtcNow();
             setting.UpdatedBy = ClientContext.Manager.ManagerId;
 

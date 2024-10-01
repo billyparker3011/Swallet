@@ -38,6 +38,10 @@ namespace SWallet.ManagerService.Validations.Setting
             RuleFor(f => f.PaymentPartner)
                 .NotEmpty()
                 .WithMessage(CommonMessageConsts.SettingPaymentPartnerCanNotBeNull);
+
+            RuleFor(f => f.MainDomain)
+                .NotEmpty()
+                .WithMessage(CommonMessageConsts.SettingMainDomainCanNotBeNull);
         }
     }
 }

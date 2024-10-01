@@ -11,6 +11,7 @@
         public const string BankAccountIsRequired = "Bank Account is required.";
         public const string AmountIsGreaterThanZero = "Amount must be greater than zero.";
         public const string PaymentContentIsRequired = "Payment Content is required.";
+        public const string YourBalanceIsNotEnoughToWithdraw = "Your balance is not enough to withdraw.";
 
         public const string UserNameIsRequired = "Username is required.";
         public const int MinLengthOfUserName = 15;
@@ -62,6 +63,8 @@
         public const string PaymentMethodNameCannotBeNull = "Payment method name cannot be NULL.";
         public const string PaymentMethodCodeCannotBeNull = "Payment method code cannot be NULL.";
         public const string PaymentMethodCodeExists = "Payment method code has been used.";
+
+        public const string SettingMainDomainCanNotBeNull = "Main domain cannot be NULL.";
         #endregion
 
         #region Discount

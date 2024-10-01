@@ -47,6 +47,12 @@ namespace SWallet.Core.Services.Payments
             return instanceOf == null ? throw new NotFoundException() : await instanceOf.GetBankAccountsForDeposit(bankId);
         }
 
+        public async Task<List<BankAccountForModel>> GetBankAccountsForWithdraw(int paymentPartner, string paymentMethodCode, int bankId)
+        {
+            var instanceOf = _instances.FirstOrDefault(f => f.PaymentPartner == paymentPartner.ToEnum<PaymentPartner>() && f.PaymentMethodCode == paymentMethodCode);
+            return instanceOf == null ? throw new NotFoundException() : await instanceOf.GetBankAccountsForWithdraw(bankId);
+        }
+
         public virtual async Task<string> GetPaymentContent(int paymentPartner, string paymentMethodCode, string currentUsername)
         {
             var currentTime = _clockService.GetUtcNow();

@@ -11,6 +11,7 @@ namespace SWallet.ManagerService.Controllers
     public class BankController : HnControllerBase
     {
         private readonly IBankService _bankService;
+
         public BankController(IBankService bankService)
         {
             _bankService = bankService;
@@ -66,6 +67,12 @@ namespace SWallet.ManagerService.Controllers
         public async Task<IActionResult> CheckExistBank([FromQuery] string bankName, [FromQuery] int? bankId)
         {
             return Ok(OkResponse.Create(await _bankService.CheckExistBank(bankName, bankId)));
+        }
+
+        [HttpGet("active-banks")]
+        public async Task<IActionResult> ActiveBanks()
+        {
+            return Ok(OkResponse.Create(await _bankService.ActiveBanks()));
         }
     }
 }

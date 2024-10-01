@@ -9,6 +9,7 @@ using SWallet.Core.Converters;
 using SWallet.Core.Enums;
 using SWallet.Core.Models.Enums;
 using SWallet.Core.Models.Payment;
+using SWallet.Data.Repositories.Customers;
 using SWallet.Data.Repositories.Payments;
 using SWallet.Data.Repositories.Settings;
 using SWallet.Data.UnitOfWorks;
@@ -48,6 +49,14 @@ namespace SWallet.Core.Services.Payments
         {
             var setting = await GetInternalActualPaymentPartner();
             return await _paymentProcessor.GetBankAccountsForDeposit(setting.PaymentPartner, paymentMethodCode, bankId);
+        }
+
+        public async Task<List<BankAccountForModel>> GetBankAccountsForWithdraw(int paymentMethodId, int bankId)
+        {
+            var setting = await GetInternalActualPaymentPartner();
+            var paymentMethodRepository = SWalletUow.GetRepository<IPaymentMethodRepository>();
+            var paymentMethod = await paymentMethodRepository.FindByIdAsync(paymentMethodId) ?? throw new NotFoundException();
+            return await _paymentProcessor.GetBankAccountsForWithdraw(setting.PaymentPartner, paymentMethod.Code, bankId);
         }
 
         public async Task<List<BankForModel>> GetBanksForDeposit(string paymentMethodCode)
@@ -97,6 +106,11 @@ namespace SWallet.Core.Services.Payments
         {
             var setting = await GetInternalActualPaymentPartner();
             var customerId = ClientContext.Customer.CustomerId;
+
+            var balanceCustomerRepository = SWalletUow.GetRepository<IBalanceCustomerRepository>();
+            var balanceCustomer = await balanceCustomerRepository.FindByCustomerId(customerId);
+            var balance = balanceCustomer != null ? balanceCustomer.ToBalance() : 0m;
+            if (model.Amount > balance) throw new BadRequestException(-1, CommonMessageConsts.YourBalanceIsNotEnoughToWithdraw);
             await _paymentProcessor.Withdraw(setting.PaymentPartner, customerId, model);
         }
 

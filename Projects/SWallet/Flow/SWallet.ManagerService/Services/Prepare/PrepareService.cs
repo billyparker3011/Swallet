@@ -231,7 +231,8 @@ namespace SWallet.ManagerService.Services.Prepare
                     MaskCharacter = "X",
                     NumberOfMaskCharacters = 4,
                     PaymentPartner = PaymentPartner.Manual.ToInt(),
-                    DateTimeOffSet = 7
+                    DateTimeOffSet = 7,
+                    MainDomain = "https://abc.com"
                 };
                 settingRepository.Add(actualSetting);
             }

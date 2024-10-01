@@ -57,7 +57,9 @@ namespace SWallet.ManagerService.Controllers
             await _transactionService.CompletedTransaction(new CompletedTransactionModel
             {
                 TransactionId = transactionId,
-                Amount = request.Amount
+                Amount = request.Amount,
+                BankAccountId = request.BankAccountId,
+                BankId = request.BankId
             });
             return Ok();
         }

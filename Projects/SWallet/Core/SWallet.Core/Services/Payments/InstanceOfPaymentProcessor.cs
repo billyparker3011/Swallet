@@ -32,6 +32,8 @@ namespace SWallet.Core.Services.Payments
 
         public abstract Task<List<BankAccountForModel>> GetBankAccountsForDeposit(int bankId);
 
+        public abstract Task<List<BankAccountForModel>> GetBankAccountsForWithdraw(int bankId);
+
         public abstract Task<List<BankForModel>> GetBanksForDeposit();
 
         public abstract Task Withdraw(long customerId, WithdrawActivityModel model);

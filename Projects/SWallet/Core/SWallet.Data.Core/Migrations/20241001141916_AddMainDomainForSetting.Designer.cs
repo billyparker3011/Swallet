@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SWallet.Data.Core;
 
@@ -11,9 +12,11 @@ using SWallet.Data.Core;
 namespace SWallet.Data.Core.Migrations
 {
     [DbContext(typeof(SWalletContext))]
-    partial class SWalletContextModelSnapshot : ModelSnapshot
+    [Migration("20241001141916_AddMainDomainForSetting")]
+    partial class AddMainDomainForSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,18 +45,6 @@ namespace SWallet.Data.Core.Migrations
 
                     b.Property<long>("CustomerId")
                         .HasColumnType("bigint");
-
-                    b.Property<decimal>("HistoryTotalWinlose")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<decimal>("TotalOutstanding")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<decimal>("TotalWinlose")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
