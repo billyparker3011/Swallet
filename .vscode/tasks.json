@@ -1,0 +1,66 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "docker-build",
+			"label": "docker-build: debug",
+			"dependsOn": [
+				"build"
+			],
+			"dockerBuild": {
+				"tag": "hnmicro:dev",
+				"target": "base",
+				"dockerfile": "${workspaceFolder}/Projects/SWallet/Flow/SWallet.CustomerService/Dockerfile",
+				"context": "${workspaceFolder}",
+				"pull": true
+			},
+			"netCore": {
+				"appProject": "${workspaceFolder}/Projects/SWallet/Flow/SWallet.CustomerService/SWallet.CustomerService.csproj"
+			}
+		},
+		{
+			"type": "docker-build",
+			"label": "docker-build: release",
+			"dependsOn": [
+				"build"
+			],
+			"dockerBuild": {
+				"tag": "hnmicro:latest",
+				"dockerfile": "${workspaceFolder}/Projects/SWallet/Flow/SWallet.CustomerService/Dockerfile",
+				"context": "${workspaceFolder}",
+				"platform": {
+					"os": "linux",
+					"architecture": "amd64"
+				},
+				"pull": true
+			},
+			"netCore": {
+				"appProject": "${workspaceFolder}/Projects/SWallet/Flow/SWallet.CustomerService/SWallet.CustomerService.csproj"
+			}
+		},
+		{
+			"type": "docker-run",
+			"label": "docker-run: debug",
+			"dependsOn": [
+				"docker-build: debug"
+			],
+			"dockerRun": {},
+			"netCore": {
+				"appProject": "${workspaceFolder}/Projects/SWallet/Flow/SWallet.CustomerService/SWallet.CustomerService.csproj",
+				"enableDebugging": true,
+				"configureSsl": false
+			}
+		},
+		{
+			"type": "docker-run",
+			"label": "docker-run: release",
+			"dependsOn": [
+				"docker-build: release"
+			],
+			"dockerRun": {},
+			"netCore": {
+				"appProject": "${workspaceFolder}/Projects/SWallet/Flow/SWallet.CustomerService/SWallet.CustomerService.csproj"
+			}
+		}
+	]
+}
