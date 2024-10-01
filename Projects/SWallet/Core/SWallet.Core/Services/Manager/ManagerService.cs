@@ -104,12 +104,72 @@ namespace SWallet.Core.Services.Manager
         public async Task<GetManagersResult> GetManagers(GetManagersModel model)
         {
             var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+            var customerRepos = SWalletUow.GetRepository<ICustomerRepository>();
 
             var targetManagerId = model.ManagerId.HasValue ? model.ManagerId.Value : ClientContext.Manager.ManagerId;
 
             var clientManager = await managerRepos.FindByIdAsync(targetManagerId) ?? throw new NotFoundException();
 
+            if (clientManager.ManagerRole.ToEnum<ManagerRole>() == ManagerRole.Agent)
+            {
+                return await GetCustomersByAgent(customerRepos, clientManager, model);
+            }
             return await GetManagerByRole(managerRepos, clientManager, model);
+        }
+
+        private async Task<GetManagersResult> GetCustomersByAgent(ICustomerRepository customerRepos, Data.Core.Entities.Manager clientManager, GetManagersModel model)
+        {
+            IQueryable<Data.Core.Entities.Customer> customerQuery = customerRepos.FindQuery().Include(f => f.CustomerSession);
+
+            customerQuery = customerQuery.Where(x => x.AgentId == clientManager.ManagerId);
+
+            if (!string.IsNullOrEmpty(model.SearchTerm))
+            {
+                customerQuery = customerQuery.Where(x =>
+                        x.Username.Contains(model.SearchTerm) ||
+                        x.LastName.Contains(model.SearchTerm) ||
+                        x.FirstName.Contains(model.SearchTerm));
+            }
+            if (model.State.HasValue)
+            {
+                customerQuery = customerQuery.Where(x => x.State == model.State.Value);
+            }
+
+            if (model.SortType == SortType.Descending)
+            {
+                customerQuery = model.SortName == "state" ? customerQuery.OrderByDescending(x => x.State).ThenBy(x => x.Username) : customerQuery.OrderByDescending(GetSortAgentCustomerProperty(model));
+            }
+            else
+            {
+                customerQuery = model.SortName == "state" ? customerQuery.OrderBy(x => x.State).ThenBy(x => x.Username) : customerQuery.OrderBy(GetSortAgentCustomerProperty(model));
+            }
+            var result = await customerRepos.PagingByAsync(customerQuery, model.PageIndex, model.PageSize);
+            return new GetManagersResult
+            {
+                Managers = result.Items.Select(x => new ManagerModel
+                {
+                    ManagerId = x.CustomerId,
+                    ManagerRole = ManagerRole.Customer.ToInt(),
+                    FullName = x.FirstName + " " + x.LastName,
+                    RoleCode = x.Role?.RoleCode,
+                    RoleName = x.Role?.RoleName,
+                    RoleId = x.RoleId,
+                    State = x.State,
+                    Username = x.Username,
+                    CreatedDate = x.CreatedAt,
+                    IpAddress = x.CustomerSession?.IpAddress,
+                    Platform = x.CustomerSession?.Platform,
+                    SupermasterId = x.SupermasterId,
+                    MasterId = x.MasterId
+                }).ToList(),
+                Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
+                {
+                    NoOfPages = result.Metadata.NoOfPages,
+                    NoOfRows = result.Metadata.NoOfRows,
+                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
+                    Page = result.Metadata.Page
+                }
+            };
         }
 
         private async Task<GetManagersResult> GetManagerByRole(IManagerRepository managerRepos, Data.Core.Entities.Manager clientManager, GetManagersModel model)
@@ -162,7 +222,7 @@ namespace SWallet.Core.Services.Manager
                     RoleCode = x.Role?.RoleCode,
                     RoleName = x.Role?.RoleName,
                     RoleId = x.RoleId,
-                    State = x.State.ToEnum<ManagerState>(),
+                    State = x.State,
                     Username = x.Username,
                     CreatedDate = x.CreatedAt,
                     IpAddress = x.ManagerSession?.IpAddress,
@@ -190,6 +250,19 @@ namespace SWallet.Core.Services.Manager
                 "state" => manager => manager.State,
                 "fullname" => manager => manager.FullName,
                 _ => manager => manager
+            };
+        }
+
+        private static Expression<Func<Data.Core.Entities.Customer, object>> GetSortAgentCustomerProperty(GetManagersModel model)
+        {
+            if (string.IsNullOrEmpty(model.SortName)) return customer => customer.State;
+            return model.SortName?.ToLower() switch
+            {
+                "username" => customer => customer.Username,
+                "createddate" => customer => customer.CreatedAt,
+                "state" => customer => customer.State,
+                "fullname" => customer => customer.FirstName + " " + customer.LastName,
+                _ => customer => customer
             };
         }
 
