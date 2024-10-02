@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="..\..\..\..\Core\HnMicro.Core\HnMicro.Core.csproj" />
+    <ProjectReference Include="..\..\..\..\Modules\HnMicro.Modules.EntityFrameworkCore.SqlServer\HnMicro.Modules.EntityFrameworkCore.SqlServer.csproj" />
+    <ProjectReference Include="..\..\..\..\Modules\HnMicro.Modules.EntityFrameworkCore\HnMicro.Modules.EntityFrameworkCore.csproj" />
+    <ProjectReference Include="..\SWallet.Data.Core\SWallet.Data.Core.csproj" />
+    <ProjectReference Include="..\SWallet.Data\SWallet.Data.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\Background\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.2.0" />
+  </ItemGroup>
+
+</Project>
