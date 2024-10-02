@@ -10,5 +10,6 @@ namespace SWallet.Data.Repositories.Banks
         Task<List<Bank>> GetWithdrawBanks();
         Task<bool> CheckExistBank(string bankName);
         Task<bool> CheckExistBankWhenUpdate(string bankName, int bankId);
+        Task<List<Bank>> GetActiveBanks();
     }
 }

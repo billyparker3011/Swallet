@@ -23,7 +23,7 @@ namespace SWallet.Data.Repositories.Banks
 
         public async Task<BankAccount> FindByBankAndBankAccount(int bankId, int bankAccountId)
         {
-            return await DbSet.FirstOrDefaultAsync(f => f.BankId == bankId && f.BankAccountId == bankAccountId);
+            return await DbSet.Include(f => f.Bank).FirstOrDefaultAsync(f => f.BankId == bankId && f.BankAccountId == bankAccountId);
         }
 
         public async Task<List<BankAccount>> GetBankAccountByBankId(int bankId)
@@ -34,6 +34,11 @@ namespace SWallet.Data.Repositories.Banks
         public async Task<List<BankAccount>> GetDepositBankAccountByBankId(int bankId)
         {
             return await DbSet.Where(f => f.BankId == bankId && f.DepositEnabled).ToListAsync();
+        }
+
+        public async Task<List<BankAccount>> GetWithdrawBankAccountByBankId(int bankId)
+        {
+            return await DbSet.Where(f => f.BankId == bankId && f.WithdrawEnabled).ToListAsync();
         }
     }
 }

@@ -4,6 +4,12 @@ namespace HnMicro.Framework.Enums
 {
     public enum SportKind
     {
+        [EnumDescription("Cock Fight")]
+        CockFight = 600,
+
+        [EnumDescription("Casino")]
+        Casino = 700,
+
         [EnumDescription("Lottery")]
         Lottery = 840,
 

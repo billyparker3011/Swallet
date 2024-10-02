@@ -1,8 +1,10 @@
 ﻿using HnMicro.Framework.Controllers;
 using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
+using SWallet.Core.Models.Settings;
 using SWallet.Core.Services.Payments;
 using SWallet.Core.Services.Setting;
+using SWallet.ManagerService.Requests.Setting;
 
 namespace SWallet.ManagerService.Controllers
 {
@@ -21,6 +23,26 @@ namespace SWallet.ManagerService.Controllers
         public async Task<IActionResult> GetSetting()
         {
             return Ok(OkResponse.Create(await _settingService.GetSetting()));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateSetting([FromBody] UpdateSettingRequest request)
+        {
+            await _settingService.UpdateSetting(new SettingModel
+            {
+                Currency = new CurrencySettingModel
+                {
+                    CurrencySymbol = request.Currency.CurrencySymbol
+                },
+                Mask = new MaskSettingModel
+                {
+                    MaskCharacter = request.Mask.MaskCharacter,
+                    NumberOfMaskCharacters = request.Mask.NumberOfMaskCharacters
+                },
+                PaymentPartner = request.PaymentPartner,
+                MainDomain = request.MainDomain
+            });
+            return Ok();
         }
 
         [HttpGet("payment-partners")]

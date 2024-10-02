@@ -25,5 +25,11 @@ namespace SWallet.CustomerService.Controllers
         {
             return Ok(OkResponse.Create(await _bankService.GetBankBy(false, true)));
         }
+
+        [HttpGet("active-banks")]
+        public async Task<IActionResult> ActiveBanks()
+        {
+            return Ok(OkResponse.Create(await _bankService.ActiveBanks()));
+        }
     }
 }

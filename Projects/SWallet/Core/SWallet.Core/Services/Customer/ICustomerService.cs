@@ -6,6 +6,7 @@ namespace SWallet.Core.Services.Customer
     public interface ICustomerService : IScopedDependency
     {
         Task ChangeInfo(ChangeInfoModel model);
-        Task<MyCustomerProfileModel> MyProfile();
+        Task<MyBalanceCustomerModel> MyBalance();
+        Task<MyCustomerProfileModel> CustomerProfile(long customerId = 0L);
     }
 }

@@ -18,7 +18,7 @@ namespace SWallet.Core.Converters
                 MasterId = manager.MasterId,
                 ParentId = manager.ParentId,
                 RoleId = manager.RoleId,
-                State = manager.State.ToEnum<ManagerState>(),
+                State = manager.State,
                 SupermasterId = manager.SupermasterId,
                 Username = manager.Username
             };

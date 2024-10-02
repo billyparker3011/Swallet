@@ -17,7 +17,10 @@ namespace SWallet.Core.Converters
                 {
                     MaskCharacter = setting.MaskCharacter,
                     NumberOfMaskCharacters = setting.NumberOfMaskCharacters
-                }
+                },
+                DateTimeOffset = setting.DateTimeOffSet,
+                PaymentPartner = setting.PaymentPartner,
+                MainDomain = setting.MainDomain
             };
         }
     }

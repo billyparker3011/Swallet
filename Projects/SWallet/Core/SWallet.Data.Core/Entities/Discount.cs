@@ -20,6 +20,12 @@ namespace SWallet.Data.Core.Entities
         [Required]
         public bool IsStatic { get; set; }
 
+        public int? SportKindId { get; set; }
+
+        public DateTime? StartDate { get; set; }
+
+        public DateTime? EndDate { get; set; }
+
         public string Setting { get; set; }
 
         [Required, DefaultValue(true)]

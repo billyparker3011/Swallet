@@ -7,6 +7,7 @@ namespace SWallet.Core.Services.Payments
     {
         Task Deposit(int paymentPartner, long customerId, DepositActivityModel model);
         Task<List<BankAccountForModel>> GetBankAccountsForDeposit(int paymentPartner, string paymentMethodCode, int bankId);
+        Task<List<BankAccountForModel>> GetBankAccountsForWithdraw(int paymentPartner, string paymentMethodCode, int bankId);
         Task<List<BankForModel>> GetBanksForDeposit(int paymentPartner, string paymentMethodCode);
         Task<string> GetPaymentContent(int paymentPartner, string paymentMethodCode, string currentUsername);
         Task Withdraw(int paymentPartner, long customerId, WithdrawActivityModel model);

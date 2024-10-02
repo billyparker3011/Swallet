@@ -8,7 +8,7 @@ jobs:
       AllBet:
         WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
         application: "Casino.Tools.AllBet"
-        repository: "allBet"
+        repository: "allbet"
         Dockerfile: "Projects/Lottery/Tools/Casino.Tools.AllBet/Dockerfile"
         AppSettings: "Projects/Lottery/Tools/Casino.Tools.AllBet"
   steps:

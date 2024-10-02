@@ -20,7 +20,7 @@ namespace SWallet.Core.Services.Auth
         public async Task ChangeCustomerPassword(ChangePasswordModel model)
         {
             var customerRepository = SWalletUow.GetRepository<ICustomerRepository>();
-            var customerId = ClientContext.Customer.CustomerId;
+            var customerId = model.CustomerId == 0L ? ClientContext.Customer.CustomerId : model.CustomerId;
 
             var customer = await customerRepository.FindByIdAsync(customerId);
             if (customer == null) throw new NotFoundException();

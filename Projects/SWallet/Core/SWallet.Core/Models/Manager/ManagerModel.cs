@@ -10,7 +10,7 @@ namespace SWallet.Core.Models
         public string ManagerCode { get; set; }
         public string Username { get; set; }
         public string FullName { get; set; }
-        public ManagerState State { get; set; }
+        public int State { get; set; }
         public long SupermasterId { get; set; }
         public long MasterId { get; set; }
         public int RoleId { get; set; }

@@ -3,6 +3,7 @@ using HnMicro.Framework.Enums;
 using HnMicro.Framework.Exceptions;
 using HnMicro.Framework.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using SWallet.Core.Consts;
@@ -15,6 +16,7 @@ using SWallet.Data.Repositories.Managers;
 using SWallet.Data.Repositories.Roles;
 using SWallet.Data.UnitOfWorks;
 using System.Linq.Expressions;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace SWallet.Core.Services.Manager
 {
@@ -63,8 +65,8 @@ namespace SWallet.Core.Services.Manager
         {
             return managerRole switch
             {
-                (int)ManagerRole.Root => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsRoot).Select(x => x.RoleId).FirstOrDefaultAsync(),
-                (int)ManagerRole.Supermaster => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsManager).Select(x => x.RoleId).FirstOrDefaultAsync(),
+                (int)ManagerRole.Root => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsManager).Select(x => x.RoleId).FirstOrDefaultAsync(),
+                (int)ManagerRole.Supermaster => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsAgent).Select(x => x.RoleId).FirstOrDefaultAsync(),
                 (int)ManagerRole.Master => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsAgent).Select(x => x.RoleId).FirstOrDefaultAsync(),
                 (int)ManagerRole.Agent => await roleRepos.FindQueryBy(x => x.RoleCode == RoleConsts.RoleAsCustomer).Select(x => x.RoleId).FirstOrDefaultAsync(),
                 _ => 0,
@@ -102,12 +104,72 @@ namespace SWallet.Core.Services.Manager
         public async Task<GetManagersResult> GetManagers(GetManagersModel model)
         {
             var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
+            var customerRepos = SWalletUow.GetRepository<ICustomerRepository>();
 
             var targetManagerId = model.ManagerId.HasValue ? model.ManagerId.Value : ClientContext.Manager.ManagerId;
 
             var clientManager = await managerRepos.FindByIdAsync(targetManagerId) ?? throw new NotFoundException();
 
+            if (clientManager.ManagerRole.ToEnum<ManagerRole>() == ManagerRole.Agent)
+            {
+                return await GetCustomersByAgent(customerRepos, clientManager, model);
+            }
             return await GetManagerByRole(managerRepos, clientManager, model);
+        }
+
+        private async Task<GetManagersResult> GetCustomersByAgent(ICustomerRepository customerRepos, Data.Core.Entities.Manager clientManager, GetManagersModel model)
+        {
+            IQueryable<Data.Core.Entities.Customer> customerQuery = customerRepos.FindQuery().Include(f => f.CustomerSession);
+
+            customerQuery = customerQuery.Where(x => x.AgentId == clientManager.ManagerId);
+
+            if (!string.IsNullOrEmpty(model.SearchTerm))
+            {
+                customerQuery = customerQuery.Where(x =>
+                        x.Username.Contains(model.SearchTerm) ||
+                        x.LastName.Contains(model.SearchTerm) ||
+                        x.FirstName.Contains(model.SearchTerm));
+            }
+            if (model.State.HasValue)
+            {
+                customerQuery = customerQuery.Where(x => x.State == model.State.Value);
+            }
+
+            if (model.SortType == SortType.Descending)
+            {
+                customerQuery = model.SortName == "state" ? customerQuery.OrderByDescending(x => x.State).ThenBy(x => x.Username) : customerQuery.OrderByDescending(GetSortAgentCustomerProperty(model));
+            }
+            else
+            {
+                customerQuery = model.SortName == "state" ? customerQuery.OrderBy(x => x.State).ThenBy(x => x.Username) : customerQuery.OrderBy(GetSortAgentCustomerProperty(model));
+            }
+            var result = await customerRepos.PagingByAsync(customerQuery, model.PageIndex, model.PageSize);
+            return new GetManagersResult
+            {
+                Managers = result.Items.Select(x => new ManagerModel
+                {
+                    ManagerId = x.CustomerId,
+                    ManagerRole = ManagerRole.Customer.ToInt(),
+                    FullName = x.FirstName + " " + x.LastName,
+                    RoleCode = x.Role?.RoleCode,
+                    RoleName = x.Role?.RoleName,
+                    RoleId = x.RoleId,
+                    State = x.State,
+                    Username = x.Username,
+                    CreatedDate = x.CreatedAt,
+                    IpAddress = x.CustomerSession?.IpAddress,
+                    Platform = x.CustomerSession?.Platform,
+                    SupermasterId = x.SupermasterId,
+                    MasterId = x.MasterId
+                }).ToList(),
+                Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
+                {
+                    NoOfPages = result.Metadata.NoOfPages,
+                    NoOfRows = result.Metadata.NoOfRows,
+                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
+                    Page = result.Metadata.Page
+                }
+            };
         }
 
         private async Task<GetManagersResult> GetManagerByRole(IManagerRepository managerRepos, Data.Core.Entities.Manager clientManager, GetManagersModel model)
@@ -160,7 +222,7 @@ namespace SWallet.Core.Services.Manager
                     RoleCode = x.Role?.RoleCode,
                     RoleName = x.Role?.RoleName,
                     RoleId = x.RoleId,
-                    State = x.State.ToEnum<ManagerState>(),
+                    State = x.State,
                     Username = x.Username,
                     CreatedDate = x.CreatedAt,
                     IpAddress = x.ManagerSession?.IpAddress,
@@ -191,6 +253,19 @@ namespace SWallet.Core.Services.Manager
             };
         }
 
+        private static Expression<Func<Data.Core.Entities.Customer, object>> GetSortAgentCustomerProperty(GetManagersModel model)
+        {
+            if (string.IsNullOrEmpty(model.SortName)) return customer => customer.State;
+            return model.SortName?.ToLower() switch
+            {
+                "username" => customer => customer.Username,
+                "createddate" => customer => customer.CreatedAt,
+                "state" => customer => customer.State,
+                "fullname" => customer => customer.FirstName + " " + customer.LastName,
+                _ => customer => customer
+            };
+        }
+
         public async Task<GetCustomerOfAgentManagerResult> GetCustomerOfAgentManager(GetCustomerOfAgentManagerModel model)
         {
             var managerRepos = SWalletUow.GetRepository<IManagerRepository>();
@@ -198,7 +273,64 @@ namespace SWallet.Core.Services.Manager
 
             var clientManager = await managerRepos.FindByIdAsync(ClientContext.Manager.ManagerId) ?? throw new NotFoundException();
 
-            IQueryable<Data.Core.Entities.Customer> customerQuery = customerRepos.FindQuery().Include(f => f.CustomerSession).Include(x => x.Role).Where(x => x.IsAffiliate);
+            var customerQuery = clientManager.ManagerRole == ManagerRole.Root.ToInt() ? customerRepos.FindQuery().Include(f => f.CustomerSession).Include(f => f.Role)
+                                                                                                                            .GroupJoin(managerRepos.FindQuery(), c => c.AgentId, m => m.ManagerId, (customer, manager) => new
+                                                                                                                            {
+                                                                                                                                customer,
+                                                                                                                                manager
+                                                                                                                            })
+                                                                                                                            .SelectMany(f => f.manager.DefaultIfEmpty(), (customerRes, managerRes) => new CustomerModel
+                                                                                                                            {
+                                                                                                                                CustomerId = customerRes.customer.CustomerId,
+                                                                                                                                RoleName = customerRes.customer.Role != null ? customerRes.customer.Role.RoleName : null,
+                                                                                                                                RoleCode = customerRes.customer.Role != null ? customerRes.customer.Role.RoleCode : null,
+                                                                                                                                RoleId = customerRes.customer.RoleId,
+                                                                                                                                State = customerRes.customer.State.ToEnum<CustomerState>(),
+                                                                                                                                Username = customerRes.customer.Username,
+                                                                                                                                UsernameUpper = customerRes.customer.UsernameUpper,
+                                                                                                                                FirstName = customerRes.customer.FirstName,
+                                                                                                                                LastName = customerRes.customer.LastName,
+                                                                                                                                Email = customerRes.customer.Email,
+                                                                                                                                Phone = customerRes.customer.Phone,
+                                                                                                                                Telegram = customerRes.customer.Telegram,
+                                                                                                                                IsAffiliate = customerRes.customer.IsAffiliate,
+                                                                                                                                AgentId = customerRes.customer.AgentId,
+                                                                                                                                IpAddress = customerRes.customer.CustomerSession != null ? customerRes.customer.CustomerSession.IpAddress : null,
+                                                                                                                                Platform = customerRes.customer.CustomerSession != null ? customerRes.customer.CustomerSession.Platform : null,
+                                                                                                                                SupermasterId = customerRes.customer.SupermasterId,
+                                                                                                                                MasterId = customerRes.customer.MasterId,
+                                                                                                                                CreatedDate = customerRes.customer.CreatedAt,
+                                                                                                                                AffiliateUsername = managerRes != null ? managerRes.Username : null,
+                                                                                                                            })
+                                                                                                                        : customerRepos.FindQuery().Include(f => f.CustomerSession).Include(f => f.Role).Where(f => f.IsAffiliate)
+                                                                                                                            .GroupJoin(managerRepos.FindQuery(), c => c.AgentId, m => m.ManagerId, (customer, manager) => new
+                                                                                                                            {
+                                                                                                                                customer,
+                                                                                                                                manager
+                                                                                                                            })
+                                                                                                                            .SelectMany(f => f.manager.DefaultIfEmpty(), (customerRes, managerRes) => new CustomerModel
+                                                                                                                            {
+                                                                                                                                CustomerId = customerRes.customer.CustomerId,
+                                                                                                                                RoleName = customerRes.customer.Role != null ? customerRes.customer.Role.RoleName : null,
+                                                                                                                                RoleCode = customerRes.customer.Role != null ? customerRes.customer.Role.RoleCode : null,
+                                                                                                                                RoleId = customerRes.customer.RoleId,
+                                                                                                                                State = customerRes.customer.State.ToEnum<CustomerState>(),
+                                                                                                                                Username = customerRes.customer.Username,
+                                                                                                                                UsernameUpper = customerRes.customer.UsernameUpper,
+                                                                                                                                FirstName = customerRes.customer.FirstName,
+                                                                                                                                LastName = customerRes.customer.LastName,
+                                                                                                                                Email = customerRes.customer.Email,
+                                                                                                                                Phone = customerRes.customer.Phone,
+                                                                                                                                Telegram = customerRes.customer.Telegram,
+                                                                                                                                IsAffiliate = customerRes.customer.IsAffiliate,
+                                                                                                                                AgentId = customerRes.customer.AgentId,
+                                                                                                                                IpAddress = customerRes.customer.CustomerSession != null ? customerRes.customer.CustomerSession.IpAddress : null,
+                                                                                                                                Platform = customerRes.customer.CustomerSession != null ? customerRes.customer.CustomerSession.Platform : null,
+                                                                                                                                SupermasterId = customerRes.customer.SupermasterId,
+                                                                                                                                MasterId = customerRes.customer.MasterId,
+                                                                                                                                CreatedDate = customerRes.customer.CreatedAt,
+                                                                                                                                AffiliateUsername = managerRes != null ? managerRes.Username : null,
+                                                                                                                            });
 
             switch (clientManager.ManagerRole.ToEnum<ManagerRole>())
             {
@@ -224,7 +356,11 @@ namespace SWallet.Core.Services.Manager
             }
             if (model.State.HasValue)
             {
-                customerQuery = customerQuery.Where(x => x.State == model.State.Value);
+                customerQuery = customerQuery.Where(x => x.State == model.State.Value.ToEnum<CustomerState>());
+            }
+            if (model.AffiliateId.HasValue)
+            {
+                customerQuery = customerQuery.Where(x => x.IsAffiliate && x.AgentId == model.AffiliateId.Value);
             }
 
             if (model.SortType == SortType.Descending)
@@ -235,51 +371,35 @@ namespace SWallet.Core.Services.Manager
             {
                 customerQuery = model.SortName == "state" ? customerQuery.OrderBy(x => x.State).ThenBy(x => x.Username) : customerQuery.OrderBy(GetSortCustomerProperty(model));
             }
-            var result = await customerRepos.PagingByAsync(customerQuery, model.PageIndex, model.PageSize);
 
             return new GetCustomerOfAgentManagerResult
             {
-                Customers = result.Items.Select(x => new CustomerModel
-                {
-                    CustomerId = x.CustomerId,
-                    RoleCode = x.Role?.RoleCode,
-                    RoleName = x.Role?.RoleName,
-                    RoleId = x.RoleId,
-                    State = x.State.ToEnum<CustomerState>(),
-                    Username = x.Username,
-                    UsernameUpper = x.UsernameUpper,
-                    FirstName = x.FirstName,
-                    LastName = x.LastName,
-                    Email = x.Email,
-                    Phone = x.Phone,
-                    Telegram = x.Telegram,
-                    IsAffiliate = x.IsAffiliate,
-                    AgentId = x.AgentId,
-                    CreatedDate = x.CreatedAt,
-                    IpAddress = x.CustomerSession?.IpAddress,
-                    Platform = x.CustomerSession?.Platform,
-                    SupermasterId = x.SupermasterId,
-                    MasterId = x.MasterId
-                }).ToList(),
+                Customers = await customerQuery
+                            .Skip(model.PageSize * model.PageIndex)
+                            .Take(model.PageSize).ToListAsync(),
                 Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
                 {
-                    NoOfPages = result.Metadata.NoOfPages,
-                    NoOfRows = result.Metadata.NoOfRows,
-                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
-                    Page = result.Metadata.Page
+                    NoOfRows = await customerQuery.CountAsync(),
+                    NoOfRowsPerPage = model.PageSize,
+                    Page = model.PageIndex
                 }
             };
         }
 
-        private static Expression<Func<Data.Core.Entities.Customer, object>> GetSortCustomerProperty(GetCustomerOfAgentManagerModel model)
+        private static Expression<Func<CustomerModel, object>> GetSortCustomerProperty(GetCustomerOfAgentManagerModel model)
         {
             if (string.IsNullOrEmpty(model.SortName)) return customer => customer.State;
             return model.SortName?.ToLower() switch
             {
                 "username" => customer => customer.Username,
-                "createddate" => customer => customer.CreatedAt,
+                "createddate" => customer => customer.CreatedDate,
                 "state" => customer => customer.State,
                 "fullname" => customer => customer.FirstName + " " + customer.LastName,
+                "email" => customer => customer.Email,
+                "telegram" => customer => customer.Telegram,
+                "phone" => customer => customer.Phone,
+                "rolename" => customer => customer.RoleName,
+                "affiliateusername" => customer => customer.AffiliateUsername,
                 _ => customer => customer
             };
         }

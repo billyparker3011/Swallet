@@ -6,5 +6,6 @@ namespace SWallet.Core.Models
     {
         public string SearchTerm { get; set; }
         public int? State { get; set; }
+        public long? AffiliateId { get; set; }
     }
 }

@@ -31,7 +31,7 @@ namespace SWallet.Core.Services.Payments
             var instanceOfPayments = typeof(IInstanceOfPaymentProcessor).GetDerivedClass();
             foreach (var instance in instanceOfPayments)
             {
-                _instances.Add(Activator.CreateInstance(instance, _serviceProvider, _configuration, _sWalletUow) as IInstanceOfPaymentProcessor);
+                _instances.Add(Activator.CreateInstance(instance, _serviceProvider, _configuration, _clockService, _sWalletUow) as IInstanceOfPaymentProcessor);
             }
         }
 
@@ -47,11 +47,17 @@ namespace SWallet.Core.Services.Payments
             return instanceOf == null ? throw new NotFoundException() : await instanceOf.GetBankAccountsForDeposit(bankId);
         }
 
+        public async Task<List<BankAccountForModel>> GetBankAccountsForWithdraw(int paymentPartner, string paymentMethodCode, int bankId)
+        {
+            var instanceOf = _instances.FirstOrDefault(f => f.PaymentPartner == paymentPartner.ToEnum<PaymentPartner>() && f.PaymentMethodCode == paymentMethodCode);
+            return instanceOf == null ? throw new NotFoundException() : await instanceOf.GetBankAccountsForWithdraw(bankId);
+        }
+
         public virtual async Task<string> GetPaymentContent(int paymentPartner, string paymentMethodCode, string currentUsername)
         {
             var currentTime = _clockService.GetUtcNow();
             var content = currentUsername.RandomStringFrom(3);
-            return $"{currentTime.Millisecond}{currentTime.Hour}{currentTime.Year}{currentTime.Minute}{content}{currentTime.Day}{currentTime.Second}{currentTime.Month}";
+            return $"{currentTime:HHyymm}{content}{currentTime:ddsMM}".ToUpper();
         }
 
         public async Task Deposit(int paymentPartner, long customerId, DepositActivityModel model)

@@ -19,5 +19,11 @@ namespace SWallet.Data.Core.Entities
 
         [Required, DefaultValue(0)]
         public int PaymentPartner { get; set; }
+
+        [Required, DefaultValue(0)]
+        public int DateTimeOffSet { get; set; }
+
+        [MaxLength(500)]
+        public string MainDomain { get; set; }
     }
 }

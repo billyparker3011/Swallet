@@ -70,7 +70,7 @@ namespace SWallet.CustomerService.Controllers
         [HttpGet("my-profile")]
         public async Task<IActionResult> MyProfile()
         {
-            return Ok(OkResponse.Create(await _customerService.MyProfile()));
+            return Ok(OkResponse.Create(await _customerService.CustomerProfile()));
         }
     }
 }

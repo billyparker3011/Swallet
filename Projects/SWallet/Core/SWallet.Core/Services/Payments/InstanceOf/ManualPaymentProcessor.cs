@@ -71,6 +71,12 @@ namespace SWallet.Core.Services.Payments.InstanceOf
             return (await bankAccountRepository.GetDepositBankAccountByBankId(bankId)).Select(f => f.ToBankAccountForModel()).ToList();
         }
 
+        public override async Task<List<BankAccountForModel>> GetBankAccountsForWithdraw(int bankId)
+        {
+            var bankAccountRepository = SWalletUow.GetRepository<IBankAccountRepository>();
+            return (await bankAccountRepository.GetWithdrawBankAccountByBankId(bankId)).Select(f => f.ToBankAccountForModel()).ToList();
+        }
+
         public override async Task<List<BankForModel>> GetBanksForDeposit()
         {
             var bankRepository = SWalletUow.GetRepository<IBankRepository>();
@@ -92,8 +98,9 @@ namespace SWallet.Core.Services.Payments.InstanceOf
                 CreatedAt = ClockService.GetUtcNow(),
                 CreatedBy = customerId,
                 CustomerId = customerId,
-                DepositPaymentPartnerId = PaymentPartner.ToInt(),
-                DepositPaymentMethodId = paymentMethod.Id,
+
+                WithdrawPaymentPartnerId = PaymentPartner.ToInt(),
+                WithdrawPaymentMethodId = paymentMethod.Id,
 
                 WithdrawToBankName = customerBankAccount.Bank.Name,
                 WithdrawToCardHolder = customerBankAccount.CardHolder,

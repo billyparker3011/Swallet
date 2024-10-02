@@ -11,6 +11,7 @@
         public const string BankAccountIsRequired = "Bank Account is required.";
         public const string AmountIsGreaterThanZero = "Amount must be greater than zero.";
         public const string PaymentContentIsRequired = "Payment Content is required.";
+        public const string YourBalanceIsNotEnoughToWithdraw = "Your balance is not enough to withdraw.";
 
         public const string UserNameIsRequired = "Username is required.";
         public const int MinLengthOfUserName = 15;
@@ -46,6 +47,35 @@
         public const string ConfirmPasswordDoesNotMatch = "Password doesn't match.";
         public const string NewPasswordCanNotBeOldPassword = "New Password cann't be equal to Old Password.";
         public const string OldPasswordDoesNotMatch = "Old Password doesn't match.";
+        #endregion
+
+        #region Setting
+        public const string SettingMaskCanNotBeNull = "Mask cannot be NULL.";
+        public const string SettingNumberOfMaskCharactersMustBeGreaterThanZero = "No.of mask must be greater than zero.";
+        public const string SettingMaskCharacterCanNotBeNull = "Mask character cannot be NULL.";
+        public const string SettingMaskCharacterContainsOnlyOneCharacter = "Mask character contains only one character.";
+
+        public const string SettingCurrencyCanNotBeNull = "Currency cannot be NULL.";
+        public const string SettingCurrencySymbolCanNotBeNull = "Currency symbol cannot be NULL.";
+
+        public const string SettingPaymentPartnerCanNotBeNull = "Payment partner cannot be NULL.";
+
+        public const string PaymentMethodNameCannotBeNull = "Payment method name cannot be NULL.";
+        public const string PaymentMethodCodeCannotBeNull = "Payment method code cannot be NULL.";
+        public const string PaymentMethodCodeExists = "Payment method code has been used.";
+
+        public const string SettingMainDomainCanNotBeNull = "Main domain cannot be NULL.";
+        #endregion
+
+        #region Discount
+        public const string DiscountNameCanNotBeNull = "Discount name cannot be NULL.";
+        public const string DiscountDescriptionCanNotBeNull = "Discount description cannot be NULL.";
+        public const string DiscountAppliedTimeIsWrong = "Ended Date must be greater or equals than Started Date.";
+        #endregion
+
+        #region Transaction
+        public const string TransactionAmount = "Amount cannot be NULL.";
+        public const string TransactionAmountMustBeGreaterThanZero = "Amount must be greater than zero.";
         #endregion
     }
 }

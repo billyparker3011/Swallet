@@ -10,6 +10,7 @@ namespace SWallet.Core.Services.Payments
 
         Task Deposit(long customerId, DepositActivityModel model);
         Task<List<BankAccountForModel>> GetBankAccountsForDeposit(int bankId);
+        Task<List<BankAccountForModel>> GetBankAccountsForWithdraw(int bankId);
         Task<List<BankForModel>> GetBanksForDeposit();
         Task Withdraw(long customerId, WithdrawActivityModel model);
     }

@@ -4,7 +4,7 @@ using HnMicro.Framework.Responses;
 using Microsoft.AspNetCore.Mvc;
 using SWallet.Core.Models.Transactions;
 using SWallet.Core.Services.Transaction;
-using SWallet.CustomerService.Validations.Transactions;
+using SWallet.CustomerService.Requests.Transactions;
 
 namespace SWallet.CustomerService.Controllers
 {
@@ -17,6 +17,7 @@ namespace SWallet.CustomerService.Controllers
             _transactionService = transactionService;
         }
 
+        [HttpGet]
         public async Task<IActionResult> GetTransactionsHistory([FromQuery] GetTransactionsHistoryRequest request, [FromQuery] QueryAdvance advanceRequest)
         {
             return Ok(OkResponse.Create(await _transactionService.GetTransactionsHistory(new GetTransactionsHistoryModel

@@ -52,6 +52,8 @@ namespace SWallet.Data.Core.Entities
 
         public virtual CustomerSession CustomerSession { get; set; }
 
+        public virtual BalanceCustomer CustomerBalance { get; set; }
+
         [ForeignKey(nameof(RoleId))]
         public virtual Role Role { get; set; }
 
@@ -80,5 +82,7 @@ namespace SWallet.Data.Core.Entities
 
         [Required, DefaultValue(true)]
         public bool DiscountAllowed { get; set; }
+
+        public int? DiscountId { get; set; }
     }
 }

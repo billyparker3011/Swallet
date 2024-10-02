@@ -33,6 +33,24 @@ namespace SWallet.Core.Converters
             };
         }
 
+        public static decimal ToBalance(this BalanceCustomer balanceCustomer)
+        {
+            //  balanceCustomer.Balance <=> Total Deposit / Withdraw
+            //  balanceCustomer.TotalWinlose <=> Total Winlose (tickets in Tickets table)
+            //  balanceCustomer.HistoryTotalWinlose <=> Total Winlose (tickets deleted in Tickets table)
+            //  balanceCustomer.TotalOutstanding <=> Current Outs
+            return balanceCustomer.Balance + balanceCustomer.TotalWinlose + balanceCustomer.HistoryTotalWinlose - balanceCustomer.TotalOutstanding;
+        }
+
+        public static MyBalanceCustomerModel ToMyCustomerBalanceModel(this BalanceCustomer balanceCustomer, Setting setting)
+        {
+            return new MyBalanceCustomerModel
+            {
+                Balance = balanceCustomer.ToBalance(),
+                CurrencySymbol = setting.CurrencySymbol
+            };
+        }
+
         public static MyCustomerProfileModel ToMyCustomerProfileModel(this Customer customer)
         {
             return new MyCustomerProfileModel

@@ -9,5 +9,6 @@ namespace SWallet.Data.Repositories.Customers
         Task<Customer> FindByUsername(string username);
         Task<Customer> FindByUsernameAndPassword(string username, string password);
         Task<Customer> FindByEmail(string email);
+        Task<Customer> FindByCustomerId(long customerId);
     }
 }

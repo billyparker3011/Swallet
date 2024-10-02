@@ -536,6 +536,35 @@ namespace Lottery.Core.Services.Partners.Bti
             return outs + winlose;
         }
 
+        public async Task<BtiRefreshResponseModel> RefreshBalance(string token)
+        {
+            try
+            {
+                var result = _btiSerivice.ValidateToken(token);
+
+                if (!result.IsValid || result.IsExpired) return new BtiRefreshResponseModel(false, 0);
+
+                var playerRepos = LotteryUow.GetRepository<IPlayerRepository>();
+
+                var player = await playerRepos.FindByIdAsync(result.PlayerId);
+                var btiPlayerMappingRepos = LotteryUow.GetRepository<IBtiPlayerMappingRepository>();
+                var btiTicketRepos = LotteryUow.GetRepository<IBtiTicketRepository>();
+                var playerMapping = await btiPlayerMappingRepos.FindQueryBy(c => c.PlayerId == result.PlayerId).FirstOrDefaultAsync();
+
+                if (player == null || playerMapping == null) return new BtiRefreshResponseModel(false, 0);
+
+                var outAndWinlose = await GetOutAndWinlose(btiTicketRepos, playerMapping.PlayerId);
+
+                var balance = _testBalance + outAndWinlose;
+
+                return new BtiRefreshResponseModel(true, balance);
+            }
+            catch (Exception ex)
+            {
+                return new BtiRefreshResponseModel(false, 0);
+            }
+        }
+
         private long GetTransaction()
         {
             return DateTime.UtcNow.Ticks;
