@@ -9,7 +9,7 @@ RUN dotnet restore Projects/SWallet/Flow/SWallet.ManagerService/SWallet.ManagerS
 RUN dotnet build Projects/SWallet/Flow/SWallet.ManagerService/SWallet.ManagerService.csproj -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish Projects/SWallet/Flow/SWallet.ManagerService/SWallet.ManagerService.csproj -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish Projects/SWallet/Flow/SWallet.ManagerService/SWallet.ManagerService.csproj -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
