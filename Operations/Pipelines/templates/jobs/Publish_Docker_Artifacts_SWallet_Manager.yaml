@@ -10,7 +10,7 @@ jobs:
         application: "SWallet.ManagerService"
         repository: "swalletmanager"
         Dockerfile: "Projects/SWallet/Flow/SWallet.ManagerService/Dockerfile"
-        AppSettings: "Projects/SWallet/Flow/SWallet.ManagerService/"
+        AppSettings: "Projects/SWallet/Flow/SWallet.ManagerService"
 
   steps:
   - template: ../steps/Replace_AppSettings_Files.yaml
