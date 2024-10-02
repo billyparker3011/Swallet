@@ -8,7 +8,7 @@ jobs:
       SWallet.CustomerService:
         WebAppName: "app-hnx-$(repository)-$(environment)-$(location)"
         application: "SWallet.CustomerService"
-        repository: "swallet.customerService"
+        repository: "swallet.customerservice"
         Dockerfile: "Projects/SWallet/Flow/SWallet.CustomerService/Dockerfile"
         AppSettings: "Projects/SWallet/Flow/SWallet.CustomerService"
   steps:
