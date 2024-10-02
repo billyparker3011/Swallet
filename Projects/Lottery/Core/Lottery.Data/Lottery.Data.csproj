@@ -29,10 +29,19 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Scripts\CreateBtiPTForCompany.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\CreateBtiOddForCompany.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Scripts\CreateCockFightPTForCompany.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Scripts\CreateCockFightOddForCompany.sql">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Scripts\InitBtiBetKinds.sql">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Scripts\InitCasinoData.sql">

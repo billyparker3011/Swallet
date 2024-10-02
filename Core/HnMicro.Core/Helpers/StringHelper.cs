@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace HnMicro.Core.Helpers
@@ -88,6 +89,13 @@ namespace HnMicro.Core.Helpers
             return useSpecial
                     ? new string(Enumerable.Repeat(_charsWithSpecial, length).Select(f => f[OtherHelper.Rnd.Next(f.Length)]).ToArray())
                     : new string(Enumerable.Repeat(_chars, length).Select(f => f[OtherHelper.Rnd.Next(f.Length)]).ToArray());
+        }
+
+        public static string RandomStringFrom(this string originText, int length)
+        {
+            if (string.IsNullOrEmpty(originText)) return string.Empty;
+            if (originText.Length < length) return originText.ToUpper();
+            return (new string(Enumerable.Repeat(originText, length).Select(f => f[OtherHelper.Rnd.Next(f.Length)]).ToArray())).ToUpper();
         }
 
         public static string Hs256Signature()
@@ -288,6 +296,29 @@ namespace HnMicro.Core.Helpers
                 // Optional: Log or handle parsing error
                 return false;
             }
+        }
+
+        public static string ConvertStringToAscii(this string inputString)
+        {
+            if (string.IsNullOrEmpty(inputString))
+            {
+                throw new ArgumentException("Input string cannot be null or empty.");
+            }
+
+            StringBuilder asciiString = new StringBuilder();
+
+            foreach (char c in inputString)
+            {
+                int asciiValue = (int)c;
+                asciiString.Append(asciiValue.ToString() + " ");
+            }
+
+            return asciiString.ToString().Trim();
+        }
+
+        public static string NormalizeJsonString(this object obj)
+        {
+            return JsonConvert.SerializeObject(obj, CamelCaseJsonSetting);
         }
     }
 }

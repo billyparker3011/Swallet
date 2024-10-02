@@ -27,6 +27,10 @@ namespace Lottery.Agent.AgentService.Controllers
         {
             await _cockFightAgentBetKindService.UpdateCockFightAgentBetKind(new GetCockFightAgentBetKindModel
             {
+<<<<<<< HEAD
+=======
+                Id = request.Id,
+>>>>>>> develop
                 Name = request.Name,
                 Enabled = request.Enabled
             });

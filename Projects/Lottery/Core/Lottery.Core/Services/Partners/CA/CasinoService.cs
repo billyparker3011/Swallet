@@ -67,5 +67,13 @@ namespace Lottery.Core.Services.Partners.CA
             if (!clientUrlHash.TryGetValue(clientUrlKey.SubKey, out string gameUrl)) return null;
             return gameUrl;
         }
+
+        public async Task<string> GetCheckGameUrlAsync(long check)
+        {
+            var clientUrlKey = check.GetCasinoClientUrlByPlayerId();
+            var clientUrlHash = await _redisCacheService.HashGetFieldsAsync(clientUrlKey.MainKey, new List<string> { clientUrlKey.SubKey }, CachingConfigs.RedisConnectionForApp);
+            if (!clientUrlHash.TryGetValue(clientUrlKey.SubKey, out string gameUrl)) return null;
+            return gameUrl;
+        }
     }
 }

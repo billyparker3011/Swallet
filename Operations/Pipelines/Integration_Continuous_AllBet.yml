@@ -21,8 +21,11 @@ variables:
   - template: templates/variables/Production.yaml
 - ${{ elseif eq(variables['Build.SourceBranchName'], 'test') }}:
   - template: templates/variables/Testing.yaml
+<<<<<<< HEAD
 - ${{ elseif eq(variables['Build.SourceBranchName'], 'staging') }}:
   - template: templates/variables/Staging.yaml
+=======
+>>>>>>> develop
 - ${{ else }}:
   - template: templates/variables/Development.yaml
 

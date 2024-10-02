@@ -270,6 +270,7 @@ namespace Lottery.Core.Services.Agent
                     RoleId = x.RoleId,
                     State = x.ParentState.HasValue && x.State >= x.ParentState.Value ? x.State : x.ParentState ?? x.State,
                     Username = x.Username,
+                    IsLock = x.Lock,
                     CreatedDate = x.CreatedAt,
                     IpAddress = x.AgentSession?.IpAddress,
                     Platform = x.AgentSession?.Platform,
@@ -324,6 +325,7 @@ namespace Lottery.Core.Services.Agent
                     RoleId = Role.Player.ToInt(),
                     State = x.ParentState.HasValue && x.State >= x.ParentState.Value ? x.State : x.ParentState ?? x.State,
                     Username = x.Username,
+                    IsLock = x.Lock,
                     CreatedDate = x.CreatedAt,
                     IpAddress = x.PlayerSession != null ? x.PlayerSession.IpAddress : null,
                     Platform = x.PlayerSession != null ? x.PlayerSession.Platform : null
@@ -385,6 +387,7 @@ namespace Lottery.Core.Services.Agent
             updatedAgent.Credit = updateModel.Credit ?? updatedAgent.Credit;
             var oldMemberMaxCreditValue = updatedAgent.MemberMaxCredit ?? 0m;
             updatedAgent.MemberMaxCredit = updateModel.MemberMaxCredit ?? updatedAgent.MemberMaxCredit;
+            updatedAgent.Lock = updateModel.IsLock ?? updatedAgent.Lock;
             agentRepos.Update(updatedAgent);
 
             await LotteryUow.SaveChangesAsync();
@@ -939,6 +942,7 @@ namespace Lottery.Core.Services.Agent
                                           FirstName = x.FirstName,
                                           LastName = x.LastName,
                                           Role = x.RoleId,
+                                          IsLock = x.Lock,
                                           CreatedDate = x.CreatedAt,
                                           Permissions = !string.IsNullOrEmpty(x.Permissions) ? x.Permissions.Split(',', StringSplitOptions.None).ToList() : new List<string>(),
                                           IpAddress = x.AgentSession != null ? x.AgentSession.IpAddress : null,

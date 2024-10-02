@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Diagnostics.Eventing.Reader;
 using System.Globalization;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -129,7 +130,9 @@ namespace Lottery.Core.Partners.Casino.Allbet
             var casinoPartnerLoginModel = data as CasinoAllBetPlayerLoginModel;
             Logger.LogInformation($"Player {casinoPartnerLoginModel.PlayerId}");
             await RemoveCacheClientUrl(casinoPartnerLoginModel.PlayerId);
-
+            await RemoveCacheClientUrl(1);
+            await RemoveCacheClientUrl(2);
+            await UpdateCacheClientUrl(2, "2");
             // Check player can play
             var isPlay = await CheckMaxWinLose(casinoPartnerLoginModel.PlayerId);
             if(!isPlay) return;
@@ -141,6 +144,10 @@ namespace Lottery.Core.Partners.Casino.Allbet
             if (casinoPlayerMapping != null)
             {
                 casinoPartnerLoginModel.Player = casinoPlayerMapping.BookiePlayerId;
+
+                //check
+                var check = await CheckSendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
+                await UpdateCacheClientUrl(1, check);
 
                 var response = await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
                 if (response == null) return;
@@ -161,6 +168,10 @@ namespace Lottery.Core.Partners.Casino.Allbet
                 if (casinoPlayerMapping != null)
                 {
                     casinoPartnerLoginModel.Player = casinoPlayerMapping.BookiePlayerId;
+
+                    //check
+                    var check = await CheckSendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
+                    await UpdateCacheClientUrl(casinoPartnerLoginModel.PlayerId + 1000, check);
 
                     var response = await SendRequestAsync(HttpMethod.Post, PartnerHelper.CasinoPathPost.Login, casinoPartnerLoginModel.ToBodyJson(), settingValue);
                     if (response == null) return;
@@ -276,6 +287,38 @@ namespace Lottery.Core.Partners.Casino.Allbet
             return chars[index];
         }
 
+        private async Task<string> CheckSendRequestAsync(HttpMethod httpMethod, string path, string requestBody, AllbetBookieSettingValue settingValue)
+        {
+            try
+            {
+                HttpClient client = new HttpClient();
+                CultureInfo ci = new CultureInfo("en-US");
+                string requestTime = DateTime.Now.ToString("dd MMM yyyy HH:mm:ss z", ci);
+
+                string contentMD5 = Base64edMd5(requestBody);
+                var authorization = GeneralAuthorizationHeader(httpMethod.Method, path, contentMD5, settingValue.ContentType, requestTime, settingValue.AllbetApiKey, settingValue.OperatorId);
+
+                var httpRequestMessage = new HttpRequestMessage();
+                httpRequestMessage.Method = httpMethod;
+                httpRequestMessage.Content = httpMethod == HttpMethod.Post ? new StringContent(requestBody) : null;
+
+                httpRequestMessage.RequestUri = new Uri(settingValue.ApiURL + path);
+                httpRequestMessage.Headers.TryAddWithoutValidation("Authorization", authorization);
+                httpRequestMessage.Headers.TryAddWithoutValidation("Date", requestTime);
+                httpRequestMessage.Content.Headers.TryAddWithoutValidation("Content-MD5", contentMD5);
+                httpRequestMessage.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
+                httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+                return JsonConvert.SerializeObject(httpRequestMessage).ToString();
+
+            }
+            catch (HttpRequestException e)  
+            {
+                Logger.LogError($"SendRequest failed with errors {e.Message}.");
+                return e.Message;
+            }
+        }
+
         private async Task<HttpResponseMessage> SendRequestAsync(HttpMethod httpMethod, string path, string requestBody, AllbetBookieSettingValue settingValue)
         {
             try
@@ -301,6 +344,7 @@ namespace Lottery.Core.Partners.Casino.Allbet
                 Logger.LogInformation($"SendRequest to {httpRequestMessage.RequestUri} with body: {requestBody}, header: {httpRequestMessage.Headers}.");
                 HttpResponseMessage response = client.SendAsync(httpRequestMessage).Result;
                 Logger.LogInformation($"Response: {await response.Content.ReadAsStringAsync()}");
+
                 return response;
 
             }
