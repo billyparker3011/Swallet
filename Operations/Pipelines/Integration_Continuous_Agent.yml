@@ -4,7 +4,6 @@ trigger:
     - main
     - develop
     - test
-    - staging
   paths:
     exclude:
     - "Operations/*"
