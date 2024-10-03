@@ -25,5 +25,20 @@ namespace SWallet.Data.Core
         public DbSet<BalanceCustomer> BalanceCustomers { get; set; }
         public DbSet<Setting> Settings { get; set; }
         public DbSet<PaymentMethod> PaymentMethods { get; set; }
+        #region M8XS
+        public DbSet<M8xsBetKind> M8XsBetKinds { get; set; }
+        public DbSet<M8xsCustomerBetSetting> M8XsAgentBetSettings { get; set; }
+        public DbSet<M8xsTicket> M8xsTickets { get; set; }
+        #endregion
+        #region CockFight
+        public DbSet<CockFightBetKind> CockFightBetKinds { get; set; }
+        public DbSet<CockFightCustomerBetSetting> CockFightAgentBetSettings { get; set; }
+        public DbSet<CockFightTicket> CockFightTickets { get; set; }
+        #endregion
+        #region Casino
+        public DbSet<CasinoBetKind> CasinoBetKinds { get; set; }
+        public DbSet<CasinoCustomerBetSetting> CasinoAgentBetSettings { get; set; }
+        public DbSet<CasinoTicket> CasinoTickets { get; set; }
+        #endregion
     }
 }
