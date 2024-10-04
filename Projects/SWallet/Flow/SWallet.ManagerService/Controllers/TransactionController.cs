@@ -17,12 +17,11 @@ namespace SWallet.ManagerService.Controllers
             _transactionService = transactionService;
         }
 
-        [HttpGet("customer/{id:long}/transactions")]
-        public async Task<IActionResult> GetCustomerTransactions([FromRoute] long id, [FromQuery] CustomerTransactionsRequest request, [FromQuery] QueryAdvance advanceRequest)
+        [HttpGet]
+        public async Task<IActionResult> GetTransactions([FromQuery] CustomerTransactionsRequest request, [FromQuery] QueryAdvance advanceRequest)
         {
-            return Ok(OkResponse.Create(await _transactionService.GetTransactionsHistory(new Core.Models.Transactions.GetTransactionsHistoryModel
+            return Ok(OkResponse.Create(await _transactionService.GetTransactions(new GetTransactionsHistoryModel
             {
-                CustomerId = id,
                 TransactionType = request.TransactionType,
                 From = request.From,
                 To = request.To,
@@ -34,11 +33,12 @@ namespace SWallet.ManagerService.Controllers
             })));
         }
 
-        [HttpGet("get-customer-transactions")]
-        public async Task<IActionResult> GetAllCustomerTransactions([FromQuery] CustomerTransactionsRequest request, [FromQuery] QueryAdvance advanceRequest)
+        [HttpGet("customers/{customerId:long}")]
+        public async Task<IActionResult> GetTransactionsOfCustomer([FromRoute] long customerId, [FromQuery] CustomerTransactionsRequest request, [FromQuery] QueryAdvance advanceRequest)
         {
-            return Ok(OkResponse.Create(await _transactionService.GetTransactionsHistory(new Core.Models.Transactions.GetTransactionsHistoryModel
+            return Ok(OkResponse.Create(await _transactionService.GetTransactionsOfCustomer(new GetTransactionsHistoryModel
             {
+                CustomerId = customerId,
                 TransactionType = request.TransactionType,
                 From = request.From,
                 To = request.To,
@@ -46,8 +46,7 @@ namespace SWallet.ManagerService.Controllers
                 PageIndex = advanceRequest.PageIndex,
                 PageSize = advanceRequest.PageSize,
                 SortName = advanceRequest.SortName,
-                SortType = advanceRequest.SortType,
-                GetAllCustomerTrans = true
+                SortType = advanceRequest.SortType
             })));
         }
 
