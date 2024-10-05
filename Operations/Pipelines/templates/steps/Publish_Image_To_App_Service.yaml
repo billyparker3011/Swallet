@@ -122,7 +122,7 @@ steps:
     commands: |
       docker stop crhnxstagingsoutheastasia-$(repository) || true
       docker rm -f crhnxstagingsoutheastasia-$(repository) || true
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 94:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 94:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber) --environment Development
 
 - task: SSH@0
   condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'swallet.customerservice'))
