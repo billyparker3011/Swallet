@@ -133,7 +133,7 @@ steps:
     commands: |
       docker stop crhnxstagingsoutheastasia-$(repository) || true
       docker rm -f crhnxstagingsoutheastasia-$(repository) || true
-      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 95:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxstagingsoutheastasia-$(repository) -p 95:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber) --environment Development
 
 
 - task: Bash@3
