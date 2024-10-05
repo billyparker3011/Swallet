@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+ENV ASPNETCORE_ENVIRONMENT=Development
 WORKDIR /app
 EXPOSE 80
 
@@ -14,4 +15,4 @@ RUN dotnet publish Projects/SWallet/Flow/SWallet.ManagerService/SWallet.ManagerS
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SWallet.ManagerService.dll"]
+ENTRYPOINT ["dotnet", "SWallet.ManagerService.dll","--environment=Development"]
