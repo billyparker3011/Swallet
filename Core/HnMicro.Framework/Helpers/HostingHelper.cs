@@ -24,6 +24,7 @@ namespace HnMicro.Framework.Helpers
 
         public static void BuildServices(this WebApplicationBuilder builder, params Type[] filters)
         {
+            builder.Configuration.AddEnvironmentVariables();
             builder.Services.AddHealthChecks();
             builder.Services.AddResponseCaching();
             builder.Services.AddHttpContextAccessor();
@@ -118,6 +119,7 @@ namespace HnMicro.Framework.Helpers
 
         public static void BuildSignalRService(this WebApplicationBuilder builder, params Type[] filters)
         {
+            builder.Configuration.AddEnvironmentVariables();
             builder.Services.AddHealthChecks();
             builder.Services.AddHttpContextAccessor();
             builder.Services.AddHttpClient();

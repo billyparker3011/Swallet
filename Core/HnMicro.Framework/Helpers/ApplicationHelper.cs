@@ -12,6 +12,7 @@ namespace HnMicro.Framework.Helpers
     {
         public static void Usage(this WebApplication app)
         {
+            Console.WriteLine($"Print to test Environment: {app.Environment}. Is Development: {app.Environment.IsDevelopment()}.");
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
