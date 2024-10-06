@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SWallet.Data.Core;
 
@@ -11,9 +12,11 @@ using SWallet.Data.Core;
 namespace SWallet.Data.Core.Migrations
 {
     [DbContext(typeof(SWalletContext))]
-    partial class SWalletContextModelSnapshot : ModelSnapshot
+    [Migration("20241002155634_ModifySwalletBetSetting")]
+    partial class ModifySwalletBetSetting
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -241,96 +244,6 @@ namespace SWallet.Data.Core.Migrations
                     b.ToTable("CasinoCustomerBetSettings");
                 });
 
-            modelBuilder.Entity("SWallet.Data.Core.Entities.CasinoTicket", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("AgentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<int>("BetKindId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("BookiePlayerId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("CancelReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<long?>("CancelTransactionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<long>("CustomerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<bool>("IsCancel")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsRetry")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsRetryCancel")
-                        .HasColumnType("bit");
-
-                    b.Property<long>("MasterId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Reason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<long>("SupermasterId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("TransactionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal>("WinlossAmountTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookiePlayerId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("TransactionId")
-                        .IsUnique();
-
-                    b.ToTable("CasinoTicket");
-                });
-
             modelBuilder.Entity("SWallet.Data.Core.Entities.CockFightBetKind", b =>
                 {
                     b.Property<int>("Id")
@@ -394,143 +307,6 @@ namespace SWallet.Data.Core.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("CockFightCustomerBetSettings");
-                });
-
-            modelBuilder.Entity("SWallet.Data.Core.Entities.CockFightTicket", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long>("AgentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal?>("AnteAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<string>("ArenaCode")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
-                    b.Property<decimal?>("BetAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<int>("BetKindId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CreatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("CurrencyCode")
-                        .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("nvarchar(15)");
-
-                    b.Property<long>("CustomerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("FightNumber")
-                        .HasColumnType("int");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<long>("MasterId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("MatchDayCode")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("nvarchar(64)");
-
-                    b.Property<decimal?>("Odds")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<string>("OddsType")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<long?>("ParentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Result")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Selection")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("nvarchar(32)");
-
-                    b.Property<DateTime?>("SettledDateTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool?>("ShowMore")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Sid")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<long>("SupermasterId")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal?>("TicketAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<DateTime>("TicketCreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("TicketModifiedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("UpdatedBy")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(1024)
-                        .HasColumnType("nvarchar(1024)");
-
-                    b.Property<decimal?>("ValidStake")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<decimal?>("WinlossAmount")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AgentId");
-
-                    b.HasIndex("BetKindId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("MasterId");
-
-                    b.HasIndex("Sid");
-
-                    b.HasIndex("SupermasterId");
-
-                    b.ToTable("CockFightTickets");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Customer", b =>
@@ -965,11 +741,19 @@ namespace SWallet.Data.Core.Migrations
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
 
+                    b.Property<decimal>("MaxBuy")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
                     b.Property<decimal>("MaxPerNumber")
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
 
                     b.Property<decimal>("MinBet")
+                        .HasPrecision(18, 3)
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<decimal>("MinBuy")
                         .HasPrecision(18, 3)
                         .HasColumnType("decimal(18,3)");
 
@@ -986,138 +770,6 @@ namespace SWallet.Data.Core.Migrations
                     b.HasIndex("CustomerId");
 
                     b.ToTable("M8xsAgentBetSettings");
-                });
-
-            modelBuilder.Entity("SWallet.Data.Core.Entities.M8xsTicket", b =>
-                {
-                    b.Property<long>("TicketId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("TicketId"));
-
-                    b.Property<long>("AgentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("BetKindId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ChannelId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ChoosenNumbers")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<Guid?>("CorrelationCode")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("CustomerId")
-                        .HasColumnType("bigint");
-
-                    b.Property<decimal?>("CustomerOdds")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<decimal>("CustomerPayout")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<decimal>("CustomerWinLoss")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<decimal>("DraftCustomerWinLoss")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<string>("IpAddress")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<bool>("IsLive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("KickOffTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("MasterId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("MatchId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("MixedTimes")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<long?>("ParentId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Platform")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int?>("Position")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Prize")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RegionId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("RewardRate")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<bool?>("ShowMore")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("SportKindId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Stake")
-                        .HasPrecision(18, 3)
-                        .HasColumnType("decimal(18,3)");
-
-                    b.Property<int>("State")
-                        .HasColumnType("int");
-
-                    b.Property<long>("SupermasterId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("Times")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserAgent")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.HasKey("TicketId");
-
-                    b.HasIndex("AgentId");
-
-                    b.HasIndex("BetKindId");
-
-                    b.HasIndex("CustomerId");
-
-                    b.HasIndex("MasterId");
-
-                    b.HasIndex("ParentId");
-
-                    b.HasIndex("SportKindId");
-
-                    b.HasIndex("SupermasterId");
-
-                    b.ToTable("M8xsTickets");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Manager", b =>
@@ -1578,17 +1230,6 @@ namespace SWallet.Data.Core.Migrations
                     b.Navigation("Customer");
                 });
 
-            modelBuilder.Entity("SWallet.Data.Core.Entities.CasinoTicket", b =>
-                {
-                    b.HasOne("SWallet.Data.Core.Entities.Customer", "Customer")
-                        .WithMany()
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Customer");
-                });
-
             modelBuilder.Entity("SWallet.Data.Core.Entities.CockFightCustomerBetSetting", b =>
                 {
                     b.HasOne("SWallet.Data.Core.Entities.CockFightBetKind", "CockFightBetKind")
@@ -1685,15 +1326,6 @@ namespace SWallet.Data.Core.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("M8xsBetKind");
-                });
-
-            modelBuilder.Entity("SWallet.Data.Core.Entities.M8xsTicket", b =>
-                {
-                    b.HasOne("SWallet.Data.Core.Entities.M8xsTicket", "Parent")
-                        .WithMany()
-                        .HasForeignKey("ParentId");
-
-                    b.Navigation("Parent");
                 });
 
             modelBuilder.Entity("SWallet.Data.Core.Entities.Manager", b =>
