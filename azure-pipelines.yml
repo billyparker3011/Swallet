@@ -18,7 +18,7 @@ variables:
   location: "southeastasia"
   repository: "swallet.managerservice"
   application: "SWallet.ManagerService"
-  AppSettings: "../Projects/SWallet/Flow/SWallet.ManagerService"
+  AppSettings: ".Projects/SWallet/Flow/SWallet.ManagerService"
 
 steps:
 - script: echo Hello, world!
@@ -42,6 +42,7 @@ steps:
     repository: 'swallet.managerservice'
     command: 'buildAndPush'
     Dockerfile: '$(AppSettings)/Dockerfile'
+    buildContext: '.'
     tags: |
       $(Build.BuildNumber)
       latest
