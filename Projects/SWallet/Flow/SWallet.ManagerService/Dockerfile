@@ -5,7 +5,7 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ../../Core/HnMicro.Core/HnMicro.Core.csproj Core/HnMicro.Core/HnMicro.Core.csproj
+COPY ../../../../Core/HnMicro.Core/HnMicro.Core.csproj Core/HnMicro.Core/HnMicro.Core.csproj
 RUN dotnet restore SWallet.ManagerService.csproj
 RUN dotnet build SWallet.ManagerService.csproj -c Release -o /app/build
 
