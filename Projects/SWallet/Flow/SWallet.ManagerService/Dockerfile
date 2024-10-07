@@ -7,10 +7,10 @@ FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY . .
 RUN dotnet restore SWallet.ManagerService.csproj
-RUN dotnet build Projects/SWallet/Flow/SWallet.ManagerService/SWallet.ManagerService.csproj -c Release -o /app/build
+RUN dotnet build SWallet.ManagerService.csproj -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish Projects/SWallet/Flow/SWallet.ManagerService/SWallet.ManagerService.csproj -c Release -o /app/publish
+RUN dotnet publish SWallet.ManagerService.csproj -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
