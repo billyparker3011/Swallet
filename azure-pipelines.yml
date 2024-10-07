@@ -35,3 +35,13 @@ steps:
     cp $(application).appsettings.Development.json "$(System.DefaultWorkingDirectory)/$(AppSettings)/appsettings.Development.json"
     cp $(application).appsettings.Development.json "$(System.DefaultWorkingDirectory)/$(AppSettings)/appsettings.json"
   displayName: "Replace $(application) AppSettings Files"
+
+- task: Docker@2
+  inputs:
+    containerRegistry: 'acr-connection'
+    repository: 'agent-portal'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+    tags: |
+      $(Build.BuildNumber)
+      latest
