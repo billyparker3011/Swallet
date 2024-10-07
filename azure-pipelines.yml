@@ -41,7 +41,7 @@ steps:
     containerRegistry: 'acr-connection'
     repository: 'swallet.managerservice'
     command: 'buildAndPush'
-    Dockerfile: '**/Dockerfile'
+    Dockerfile: '$(AppSettings)/Dockerfile'
     tags: |
       $(Build.BuildNumber)
       latest
