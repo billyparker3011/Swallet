@@ -22,6 +22,78 @@ namespace SWallet.Core.Services.Transaction
         {
         }
 
+        public async Task<TransactionsHistoryResultModel> GetTransactions(GetTransactionsHistoryModel model)
+        {
+            var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
+            var query = GetQueryable(transactionRepository, model);
+            var result = await transactionRepository.PagingByAsync(query, model.PageIndex, model.PageSize);
+
+            return new TransactionsHistoryResultModel
+            {
+                Transactions = result.Items.Select(f => f.ToTransactionModel()).ToList(),
+                Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
+                {
+                    NoOfPages = result.Metadata.NoOfPages,
+                    NoOfRows = result.Metadata.NoOfRows,
+                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
+                    Page = result.Metadata.Page
+                }
+            };
+        }
+
+        public async Task<TransactionsHistoryResultModel> GetTransactionsHistory(GetTransactionsHistoryModel model)
+        {
+            if (ClientContext.Customer == null) throw new ForbiddenException();
+            model.CustomerId = ClientContext.Customer.CustomerId;
+
+            var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
+            var query = GetQueryable(transactionRepository, model);
+            var result = await transactionRepository.PagingByAsync(query, model.PageIndex, model.PageSize);
+
+            return new TransactionsHistoryResultModel
+            {
+                Transactions = result.Items.Select(f => f.ToTransactionModel()).ToList(),
+                Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
+                {
+                    NoOfPages = result.Metadata.NoOfPages,
+                    NoOfRows = result.Metadata.NoOfRows,
+                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
+                    Page = result.Metadata.Page
+                }
+            };
+        }
+
+        public async Task<TransactionsHistoryResultModel> GetTransactionsOfCustomer(GetTransactionsHistoryModel model)
+        {
+            var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
+            var query = GetQueryable(transactionRepository, model);
+            var result = await transactionRepository.PagingByAsync(query, model.PageIndex, model.PageSize);
+
+            return new TransactionsHistoryResultModel
+            {
+                Transactions = result.Items.Select(f => f.ToTransactionModel()).ToList(),
+                Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
+                {
+                    NoOfPages = result.Metadata.NoOfPages,
+                    NoOfRows = result.Metadata.NoOfRows,
+                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
+                    Page = result.Metadata.Page
+                }
+            };
+        }
+
+        private IQueryable<Data.Core.Entities.Transaction> GetQueryable(ITransactionRepository transactionRepository, GetTransactionsHistoryModel model)
+        {
+            var query = model.CustomerId == 0L
+                            ? transactionRepository.FindQuery().Include(f => f.Customer)
+                            : transactionRepository.FindQueryBy(f => f.CustomerId == model.CustomerId).Include(f => f.Customer).AsQueryable();
+            if (model.From.HasValue) query = query.Where(f => f.CreatedAt >= model.From.Value.UtcDateTime);
+            if (model.To.HasValue) query = query.Where(f => f.CreatedAt <= model.To.Value.UtcDateTime);
+            if (model.TransactionType.HasValue) query = query.Where(f => f.TransactionType == model.TransactionType.Value);
+            if (model.State.HasValue) query = query.Where(f => f.TransactionState == model.State.Value);
+            return query.OrderByDescending(f => f.CreatedAt);
+        }
+
         public async Task CompletedTransaction(CompletedTransactionModel model)
         {
             var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
@@ -33,6 +105,7 @@ namespace SWallet.Core.Services.Transaction
 
             var balanceCustomerRepository = SWalletUow.GetRepository<IBalanceCustomerRepository>();
             var balance = await balanceCustomerRepository.FindByCustomerId(transaction.CustomerId) ?? throw new NotFoundException();
+            var currentBalance = balance.ToBalance();
 
             var realAmount = 0m;
             if (customer.DiscountId.HasValue)
@@ -82,6 +155,21 @@ namespace SWallet.Core.Services.Transaction
                 balance.UpdatedAt = ClockService.GetUtcNow();
                 balance.UpdatedBy = customer.CustomerId;
             }
+
+            if (transaction.TransactionType == TransactionType.Withdraw.ToInt())
+            {
+                if (model.Amount > currentBalance) throw new BadRequestException();
+                balance.Balance -= model.Amount;
+                transaction.Amount = model.Amount;
+
+                var bankAccountRepository = SWalletUow.GetRepository<IBankAccountRepository>();
+                var bankAccount = await bankAccountRepository.FindByBankAndBankAccount(model.BankId, model.BankAccountId) ?? throw new NotFoundException();
+
+                transaction.WithdrawBankName = bankAccount.Bank.Name;
+                transaction.WithdrawNumberAccount = bankAccount.NumberAccount;
+                transaction.WithdrawCardHolder = bankAccount.CardHolder;
+            }
+
             balanceCustomerRepository.Update(balance);
 
             if (transaction.TransactionType == TransactionType.Withdraw.ToInt())
@@ -100,35 +188,6 @@ namespace SWallet.Core.Services.Transaction
             transactionRepository.Update(transaction);
 
             await SWalletUow.SaveChangesAsync();
-        }
-
-        public async Task<TransactionsHistoryResultModel> GetTransactionsHistory(GetTransactionsHistoryModel model)
-        {
-            if (ClientContext.Customer == null) throw new ForbiddenException();
-
-            var transactionRepository = SWalletUow.GetRepository<ITransactionRepository>();
-
-            var targetCustomerId = model.CustomerId == 0L ? ClientContext.Customer.CustomerId : model.CustomerId;
-            var query = model.GetAllCustomerTrans ? transactionRepository.FindQuery().Include(f => f.Customer) : transactionRepository.FindQueryBy(f => f.CustomerId == targetCustomerId).Include(f => f.Customer).AsQueryable();
-            query = query.Where(f => f.CreatedAt >= model.From.UtcDateTime && f.CreatedAt <= model.To.UtcDateTime);
-            if (model.TransactionType.HasValue) query = query.Where(f => f.TransactionType == model.TransactionType.Value);
-            if (model.State.HasValue) query = query.Where(f => f.TransactionState == model.State.Value);
-
-            query = query.OrderByDescending(f => f.CreatedAt);
-
-            var result = await transactionRepository.PagingByAsync(query, model.PageIndex, model.PageSize);
-
-            return new TransactionsHistoryResultModel
-            {
-                Transactions = result.Items.Select(f => f.ToTransactionModel()).ToList(),
-                Metadata = new HnMicro.Framework.Responses.ApiResponseMetadata
-                {
-                    NoOfPages = result.Metadata.NoOfPages,
-                    NoOfRows = result.Metadata.NoOfRows,
-                    NoOfRowsPerPage = result.Metadata.NoOfRowsPerPage,
-                    Page = result.Metadata.Page
-                }
-            };
         }
 
         public async Task<bool> RejectedTransaction(long transactionId)
