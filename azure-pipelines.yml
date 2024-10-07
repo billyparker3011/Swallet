@@ -70,4 +70,4 @@ steps:
     commands: |
       docker stop crhnxswsoutheastasia-$(repository) || true
       docker rm -f crhnxswsoutheastasia-$(repository) || true
-      docker run -d --name crhnxswsoutheastasia-$(repository) -p 102:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker run -d --name crhnxswsoutheastasia-$(repository) -p 94:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
