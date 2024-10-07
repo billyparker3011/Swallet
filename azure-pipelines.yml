@@ -46,3 +46,17 @@ steps:
     tags: |
       $(Build.BuildNumber)
       latest
+
+- task: SSH@0
+  condition: eq(variables.environment, 'staging')
+  displayName: "Docker Server Pull $(application)"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      echo "Login to Azure Container Registry"
+      echo $(ACR_ACCESS_TOKEN) | docker login $(DockerRegistryURL) -u $(ACR_USERNAME) --password-stdin > /dev/null 2>&1
+      echo "Attempting to pull the Docker image..."
+      echo $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+      docker pull $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
+    readyTimeout: '20000'
