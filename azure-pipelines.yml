@@ -18,7 +18,7 @@ variables:
   location: "southeastasia"
   repository: "swallet.managerservice"
   application: "SWallet.ManagerService"
-  AppSettings: "Projects/SWallet/Flow/SWallet.ManagerService"
+  AppSettings: "../Projects/SWallet/Flow/SWallet.ManagerService"
 
 steps:
 - script: echo Hello, world!
