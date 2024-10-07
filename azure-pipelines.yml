@@ -60,3 +60,14 @@ steps:
       echo $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
       docker pull $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
     readyTimeout: '20000'
+
+- task: SSH@0
+  condition: and(eq(variables.environment, 'staging'), eq(variables.repository, 'swallet.managerservice'))
+  displayName: "Run $(application) container"
+  inputs:
+    sshEndpoint: 'ssh-docker-srv'
+    runOptions: 'commands'
+    commands: |
+      docker stop crhnxswsoutheastasia-$(repository) || true
+      docker rm -f crhnxswsoutheastasia-$(repository) || true
+      docker run -d --name crhnxswsoutheastasia-$(repository) -p 102:80 $(DockerRegistryURL)/$(repository):$(Build.BuildNumber)
