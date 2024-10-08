@@ -4,7 +4,12 @@
 # https://aka.ms/yaml
 
 trigger:
-- staging
+  branches:
+    include:
+      - staging
+  paths:
+    include:
+      - Projects/SWallet/Flow/SWallet.ManagerService/**
 
 pool:
   name: Testing Environment Agent Pool
