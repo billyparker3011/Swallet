@@ -9,7 +9,7 @@ trigger:
     - staging
   paths:
     include:
-    - Projects/SWallet/Flow/SWallet.CustomerService/
+    - Projects/SWallet/Flow/SWallet.CustomerService
 
 pool:
   name: Testing Environment Agent Pool
