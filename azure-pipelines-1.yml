@@ -11,6 +11,7 @@ trigger:
     include:
       - Projects/SWallet/Flow/SWallet.CustomerService/**
 
+
 pool:
   name: Testing Environment Agent Pool
 
