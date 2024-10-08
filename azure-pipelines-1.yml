@@ -9,11 +9,23 @@ trigger:
 pool:
   name: Testing Environment Agent Pool
 
+variables:
+  AgentPool: "Testing Environment Agent Pool"
+  DockerRegistry: "acr-connection"
+  ResourceGroupName: "rg-hnx-staging-southeastasia"
+  DockerRegistryURL: "crhnxswsoutheastasia.azurecr.io"
+  environment: "staging"
+  location: "southeastasia"
+  repository: "swallet.customerservice"
+  application: "SWallet.CustomerService"
+  AppSettings: "Projects/SWallet/Flow/SWallet.CustomerService"
+
+
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
 
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    echo "$(environment)-appsettings"
+    az storage blob download --container-name "$(environment)-appsettings" --name "$(application).appsettings.Development.json" --file "$(application).appsettings.Development.json" --account-name sthnxdevsoutheastasia --account-key $(storage_account_key)
+    cp $(application).appsettings.Development.json "$(System.DefaultWorkingDirectory)/$(AppSettings)/appsettings.Development.json"
+    cp $(application).appsettings.Development.json "$(System.DefaultWorkingDirectory)/$(AppSettings)/appsettings.json"
+  displayName: "Replace $(application) AppSettings Files"
